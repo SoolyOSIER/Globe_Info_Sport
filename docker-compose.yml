@@ -1,0 +1,112 @@
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-globeinfosport}
+      POSTGRES_USER: ${POSTGRES_USER:-globeinfosport}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-globeinfosport}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - redis_data:/data
+
+  backend:
+    build:
+      context: ./globeinfosport-backend
+      target: development
+    command: daphne -b 0.0.0.0 -p 8000 config.asgi:application
+    env_file: .env
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.development
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./globeinfosport-backend:/app
+      - backend_media:/app/media
+
+  celery:
+    build:
+      context: ./globeinfosport-backend
+      target: development
+    command: celery -A config worker --loglevel=INFO
+    env_file: .env
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.development
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./globeinfosport-backend:/app
+
+  celery-beat:
+    build:
+      context: ./globeinfosport-backend
+      target: development
+    command: celery -A config beat --loglevel=INFO --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    env_file: .env
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.development
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./globeinfosport-backend:/app
+
+  frontend-redaction:
+    build:
+      context: ./globeinfosport-redaction
+      target: development
+    command: npm run dev -- --host 0.0.0.0 --port 5173
+    environment:
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:8000/api/v1}
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./globeinfosport-redaction:/app
+      - redaction_node_modules:/app/node_modules
+
+  frontend-vitrine:
+    build:
+      context: ./globeinfosport-vitrine
+      target: development
+    command: npm run dev -- --host 0.0.0.0 --port 5174
+    environment:
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:8000/api/v1}
+      VITE_WS_URL: ${VITE_WS_URL:-ws://localhost:8000/ws}
+      VITE_RECAPTCHA_SITE_KEY: ${VITE_RECAPTCHA_SITE_KEY:-}
+      VITE_SITE_NAME: ${VITE_SITE_NAME:-Globe Info Sport}
+    ports:
+      - "5174:5174"
+    volumes:
+      - ./globeinfosport-vitrine:/app
+      - vitrine_node_modules:/app/node_modules
+
+volumes:
+  postgres_data:
+  redis_data:
+  backend_media:
+  redaction_node_modules:
+  vitrine_node_modules:

@@ -1,0 +1,32 @@
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.sqlite3
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Django runtime files
+globeinfosport-backend/media/*
+!globeinfosport-backend/media/.gitkeep
+globeinfosport-backend/staticfiles/
+
+# JavaScript
+node_modules/
+dist/
+.vite/
+npm-debug.log*
+
+# Editors and operating systems
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

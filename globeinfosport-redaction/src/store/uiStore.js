@@ -1,0 +1,2 @@
+import { create } from "zustand";
+export const useUiStore = create((set) => ({ sidebarOpen: false, toasts: [], toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })), closeSidebar: () => set({ sidebarOpen: false }), pushToast: (message) => { const id = crypto.randomUUID(); set((state) => ({ toasts: [...state.toasts, { id, message }] })); window.setTimeout(() => set((state) => ({ toasts: state.toasts.filter((toast) => toast.id !== id) })), 4000); } }));

@@ -1,0 +1,2620 @@
+================================================================================
+         GLOBE INFO SPORT — PLAN COMPLET FULL-STACK
+         Plateforme Média Sportive Haïtienne (Football)
+         Back-End : Django REST Framework (API)
+         Front-End : React SPA "Back-Office Rédaction" (Vite)
+                    + React SPA "Site Vitrine Public" (Vite)
+         Basé sur le site HTML/CSS/JS existant fourni (Globe_info_Sport.zip)
+         Organisation basée en Haïti — plateforme d'actualités du football haïtien
+         Version 1.0 | 2026
+================================================================================
+
+TABLE DES MATIÈRES
+──────────────────
+  PARTIE 0   — ANALYSE DU SITE EXISTANT ET OBJECTIFS DU PROJET
+    0.1 Inventaire du site fourni (pages, sections, contenus)
+    0.2 Constat : un site statique à transformer en plateforme dynamique
+    0.3 Objectifs du nouveau système
+    0.4 Principe d'automatisation (façon site officiel de fédération/FIFA)
+
+  PARTIE I   — ARCHITECTURE GÉNÉRALE
+    A. Stack technique
+    B. Rôles de la rédaction
+    C. Flux général (2 SPA ↔ 1 API)
+
+  PARTIE II  — BACK-END DJANGO (API)
+    A. Arborescence du projet back-end
+    B. Applications Django (apps/)
+    C. Modèles (Models) — par application
+    D. Serializers DRF
+    E. Vues API (ViewSets & APIViews)
+    F. URLs API
+    G. Authentification JWT & sécurité
+    H. Permissions & hiérarchie éditoriale
+    I. Automatisation — classements, statistiques et scores en direct
+    J. Signals
+    K. Tâches Celery
+    L. Settings (base / dev / prod)
+    M. Requirements
+    N. Fixtures & données initiales
+    O. Commandes management
+    P. Récapitulatif Back-End
+
+  PARTIE III — FRONT-END REACT (BACK-OFFICE RÉDACTION)
+    A. Arborescence du projet front-end
+    B. Couche API (axios)
+    C. Zustand Stores (état global)
+    D. Custom Hooks (TanStack Query)
+    E. Composants réutilisables
+    F. Pages (routes) — outils de la rédaction
+    G. Layouts
+    H. Router & Protection des routes (par rôle)
+    I. Variables d'environnement
+    J. Récapitulatif Front-End Back-Office
+
+  PARTIE IV  — SITE VITRINE PUBLIC (reconstruction dynamique du site fourni)
+    A. Objectif, correspondance avec les pages HTML fournies
+    B. Back-end additionnel — application "vitrine" (interactions publiques)
+       B.1 Modèles (MessageContact, AbonneNewsletter, Partenaire, FAQ)
+       B.2 Serializers publics
+       B.3 Vues API publiques (AllowAny + throttling)
+       B.4 URLs publiques
+       B.5 Permissions, anti-spam et rate-limiting
+       B.6 Signals
+       B.7 Tâches Celery
+       B.8 Admin Django
+    C. Front-end — arborescence complète du site vitrine
+    D. Pages publiques détaillées (mappées aux 6 pages HTML + galerie)
+    E. Composants par page/section
+    F. Couche services (axios)
+    G. State management (Zustand)
+    H. Hooks personnalisés
+    I. Router, SEO & accessibilité
+    J. Charte graphique (reprise du design existant)
+    K. Formulaires publics & protection anti-spam
+    L. Variables d'environnement
+    M. Récapitulatif Site Vitrine
+
+  PARTIE V   — INTÉGRATION & DÉPLOIEMENT
+    A. Communication Front ↔ Back (2 SPA ↔ 1 API)
+    B. Configuration CORS (multi-origine)
+    C. Déploiement (Docker / prod / Nginx)
+    D. Variables d'environnement globales
+
+  RÉCAPITULATIF GLOBAL DU PROJET
+
+
+================================================================================
+PARTIE 0 — ANALYSE DU SITE EXISTANT ET OBJECTIFS DU PROJET
+================================================================================
+
+0.1 INVENTAIRE DU SITE FOURNI (Globe_info_Sport.zip)
+─────────────────────────────────────────────────────
+Le site fourni est un site vitrine 100% statique (HTML/CSS/JS, sans back-end,
+sans base de données) composé des pages suivantes :
+
+  index.html (Accueil)
+    • Hero "La Passion du Football Haïtien"
+    • Section "Équipe Nationale — Les Grenadiers"
+    • "Joueurs Emblématiques"
+    • "Infrastructures"
+    • "Histoire du Football Haïtien — Une Passion Nationale"
+    • "Légendes du Football Haïtien" : Emmanuel Sanon, Joe Gaetjens,
+      Pierre Bayonne, Duckens Nazon, Frantzdy Pierrot, Johny Placide
+    • Aperçu "Actualités" (3 articles à la une, ex. qualification Mondial,
+      victoires contre Aruba et le Nicaragua)
+    • Aperçu "Calendrier — Championnat National Haïti"
+    • Aperçu "Galerie" (6 photos : Grenadiers en action, supporters,
+      Stade Sylvio Cator, entraînement, célébration de but, jeunes talents)
+    • Footer : à propos de Globe Info Sport, Navigation, Contact Rédaction,
+      Partenaires, réseaux sociaux, newsletter
+
+  equipe.html (en réalité la page "Championnat National d'Haïti")
+    • Classement du Championnat (tableau)
+    • Équipes du Championnat : Violette AC, AS Capoise, Racing Club Haïtien...
+    • Prochains Matchs
+    • Statistiques du Championnat : Meilleur Buteur, Meilleur Passeur,
+      Meilleure Défense, Meilleure Attaque, Meilleur Milieu terrain,
+      Meilleur Gardien
+
+  actualites.html
+    • "Les Dernières Nouvelles" (articles complets, ex. tirage au sort
+      Brésil/Maroc/Écosse, interview du sélectionneur Sébastien Migné,
+      portrait de Danley Jean Jacques, actualité Racing FC, jeune espoir
+      Woodson Félix, rénovation du Stade Sylvio Cator)
+    • "Les Chiffres Clés" (compteurs animés)
+    • "Classements & Résultats"
+    • "Vidéos à la Une" (highlights, récits de qualification)
+    • "Paroles d'Acteurs" (citations de joueurs/dirigeants)
+    • "Restez Connectés" (newsletter, réseaux sociaux)
+
+  calendrier.html
+    • Calendrier des matchs par mois (Octobre / Novembre / Décembre)
+    • "Compétitions" : Championnat National, Éliminatoires CDM, Ligue des
+      Nations
+    • Téléchargement du calendrier (PDF)
+
+  expatries.html (rubrique "SPI" — Sport Passion Info / Expatriés)
+    • Article en vedette
+    • Dernières actualités
+    • Abonnement à la rubrique
+    • "SPI en Chiffres"
+    • Transferts
+    • Liste des joueurs Expatriés (haïtiens évoluant à l'étranger)
+
+  contact.html
+    • Adresse, téléphone, email, réseaux sociaux
+    • Formulaire "Envoyez-nous un message"
+    • FAQ
+    • Localisation (carte) — Fédération Haïtienne de Football
+
+  Ressources communes : style.css (charte graphique rouge/bleu du drapeau
+  haïtien), script.js (menu mobile, bouton retour en haut, newsletter,
+  animations au scroll, compteurs animés), dossier Img/ et infos/ (photos).
+
+0.2 CONSTAT : UN SITE STATIQUE À TRANSFORMER EN PLATEFORME DYNAMIQUE
+──────────────────────────────────────────────────────────────────────
+Toutes les données actuelles (classement, statistiques, calendrier,
+articles, joueurs expatriés, galerie) sont codées EN DUR dans le HTML.
+Chaque mise à jour (un nouveau score, un nouvel article, un transfert)
+exige aujourd'hui de modifier manuellement le code source. Ce plan
+transforme ce site en une véritable plateforme média avec :
+  • une base de données (PostgreSQL) qui centralise tout le contenu ;
+  • un back-office (React) permettant à l'équipe rédactionnelle de publier
+    des articles, saisir des résultats de matchs, gérer les joueurs, la
+    galerie et les transferts sans toucher au code ;
+  • un site public (React) qui reproduit fidèlement les pages, sections et
+    la charte graphique du site fourni, mais dont CHAQUE section est
+    alimentée dynamiquement par l'API plutôt que codée en dur.
+
+0.3 OBJECTIFS DU NOUVEAU SYSTÈME
+──────────────────────────────────
+  1. Permettre à la rédaction de publier des actualités (avec brouillon,
+     relecture, publication) sans intervention technique.
+  2. Centraliser les données du Championnat National (clubs, classement,
+     calendrier, statistiques joueurs) et les mettre à jour automatiquement
+     à partir des résultats de matchs saisis.
+  3. Maintenir une base "Joueurs" (sélection nationale, expatriés,
+     légendes historiques) réutilisable dans tout le site.
+  4. Suivre les transferts et la carrière des joueurs haïtiens expatriés.
+  5. Gérer une galerie photo par album/évènement.
+  6. Capturer les messages de contact et les abonnements newsletter.
+  7. Offrir un site public rapide, référencé (SEO), accessible et fidèle
+     à la charte graphique déjà validée (rouge/bleu du drapeau haïtien).
+
+0.4 PRINCIPE D'AUTOMATISATION (FAÇON SITE OFFICIEL DE FÉDÉRATION / FIFA)
+──────────────────────────────────────────────────────────────────────────
+Comme sur un site officiel de compétition, la rédaction ne doit remplir
+qu'une seule fois l'information de base ; le reste se calcule seul :
+
+  • La rédaction saisit UNIQUEMENT le résultat d'un match (score final +
+    la liste des buteurs avec la minute du but).
+  → Un signal Django recalcule AUTOMATIQUEMENT :
+      - le classement du championnat (points, victoires, nuls, défaites,
+        buts pour/contre, différence de buts) pour les deux clubs ;
+      - les statistiques individuelles (buts, passes décisives, cartons,
+        clean sheets) et donc les classements "Meilleur Buteur", "Meilleur
+        Passeur", "Meilleure Défense", etc. ;
+      - le statut du match (À venir → En cours → Terminé) et son affichage
+        dans le calendrier et sur la page d'accueil.
+  • Un match "En cours" peut être rafraîchi en direct (score live) par
+    l'équipe de rédaction via un simple champ "score en direct" ; le site
+    public interroge l'API toutes les 30 secondes (polling) pendant les
+    jours de match, avec une option d'évolution vers Django Channels
+    (WebSocket) pour un vrai direct sans rafraîchissement (voir PARTIE
+    II.I pour le détail technique des deux approches).
+  • Les "Chiffres Clés" de la page Actualités (ex. nombre de sélections,
+    de buts inscrits, de victoires de la saison) sont calculés par une
+    tâche Celery périodique plutôt que saisis à la main, pour rester
+    toujours exacts.
+
+
+================================================================================
+PARTIE I — ARCHITECTURE GÉNÉRALE
+================================================================================
+
+A. STACK TECHNIQUE
+───────────────────
+  Back-End  : Django 4.2 + Django REST Framework + SimpleJWT
+  Front-End : 2 SPA distinctes servies séparément
+                1) React 18 + Vite (Back-Office Rédaction)   — PARTIE III
+                2) React 18 + Vite (Site Vitrine Public)     — PARTIE IV
+              Router v6 + TanStack Query + Zustand (les deux projets)
+  Base de données : PostgreSQL 15
+  Cache           : Redis 7 (cache classement/stats + broker Celery)
+  Tâches async    : Celery + django-celery-beat (recalcul stats, chiffres
+                    clés, newsletters, notifications)
+  Éditeur riche   : django-ckeditor (ou Tiptap côté front) pour le contenu
+                    des articles
+  Images          : Pillow + django-imagekit (miniatures automatiques pour
+                    la galerie et les images "à la une")
+  PDF             : ReportLab (génération du calendrier téléchargeable)
+  Emails          : SMTP (production) / console (dev)
+  Documentation API : drf-spectacular (Swagger / OpenAPI)
+  Anti-spam       : Honeypot + Google reCAPTCHA v3 + throttling DRF
+                    (formulaires publics)
+  Live (option avancée) : Django Channels + Redis (scores en direct par
+                    WebSocket) — voir PARTIE II.I
+  CI/CD           : GitHub Actions
+  Conteneurisation: Docker + docker-compose
+
+B. RÔLES DE LA RÉDACTION
+─────────────────────────
+  Personnel interne (Back-Office, authentifié) — hiérarchie cumulative :
+    REDACTEUR         → Rédige des articles (statut BROUILLON), saisit les
+                         résultats de matchs et statistiques, gère la
+                         galerie, consulte les messages de contact
+    EDITEUR_EN_CHEF    → Tous les droits de REDACTEUR + Publie/dépublie les
+                         articles de tous les rédacteurs, gère les clubs,
+                         compétitions, joueurs, expatriés, transferts,
+                         traite les messages de contact et la newsletter
+    ADMINISTRATEUR     → Tous les droits d'EDITEUR_EN_CHEF + Gère les
+                         comptes utilisateurs de la rédaction, les
+                         partenaires, les paramètres généraux du site
+
+  Public (Site Vitrine, entièrement anonyme) :
+    VISITEUR ANONYME  → Consulte toutes les pages publiques, s'abonne à la
+                         newsletter, envoie un message de contact.
+                         (Le site n'a volontairement AUCUN espace membre :
+                         il s'agit d'un site d'actualités, pas d'un espace
+                         communautaire — cohérent avec le site fourni qui
+                         ne propose aucune connexion visiteur.)
+
+C. FLUX GÉNÉRAL
+────────────────
+  React Back-Office (5173) ──HTTP/JSON──▶ Django API (8000) /api/v1/...
+  React Vitrine      (5174) ──HTTP/JSON──▶ Django API (8000) /api/v1/public/...
+  Django             ──▶ PostgreSQL (Articles, Clubs, Matchs, Joueurs...)
+  Django             ──▶ Redis (cache classement/stats + Celery + Channels)
+  Django             ──▶ Celery (recalcul stats, chiffres clés, PDF, emails)
+  Django             ──▶ SMTP (newsletter, notifications de contact)
+
+
+================================================================================
+PARTIE II — BACK-END DJANGO
+================================================================================
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+A. ARBORESCENCE DU PROJET BACK-END
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+globeinfosport-backend/
+│
+├── config/
+│   ├── __init__.py
+│   ├── settings/
+│   │   ├── __init__.py
+│   │   ├── base.py
+│   │   ├── development.py
+│   │   └── production.py
+│   ├── urls.py                       # URL racine + api/v1/
+│   ├── asgi.py                       # Django Channels (scores en direct)
+│   ├── wsgi.py
+│   └── celery.py
+│
+├── apps/
+│   ├── comptes/                       # Utilisateur, RoleRedaction, Auth
+│   │   ├── migrations/
+│   │   ├── management/commands/
+│   │   │   ├── create_roles.py
+│   │   │   └── create_admin.py
+│   │   ├── __init__.py
+│   │   ├── models.py                 # Utilisateur, RoleRedaction
+│   │   ├── serializers.py
+│   │   ├── views.py
+│   │   ├── urls.py
+│   │   ├── admin.py
+│   │   ├── permissions.py            # Hiérarchie éditoriale
+│   │   ├── signals.py
+│   │   ├── managers.py
+│   │   └── apps.py
+│   │
+│   ├── actualites/                    # Article, Categorie, Tag, Video,
+│   │   │                              # Citation, ChiffreCle
+│   │   ├── migrations/
+│   │   ├── __init__.py
+│   │   ├── models.py
+│   │   ├── serializers.py
+│   │   ├── views.py                  # Rédiger, Publier, Consulter, Rechercher
+│   │   ├── urls.py
+│   │   ├── admin.py
+│   │   ├── filters.py                # Recherche par titre, catégorie, tag
+│   │   ├── signals.py                # Notification à la publication
+│   │   ├── tasks.py                  # Recalcul des Chiffres Clés (Celery beat)
+│   │   └── apps.py
+│   │
+│   ├── joueurs/                       # Poste, Joueur, Legende
+│   │   ├── migrations/
+│   │   ├── __init__.py
+│   │   ├── models.py
+│   │   ├── serializers.py
+│   │   ├── views.py
+│   │   ├── urls.py
+│   │   ├── admin.py
+│   │   ├── filters.py                # Filtre par poste, club, sélection
+│   │   └── apps.py
+│   │
+│   ├── competitions/                  # Competition, Club, ClassementLigne,
+│   │   │                              # Match, ButeurMatch, StatistiqueJoueur
+│   │   ├── migrations/
+│   │   ├── __init__.py
+│   │   ├── models.py
+│   │   ├── serializers.py
+│   │   ├── views.py                  # Créer/Modifier match, Consulter,
+│   │   │                             # Générer calendrier PDF
+│   │   ├── urls.py
+│   │   ├── admin.py
+│   │   ├── filters.py                # Filtre par compétition, club, mois
+│   │   ├── services/
+│   │   │   ├── classement.py         # recalcul_classement(match)
+│   │   │   └── statistiques.py       # recalcul_stats_joueurs(match)
+│   │   ├── signals.py                # post_save(Match) → recalcul auto
+│   │   ├── tasks.py                  # Génération PDF calendrier (Celery)
+│   │   ├── consumers.py              # Django Channels — score en direct
+│   │   ├── routing.py                # Routes WebSocket (ws/matchs/{id}/)
+│   │   └── apps.py
+│   │
+│   ├── expatries/                     # ClubEtranger, JoueurExpatrie, Transfert
+│   │   ├── migrations/
+│   │   ├── __init__.py
+│   │   ├── models.py
+│   │   ├── serializers.py
+│   │   ├── views.py
+│   │   ├── urls.py
+│   │   ├── admin.py
+│   │   ├── filters.py
+│   │   └── apps.py
+│   │
+│   ├── galerie/                       # AlbumGalerie, ImageGalerie
+│   │   ├── migrations/
+│   │   ├── __init__.py
+│   │   ├── models.py
+│   │   ├── serializers.py
+│   │   ├── views.py
+│   │   ├── urls.py
+│   │   ├── admin.py
+│   │   └── apps.py
+│   │
+│   ├── vitrine/                       # NOUVEAU — voir détails PARTIE IV.B
+│   │   ├── migrations/
+│   │   ├── __init__.py
+│   │   ├── models.py                 # MessageContact, AbonneNewsletter,
+│   │   │                             # Partenaire, FAQ
+│   │   ├── serializers.py
+│   │   ├── views.py                  # Vues AllowAny + throttling
+│   │   ├── urls.py                   # préfixe /api/v1/public/
+│   │   ├── admin.py
+│   │   ├── throttles.py              # PublicAnonThrottle
+│   │   ├── signals.py
+│   │   ├── tasks.py
+│   │   └── apps.py
+│   │
+│   └── core/                          # Utilitaires partagés
+│       ├── __init__.py
+│       ├── models.py                 # TimeStampedModel, PublicationModel
+│       ├── pagination.py
+│       ├── permissions.py            # Permissions génériques
+│       ├── storage.py                # Stockage S3-compatible (images/PDF)
+│       ├── exceptions.py             # Handler d'erreurs uniformisé
+│       └── apps.py
+│
+├── requirements/
+│   ├── base.txt
+│   ├── development.txt
+│   └── production.txt
+│
+├── fixtures/
+│   ├── roles.json
+│   ├── postes.json
+│   ├── competitions.json
+│   └── clubs_championnat.json
+│
+├── static/
+├── media/                            # images articles, photos galerie,
+│   │                                 # logos clubs, PDF calendrier
+├── manage.py
+├── .env.example
+├── Dockerfile
+└── docker-compose.yml
+
+TOTAL : 7 applications Django (comptes, actualites, joueurs, competitions,
+        expatries, galerie, vitrine, + core)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+B. APPLICATIONS DJANGO — RÉSUMÉ DES RESPONSABILITÉS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  comptes       → Authentification, gestion des comptes de la rédaction,
+                  attribution des rôles éditoriaux
+  actualites    → Cœur éditorial : articles, catégories, tags, vidéos,
+                  citations, chiffres clés (page "Actualités")
+  joueurs       → Base des joueurs (sélection nationale) et des légendes
+                  historiques du football haïtien (page "Accueil")
+  competitions  → Championnat National, clubs, classement, calendrier des
+                  matchs, buteurs, statistiques (pages "Championnat" et
+                  "Calendrier") — cœur de l'AUTOMATISATION (PARTIE II.I)
+  expatries     → Joueurs haïtiens évoluant à l'étranger, transferts
+                  (page "Expatriés / SPI")
+  galerie       → Albums photo (page "Galerie")
+  vitrine       → Points d'entrée publics : messages de contact,
+                  abonnements newsletter, partenaires, FAQ (page "Contact"
+                  + éléments transverses du footer)
+  core          → Classes abstraites, pagination, permissions, stockage
+                  et exceptions communes
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+C. MODÈLES (MODELS) — PAR APPLICATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+──────────────────────────────
+core/models.py
+──────────────────────────────
+  class TimeStampedModel(models.Model):
+      created_at = models.DateTimeField(auto_now_add=True)
+      updated_at = models.DateTimeField(auto_now=True)
+      class Meta:
+          abstract = True
+
+──────────────────────────────
+comptes/models.py
+──────────────────────────────
+  class RoleRedaction(models.Model):
+      nomRole = models.CharField(max_length=30, unique=True, choices=[
+          ('REDACTEUR', 'Rédacteur'),
+          ('EDITEUR_EN_CHEF', 'Éditeur en chef'),
+          ('ADMINISTRATEUR', 'Administrateur'),
+      ])
+
+      def __str__(self):
+          return self.nomRole
+
+  class UtilisateurManager(BaseUserManager):
+      def create_user(self, identifiant, password=None, **extra):
+          user = self.model(identifiant=identifiant, **extra)
+          user.set_password(password)
+          user.save(using=self._db)
+          return user
+
+      def create_superuser(self, identifiant, password=None, **extra):
+          extra.setdefault('is_staff', True)
+          extra.setdefault('is_superuser', True)
+          return self.create_user(identifiant, password, **extra)
+
+  class Utilisateur(AbstractBaseUser, PermissionsMixin):
+      identifiant           = models.CharField(max_length=150, unique=True)
+      nom                   = models.CharField(max_length=150)
+      prenom                = models.CharField(max_length=150, blank=True)
+      email                 = models.EmailField(blank=True)
+      photo                 = models.ImageField(upload_to='redaction/', null=True, blank=True)
+      bio                   = models.CharField(max_length=255, blank=True)
+      date_creation_compte  = models.DateTimeField(auto_now_add=True)
+      dernier_acces         = models.DateTimeField(null=True, blank=True)
+
+      role_redaction = models.ForeignKey(
+          RoleRedaction, on_delete=models.PROTECT, related_name='utilisateurs')
+
+      is_active = models.BooleanField(default=True)
+      is_staff  = models.BooleanField(default=False)
+
+      objects = UtilisateurManager()
+      USERNAME_FIELD = 'identifiant'
+      REQUIRED_FIELDS = []
+
+      def __str__(self):
+          return f"{self.prenom} {self.nom}".strip() or self.identifiant
+
+──────────────────────────────
+joueurs/models.py
+──────────────────────────────
+  class Poste(models.Model):
+      nom = models.CharField(max_length=50, unique=True)
+      # Gardien, Défenseur, Milieu de terrain, Attaquant
+
+      def __str__(self):
+          return self.nom
+
+  class Joueur(TimeStampedModel):
+      """ Base commune des joueurs de la sélection nationale
+          (page Accueil > Joueurs Emblématiques, et statistiques du
+          championnat) """
+      nom              = models.CharField(max_length=150)
+      prenom           = models.CharField(max_length=150, blank=True)
+      photo            = models.ImageField(upload_to='joueurs/', null=True, blank=True)
+      date_naissance   = models.DateField(null=True, blank=True)
+      poste            = models.ForeignKey(Poste, on_delete=models.PROTECT,
+                              related_name='joueurs')
+      club_actuel      = models.CharField(max_length=150, blank=True)
+      numero_maillot   = models.PositiveSmallIntegerField(null=True, blank=True)
+      taille_cm        = models.PositiveSmallIntegerField(null=True, blank=True)
+      pied_fort        = models.CharField(max_length=10, blank=True,
+                              choices=[('GAUCHE', 'Gauche'), ('DROIT', 'Droit')])
+      biographie       = models.TextField(blank=True)
+      selection_nationale = models.BooleanField(default=True)
+      nb_selections    = models.PositiveIntegerField(default=0)
+      nb_buts_selection = models.PositiveIntegerField(default=0)
+      emblematique     = models.BooleanField(default=False)   # mis en avant en Accueil
+
+      def __str__(self):
+          return f"{self.prenom} {self.nom}".strip()
+
+  class Legende(TimeStampedModel):
+      """ Diagramme métier : "Légendes du Football Haïtien"
+          (Emmanuel Sanon, Joe Gaetjens, Pierre Bayonne, Duckens Nazon,
+          Frantzdy Pierrot, Johny Placide, etc.) — historique, distinct
+          des joueurs actifs """
+      nom              = models.CharField(max_length=150)
+      photo            = models.ImageField(upload_to='legendes/', null=True, blank=True)
+      periode_active   = models.CharField(max_length=50, blank=True)  # ex. "1973-1985"
+      poste            = models.CharField(max_length=50, blank=True)
+      biographie       = models.TextField()
+      exploits         = models.TextField(blank=True)   # faits marquants
+      ordre_affichage  = models.PositiveIntegerField(default=0)
+
+      class Meta:
+          ordering = ['ordre_affichage', 'nom']
+
+      def __str__(self):
+          return self.nom
+
+──────────────────────────────
+competitions/models.py
+──────────────────────────────
+  class Competition(models.Model):
+      """ Championnat National, Éliminatoires Coupe du Monde,
+          Ligue des Nations CONCACAF, etc. """
+      nom       = models.CharField(max_length=150)
+      type      = models.CharField(max_length=30, choices=[
+                      ('CHAMPIONNAT_NATIONAL', 'Championnat National'),
+                      ('ELIMINATOIRES_CDM', 'Éliminatoires Coupe du Monde'),
+                      ('LIGUE_NATIONS', 'Ligue des Nations CONCACAF'),
+                      ('AUTRE', 'Autre'),
+                  ])
+      saison    = models.CharField(max_length=20)   # ex. "2025-2026"
+      actif     = models.BooleanField(default=True)
+
+      def __str__(self):
+          return f"{self.nom} ({self.saison})"
+
+  class Club(TimeStampedModel):
+      """ Clubs du Championnat National (Violette AC, AS Capoise,
+          Racing Club Haïtien, ...) """
+      nom       = models.CharField(max_length=150, unique=True)
+      ville     = models.CharField(max_length=100, blank=True)
+      logo      = models.ImageField(upload_to='clubs/', null=True, blank=True)
+      stade     = models.CharField(max_length=150, blank=True)
+      fondation = models.PositiveIntegerField(null=True, blank=True)
+      palmares  = models.TextField(blank=True)
+
+      def __str__(self):
+          return self.nom
+
+  class ClassementLigne(TimeStampedModel):
+      """ Une ligne du tableau de classement — ENTIÈREMENT recalculée
+          automatiquement par le service `classement.py` à chaque match
+          terminé (voir PARTIE II.I) ; jamais modifiée manuellement """
+      competition     = models.ForeignKey(Competition, on_delete=models.CASCADE,
+                              related_name='classement')
+      club            = models.ForeignKey(Club, on_delete=models.CASCADE,
+                              related_name='classements')
+      matchs_joues    = models.PositiveIntegerField(default=0)
+      victoires       = models.PositiveIntegerField(default=0)
+      nuls            = models.PositiveIntegerField(default=0)
+      defaites        = models.PositiveIntegerField(default=0)
+      buts_pour       = models.PositiveIntegerField(default=0)
+      buts_contre     = models.PositiveIntegerField(default=0)
+      points          = models.IntegerField(default=0)
+
+      class Meta:
+          unique_together = ('competition', 'club')
+          ordering = ['-points', '-buts_pour']
+
+      @property
+      def difference_buts(self):
+          return self.buts_pour - self.buts_contre
+
+  class Match(TimeStampedModel):
+      """ «Créer/Modifier un match», «Consulter un match» — inclut le
+          calendrier (page Calendrier) et les résultats (page Accueil/
+          Actualités) """
+      competition       = models.ForeignKey(Competition, on_delete=models.CASCADE,
+                              related_name='matchs')
+      club_domicile     = models.ForeignKey(Club, on_delete=models.PROTECT,
+                              related_name='matchs_domicile')
+      # adversaire_texte : utilisé quand l'adversaire n'est pas un club du
+      # championnat (ex. sélection nationale contre le Nicaragua, Aruba...)
+      club_exterieur    = models.ForeignKey(Club, on_delete=models.PROTECT,
+                              related_name='matchs_exterieur', null=True, blank=True)
+      adversaire_texte  = models.CharField(max_length=150, blank=True)
+      date_heure        = models.DateTimeField()
+      lieu              = models.CharField(max_length=200, blank=True)
+      diffusion_tv      = models.CharField(max_length=150, blank=True)
+      score_domicile    = models.PositiveSmallIntegerField(null=True, blank=True)
+      score_exterieur   = models.PositiveSmallIntegerField(null=True, blank=True)
+      statut            = models.CharField(max_length=20, default='A_VENIR',
+                              choices=[('A_VENIR', 'À venir'),
+                                       ('EN_COURS', 'En cours'),
+                                       ('TERMINE', 'Terminé'),
+                                       ('REPORTE', 'Reporté')])
+      resume             = models.TextField(blank=True)
+
+      class Meta:
+          ordering = ['date_heure']
+
+      def __str__(self):
+          adversaire = self.club_exterieur or self.adversaire_texte
+          return f"{self.club_domicile} vs {adversaire} — {self.date_heure:%d/%m/%Y}"
+
+  class ButeurMatch(models.Model):
+      """ Saisi par la rédaction en même temps que le score final ;
+          alimente automatiquement StatistiqueJoueur (voir services/) """
+      match    = models.ForeignKey(Match, on_delete=models.CASCADE, related_name='buteurs')
+      joueur   = models.ForeignKey('joueurs.Joueur', on_delete=models.CASCADE)
+      minute   = models.PositiveSmallIntegerField()
+      type_but = models.CharField(max_length=15, default='BUT',
+                      choices=[('BUT', 'But'), ('PENALTY', 'Penalty'),
+                               ('CSC', 'Contre son camp')])
+
+  class StatistiqueJoueur(TimeStampedModel):
+      """ Statistiques cumulées par compétition — ENTIÈREMENT recalculées
+          par le service `statistiques.py` à partir des ButeurMatch et des
+          feuilles de match (voir PARTIE II.I) ; alimente les classements
+          "Meilleur Buteur", "Meilleur Passeur", "Meilleure Défense", etc. """
+      joueur          = models.ForeignKey('joueurs.Joueur', on_delete=models.CASCADE,
+                              related_name='statistiques')
+      competition     = models.ForeignKey(Competition, on_delete=models.CASCADE,
+                              related_name='statistiques_joueurs')
+      matchs_joues    = models.PositiveIntegerField(default=0)
+      buts            = models.PositiveIntegerField(default=0)
+      passes_decisives = models.PositiveIntegerField(default=0)
+      cartons_jaunes  = models.PositiveIntegerField(default=0)
+      cartons_rouges  = models.PositiveIntegerField(default=0)
+      clean_sheets    = models.PositiveIntegerField(default=0)   # gardiens/défenseurs
+
+      class Meta:
+          unique_together = ('joueur', 'competition')
+
+──────────────────────────────
+actualites/models.py
+──────────────────────────────
+  class Categorie(models.Model):
+      nom  = models.CharField(max_length=100, unique=True)
+      slug = models.SlugField(unique=True)
+      # ex. Sélection nationale, Championnat, International, Portrait
+
+      def __str__(self):
+          return self.nom
+
+  class Tag(models.Model):
+      nom  = models.CharField(max_length=50, unique=True)
+      slug = models.SlugField(unique=True)
+
+      def __str__(self):
+          return self.nom
+
+  class Article(TimeStampedModel):
+      """ «Rédiger un article», «Publier un article», «Consulter»,
+          «Rechercher» — cœur de la page Actualités et des aperçus sur
+          l'Accueil """
+      titre            = models.CharField(max_length=250)
+      slug             = models.SlugField(unique=True, max_length=270)
+      chapo            = models.CharField(max_length=300)   # résumé/accroche
+      contenu          = models.TextField()                 # riche (CKEditor)
+      image_une        = models.ImageField(upload_to='articles/', null=True, blank=True)
+      categorie        = models.ForeignKey(Categorie, on_delete=models.PROTECT,
+                              related_name='articles')
+      tags             = models.ManyToManyField(Tag, blank=True, related_name='articles')
+      auteur           = models.ForeignKey('comptes.Utilisateur', on_delete=models.PROTECT,
+                              related_name='articles')
+      statut           = models.CharField(max_length=15, default='BROUILLON',
+                              choices=[('BROUILLON', 'Brouillon'),
+                                       ('A_VALIDER', 'À valider'),
+                                       ('PUBLIE', 'Publié'),
+                                       ('ARCHIVE', 'Archivé')])
+      a_la_une         = models.BooleanField(default=False)
+      source           = models.CharField(max_length=200, blank=True)
+      date_publication = models.DateTimeField(null=True, blank=True)
+      compteur_vues    = models.PositiveIntegerField(default=0)
+
+      class Meta:
+          ordering = ['-date_publication', '-created_at']
+
+      def __str__(self):
+          return self.titre
+
+  class Video(TimeStampedModel):
+      """ «Vidéos à la Une» — highlights, récits de qualification """
+      titre        = models.CharField(max_length=200)
+      url_embed    = models.URLField()          # YouTube/Vimeo embed
+      article_lie  = models.ForeignKey(Article, on_delete=models.SET_NULL,
+                          null=True, blank=True, related_name='videos')
+      a_la_une     = models.BooleanField(default=False)
+      ordre        = models.PositiveIntegerField(default=0)
+
+      class Meta:
+          ordering = ['ordre', '-created_at']
+
+  class Citation(TimeStampedModel):
+      """ «Paroles d'Acteurs» """
+      auteur_nom      = models.CharField(max_length=150)
+      auteur_fonction = models.CharField(max_length=150, blank=True)  # ex. Sélectionneur
+      photo           = models.ImageField(upload_to='citations/', null=True, blank=True)
+      texte           = models.TextField()
+      article_lie     = models.ForeignKey(Article, on_delete=models.SET_NULL,
+                              null=True, blank=True, related_name='citations')
+      ordre           = models.PositiveIntegerField(default=0)
+
+      class Meta:
+          ordering = ['ordre', '-created_at']
+
+  class ChiffreCle(models.Model):
+      """ «Les Chiffres Clés» — valeur recalculée automatiquement par une
+          tâche Celery périodique (voir PARTIE II.K), jamais saisie
+          manuellement lorsque `calcule_auto=True` """
+      libelle       = models.CharField(max_length=100)   # ex. "Sélections"
+      valeur        = models.CharField(max_length=30)     # texte formaté ("128")
+      icone         = models.CharField(max_length=50, blank=True)  # classe FontAwesome
+      calcule_auto  = models.BooleanField(default=True)
+      code_calcul   = models.CharField(max_length=50, blank=True)
+                        # identifiant utilisé par la tâche pour savoir quel
+                        # indicateur recalculer (ex. 'NB_VICTOIRES_SAISON')
+      ordre         = models.PositiveIntegerField(default=0)
+
+      class Meta:
+          ordering = ['ordre']
+
+──────────────────────────────
+expatries/models.py
+──────────────────────────────
+  class ClubEtranger(models.Model):
+      nom   = models.CharField(max_length=150)
+      pays  = models.CharField(max_length=100)
+      ligue = models.CharField(max_length=150, blank=True)
+      logo  = models.ImageField(upload_to='clubs_etrangers/', null=True, blank=True)
+
+      def __str__(self):
+          return f"{self.nom} ({self.pays})"
+
+  class JoueurExpatrie(TimeStampedModel):
+      """ Page "Expatriés" — joueurs haïtiens évoluant à l'étranger.
+          Réutilise joueurs.Joueur pour éviter la duplication de fiche """
+      joueur        = models.OneToOneField('joueurs.Joueur', on_delete=models.CASCADE,
+                          related_name='fiche_expatrie')
+      club_etranger = models.ForeignKey(ClubEtranger, on_delete=models.PROTECT,
+                          related_name='joueurs_expatries')
+      date_arrivee  = models.DateField(null=True, blank=True)
+      statut        = models.CharField(max_length=20, default='ACTIF',
+                          choices=[('ACTIF', 'Actif'), ('PRETE', 'Prêté'),
+                                   ('BLESSE', 'Blessé'), ('LIBRE', 'Libre')])
+      en_vedette    = models.BooleanField(default=False)   # "Article en Vedette"
+
+      def __str__(self):
+          return f"{self.joueur} — {self.club_etranger}"
+
+  class Transfert(TimeStampedModel):
+      """ Section "Transferts" """
+      joueur          = models.ForeignKey('joueurs.Joueur', on_delete=models.CASCADE,
+                              related_name='transferts')
+      club_origine    = models.CharField(max_length=150)
+      club_destination = models.CharField(max_length=150)
+      date_transfert  = models.DateField()
+      type_transfert  = models.CharField(max_length=15, choices=[
+                              ('DEFINITIF', 'Transfert définitif'),
+                              ('PRET', 'Prêt')])
+      montant         = models.CharField(max_length=50, blank=True)  # ex. "Non communiqué"
+      source          = models.CharField(max_length=200, blank=True)
+
+      class Meta:
+          ordering = ['-date_transfert']
+
+──────────────────────────────
+galerie/models.py
+──────────────────────────────
+  class AlbumGalerie(TimeStampedModel):
+      titre       = models.CharField(max_length=150)
+      match_lie   = models.ForeignKey('competitions.Match', on_delete=models.SET_NULL,
+                          null=True, blank=True, related_name='albums')
+      description = models.CharField(max_length=255, blank=True)
+
+      def __str__(self):
+          return self.titre
+
+  class ImageGalerie(TimeStampedModel):
+      album     = models.ForeignKey(AlbumGalerie, on_delete=models.CASCADE,
+                      related_name='images')
+      image     = models.ImageField(upload_to='galerie/')
+      legende   = models.CharField(max_length=200, blank=True)
+      ordre     = models.PositiveIntegerField(default=0)
+
+      class Meta:
+          ordering = ['ordre', '-created_at']
+
+  (vitrine/models.py → voir PARTIE IV.B.1 pour le code complet)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+D. SERIALIZERS DRF — PAR RESSOURCE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  comptes      : UtilisateurSerializer, UtilisateurCreateSerializer,
+                 RoleRedactionSerializer
+  actualites   : ArticleListSerializer (léger, pour les listes/aperçus),
+                 ArticleDetailSerializer (complet, avec tags/citations/vidéos
+                 liées), ArticleCreateSerializer, CategorieSerializer,
+                 TagSerializer, VideoSerializer, CitationSerializer,
+                 ChiffreCleSerializer
+  joueurs      : JoueurListSerializer, JoueurDetailSerializer,
+                 JoueurCreateSerializer, PosteSerializer, LegendeSerializer
+  competitions : CompetitionSerializer, ClubSerializer,
+                 ClassementLigneSerializer (lecture seule),
+                 MatchListSerializer, MatchDetailSerializer,
+                 MatchResultatSerializer (saisie du score + buteurs),
+                 StatistiqueJoueurSerializer (lecture seule, classements)
+  expatries    : ClubEtrangerSerializer, JoueurExpatrieSerializer,
+                 TransfertSerializer
+  galerie      : AlbumGalerieSerializer, ImageGalerieSerializer
+  vitrine      : voir PARTIE IV.B.2 (serializers publics dédiés)
+
+TOTAL BACK-OFFICE : 21 serializers  (+ 4 serializers publics en PARTIE IV)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+E. VUES API (VIEWSETS & APIVIEWS)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+actualites/views.py
+───────────────────
+  class ArticleViewSet(ModelViewSet):
+      # «Rédiger un article»       → create()             (REDACTEUR+)
+      # «Modifier un article»      → update()/partial_update()
+      # «Publier un article»       → action publier()      (EDITEUR_EN_CHEF+)
+      # «Consulter un article»     → retrieve() (incrémente compteur_vues)
+      # «Rechercher un article»    → list() avec ?search=
+      filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+      search_fields = ['titre', 'chapo', 'contenu']
+      filterset_fields = ['categorie', 'tags', 'statut', 'a_la_une']
+
+      def get_permissions(self):
+          if self.action in ('publier', 'destroy'):
+              return [IsEditeurOuPlus()]
+          return [IsRedacteurOuPlus()]
+
+      def get_queryset(self):
+          qs = super().get_queryset()
+          # Un simple REDACTEUR ne voit que ses propres brouillons
+          if self.request.user.role_redaction.nomRole == 'REDACTEUR':
+              return qs.filter(Q(statut='PUBLIE') | Q(auteur=self.request.user))
+          return qs
+
+      @action(detail=True, methods=['post'])
+      def publier(self, request, pk):
+          article = self.get_object()
+          article.statut = 'PUBLIE'
+          article.date_publication = timezone.now()
+          article.save()
+          return Response(ArticleDetailSerializer(article).data)
+
+  class CategorieViewSet(ModelViewSet)     # CRUD des catégories
+  class TagViewSet(ModelViewSet)           # CRUD des tags
+  class VideoViewSet(ModelViewSet)         # gestion "Vidéos à la Une"
+  class CitationViewSet(ModelViewSet)      # gestion "Paroles d'Acteurs"
+  class ChiffreCleListView(ListAPIView)    # lecture seule, alimentée par Celery
+
+joueurs/views.py
+───────────────────
+  class JoueurViewSet(ModelViewSet):
+      filter_backends = [DjangoFilterBackend, SearchFilter]
+      search_fields = ['nom', 'prenom']
+      filterset_fields = ['poste', 'selection_nationale', 'emblematique']
+      permission_classes = [IsRedacteurOuPlus]
+
+  class LegendeViewSet(ModelViewSet):
+      permission_classes = [IsEditeurOuPlus]   # contenu historique sensible
+
+competitions/views.py
+───────────────────
+  class CompetitionViewSet(ModelViewSet)
+  class ClubViewSet(ModelViewSet)
+
+  class ClassementListView(ListAPIView):
+      # «Consulter le classement» — LECTURE SEULE, jamais modifiable
+      # directement (recalculé automatiquement, voir PARTIE II.I)
+      serializer_class = ClassementLigneSerializer
+      def get_queryset(self):
+          return ClassementLigne.objects.filter(
+              competition_id=self.kwargs['competition_id'])
+
+  class MatchViewSet(ModelViewSet):
+      # «Créer un match»           → create()               (REDACTEUR+)
+      # «Modifier un match»        → update()/partial_update()
+      # «Consulter un match»       → retrieve()/list()
+      filter_backends = [DjangoFilterBackend, OrderingFilter]
+      filterset_fields = ['competition', 'club_domicile', 'club_exterieur', 'statut']
+      ordering_fields = ['date_heure']
+
+      @action(detail=True, methods=['post'])
+      def saisir_resultat(self, request, pk):
+          """ «Saisir le résultat d'un match» — déclenche l'automatisation
+              complète (classement + statistiques, voir PARTIE II.I) """
+          match = self.get_object()
+          serializer = MatchResultatSerializer(match, data=request.data, partial=True)
+          serializer.is_valid(raise_exception=True)
+          serializer.save(statut='TERMINE')
+          # le signal post_save(Match) prend le relais automatiquement
+          return Response(MatchDetailSerializer(match).data)
+
+      @action(detail=True, methods=['patch'])
+      def mettre_a_jour_score_direct(self, request, pk):
+          """ «Mettre à jour un score en direct» — statut EN_COURS,
+              diffuse le score via Django Channels (PARTIE II.I) """
+          match = self.get_object()
+          match.score_domicile = request.data.get('score_domicile')
+          match.score_exterieur = request.data.get('score_exterieur')
+          match.statut = 'EN_COURS'
+          match.save()
+          diffuser_score_live(match)          # envoi WebSocket au groupe
+          return Response(MatchDetailSerializer(match).data)
+
+  class StatistiqueJoueurListView(ListAPIView):
+      # «Consulter les statistiques» — classements "Meilleur Buteur", etc.
+      # LECTURE SEULE (recalculée automatiquement)
+      filter_backends = [DjangoFilterBackend, OrderingFilter]
+      filterset_fields = ['competition']
+      ordering_fields = ['buts', 'passes_decisives', 'clean_sheets']
+
+expatries/views.py
+───────────────────
+  class ClubEtrangerViewSet(ModelViewSet)
+  class JoueurExpatrieViewSet(ModelViewSet):
+      filter_backends = [DjangoFilterBackend, SearchFilter]
+      filterset_fields = ['statut', 'club_etranger', 'en_vedette']
+  class TransfertViewSet(ModelViewSet):
+      ordering_fields = ['date_transfert']
+
+galerie/views.py
+───────────────────
+  class AlbumGalerieViewSet(ModelViewSet)
+  class ImageGalerieViewSet(ModelViewSet)
+
+vitrine/views.py → voir PARTIE IV.B.3 (vues publiques complètes)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+F. URLS API
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+config/urls.py :
+  path('api/v1/', include('config.api_urls'))
+  path('api/v1/docs/', SpectacularSwaggerView.as_view())
+
+config/api_urls.py :
+  AUTHENTIFICATION
+  ├── auth/login/                       POST
+  ├── auth/logout/                      POST
+  ├── auth/token/refresh/               POST
+  └── auth/me/                          GET
+
+  COMPTES (Administrateur)
+  ├── utilisateurs/                     GET, POST
+  └── utilisateurs/{id}/                GET, PUT, PATCH, DELETE
+
+  ACTUALITÉS (Rédacteur+)
+  ├── articles/                         GET (recherche ?search=), POST
+  ├── articles/{id}/                    GET, PUT, PATCH, DELETE
+  ├── articles/{id}/publier/            POST                    (Éditeur+)
+  ├── categories/                       GET, POST
+  ├── tags/                             GET, POST
+  ├── videos/                           GET, POST
+  ├── citations/                        GET, POST
+  └── chiffres-cles/                    GET
+
+  JOUEURS (Rédacteur+)
+  ├── joueurs/                          GET, POST
+  ├── joueurs/{id}/                     GET, PUT, PATCH, DELETE
+  ├── postes/                           GET
+  └── legendes/                         GET, POST                (Éditeur+)
+
+  COMPÉTITIONS (Rédacteur+)
+  ├── competitions/                     GET, POST
+  ├── clubs/                           GET, POST
+  ├── competitions/{id}/classement/     GET               (lecture seule)
+  ├── matchs/                          GET, POST
+  ├── matchs/{id}/                     GET, PUT, PATCH, DELETE
+  ├── matchs/{id}/saisir-resultat/      POST
+  ├── matchs/{id}/score-direct/         PATCH
+  ├── competitions/{id}/statistiques/   GET               (lecture seule)
+  └── matchs/calendrier/telecharger/    GET               (PDF, Celery)
+
+  EXPATRIÉS (Rédacteur+)
+  ├── clubs-etrangers/                  GET, POST
+  ├── joueurs-expatries/                GET, POST
+  └── transferts/                       GET, POST
+
+  GALERIE (Rédacteur+)
+  ├── albums/                           GET, POST
+  └── images/                           GET, POST
+
+  PUBLIC / SITE VITRINE (AllowAny — voir détail PARTIE IV.B.4)
+  ├── public/articles/                  GET
+  ├── public/articles/{slug}/           GET
+  ├── public/joueurs/                    GET
+  ├── public/legendes/                   GET
+  ├── public/clubs/                      GET
+  ├── public/classement/{competition_id}/ GET
+  ├── public/matchs/                      GET
+  ├── public/statistiques/{competition_id}/ GET
+  ├── public/expatries/                   GET
+  ├── public/transferts/                  GET
+  ├── public/galerie/                     GET
+  ├── public/chiffres-cles/               GET
+  ├── public/faq/                         GET
+  ├── public/partenaires/                 GET
+  ├── public/contact/                     POST
+  ├── public/newsletter/abonnement/       POST
+  └── ws/matchs/{id}/                     WebSocket (score en direct)
+
+TOTAL BACK-OFFICE : 32 routes API   (+ 16 routes publiques en PARTIE IV)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+G. AUTHENTIFICATION JWT & SÉCURITÉ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STRATÉGIE JWT :
+  • Access Token   : 15 minutes, envoyé dans le corps JSON
+  • Refresh Token  : 7 jours, stocké en httpOnly cookie sécurisé
+  • USERNAME_FIELD = 'identifiant'
+  • Seul le personnel de la rédaction possède un compte — le site vitrine
+    n'a aucune authentification visiteur (cohérent avec le site fourni)
+
+FLUX D'AUTHENTIFICATION :
+  1. POST /auth/login/  { identifiant, password } → { access, user } + cookie refresh
+  2. React (back-office) stocke 'access' en mémoire (Zustand, jamais localStorage)
+  3. Axios interceptor ajoute Authorization: Bearer <access>
+  4. À expiration → POST /auth/token/refresh/ (cookie envoyé automatiquement)
+  5. Mise à jour de dernier_acces à chaque login
+
+CODE BACK-END (comptes/views.py) :
+────────────────────────────────────
+  class LoginView(TokenObtainPairView):
+      def post(self, request, *args, **kwargs):
+          response = super().post(request, *args, **kwargs)
+          refresh = response.data.pop('refresh')
+          response.set_cookie('refresh_token', refresh, httponly=True,
+                               secure=True, samesite='Lax', max_age=7*24*3600)
+          user = Utilisateur.objects.get(identifiant=request.data['identifiant'])
+          user.dernier_acces = timezone.now()
+          user.save(update_fields=['dernier_acces'])
+          response.data['user'] = UtilisateurSerializer(user).data
+          return response
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+H. PERMISSIONS & HIÉRARCHIE ÉDITORIALE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+apps/comptes/permissions.py :
+─────────────────────────────────
+  HIERARCHIE = {'REDACTEUR': 1, 'EDITEUR_EN_CHEF': 2, 'ADMINISTRATEUR': 3}
+
+  class IsRedacteurOuPlus(BasePermission):
+      def has_permission(self, request, view):
+          role = request.user.role_redaction.nomRole
+          return HIERARCHIE.get(role, 0) >= HIERARCHIE['REDACTEUR']
+
+  class IsEditeurOuPlus(BasePermission):
+      def has_permission(self, request, view):
+          role = request.user.role_redaction.nomRole
+          return HIERARCHIE.get(role, 0) >= HIERARCHIE['EDITEUR_EN_CHEF']
+
+  class IsAdministrateur(BasePermission):
+      def has_permission(self, request, view):
+          return request.user.role_redaction.nomRole == 'ADMINISTRATEUR'
+
+UTILISATION :
+  class ArticleViewSet(ModelViewSet):
+      def get_permissions(self):
+          if self.action in ('publier', 'destroy'):
+              return [IsEditeurOuPlus()]
+          return [IsRedacteurOuPlus()]
+
+  class UtilisateurViewSet(ModelViewSet):
+      permission_classes = [IsAdministrateur]
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+I. AUTOMATISATION — CLASSEMENTS, STATISTIQUES ET SCORES EN DIRECT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+C'est le cœur de la demande "site très automatique, comme un site officiel
+de fédération" : la rédaction n'entre les résultats qu'UNE fois.
+
+I.1 RECALCUL AUTOMATIQUE DU CLASSEMENT
+────────────────────────────────────────
+  competitions/services/classement.py :
+    def recalculer_classement(match):
+        """ Appelé par le signal post_save(Match) quand statut='TERMINE'
+            et que les scores sont renseignés. Recrée entièrement la ligne
+            de classement des 2 clubs pour cette compétition à partir de
+            TOUS les matchs terminés (source de vérité unique, pas
+            d'incrémentation fragile). """
+        for club in [match.club_domicile, match.club_exterieur]:
+            if club is None:
+                continue
+            matchs = Match.objects.filter(
+                Q(club_domicile=club) | Q(club_exterieur=club),
+                competition=match.competition, statut='TERMINE')
+            victoires = nuls = defaites = bp = bc = 0
+            for m in matchs:
+                domicile = (m.club_domicile_id == club.id)
+                bp += m.score_domicile if domicile else m.score_exterieur
+                bc += m.score_exterieur if domicile else m.score_domicile
+                if m.score_domicile == m.score_exterieur:
+                    nuls += 1
+                elif (m.score_domicile > m.score_exterieur) == domicile:
+                    victoires += 1
+                else:
+                    defaites += 1
+            ClassementLigne.objects.update_or_create(
+                competition=match.competition, club=club,
+                defaults=dict(matchs_joues=matchs.count(), victoires=victoires,
+                    nuls=nuls, defaites=defaites, buts_pour=bp, buts_contre=bc,
+                    points=victoires * 3 + nuls))
+
+I.2 RECALCUL AUTOMATIQUE DES STATISTIQUES JOUEURS
+────────────────────────────────────────────────────
+  competitions/services/statistiques.py :
+    def recalculer_stats_joueur(match):
+        """ Agrège les ButeurMatch de tous les matchs terminés de la
+            compétition pour reconstruire StatistiqueJoueur — alimente
+            directement les classements "Meilleur Buteur", "Meilleur
+            Passeur", "Meilleure Défense/Attaque/Milieu/Gardien" affichés
+            sur la page Championnat. """
+        joueurs_concernes = {b.joueur for b in match.buteurs.all()}
+        for joueur in joueurs_concernes:
+            buts = ButeurMatch.objects.filter(
+                joueur=joueur, match__competition=match.competition,
+                type_but__in=['BUT', 'PENALTY']).count()
+            StatistiqueJoueur.objects.update_or_create(
+                joueur=joueur, competition=match.competition,
+                defaults=dict(buts=buts))
+        # passes décisives, cartons et clean sheets suivent la même
+        # logique via des modèles complémentaires (PasseDecisive,
+        # CartonMatch) saisis en même temps que le résultat du match.
+
+I.3 SIGNAL DÉCLENCHEUR
+─────────────────────────
+  competitions/signals.py :
+    @receiver(post_save, sender=Match)
+    def match_termine_handler(sender, instance, **kwargs):
+        if instance.statut == 'TERMINE' and instance.score_domicile is not None:
+            recalculer_classement(instance)
+            recalculer_stats_joueur(instance)
+            invalidate_cache(f"classement:{instance.competition_id}")
+            invalidate_cache(f"stats:{instance.competition_id}")
+
+I.4 SCORE EN DIRECT — DEUX NIVEAUX D'AUTOMATISATION
+──────────────────────────────────────────────────────
+  Niveau 1 (simple, suffisant au lancement) — POLLING :
+    Le site public interroge GET /public/matchs/?statut=EN_COURS toutes
+    les 30 secondes le jour d'un match grâce à TanStack Query
+    (refetchInterval: 30000). Aucune infrastructure supplémentaire.
+
+  Niveau 2 (avancé, évolution recommandée) — DJANGO CHANNELS :
+    competitions/consumers.py :
+      class MatchLiveConsumer(AsyncWebsocketConsumer):
+          async def connect(self):
+              self.match_id = self.scope['url_route']['kwargs']['match_id']
+              await self.channel_layer.group_add(f"match_{self.match_id}",
+                                                  self.channel_name)
+              await self.accept()
+          async def score_update(self, event):
+              await self.send(text_data=json.dumps(event['data']))
+
+    Chaque appel à `mettre_a_jour_score_direct` (vue MatchViewSet) envoie
+    ensuite le nouveau score à tous les visiteurs connectés au match sans
+    qu'ils aient à rafraîchir la page — exactement le comportement d'un
+    site de fédération pendant un match en direct.
+
+I.5 CHIFFRES CLÉS — RECALCUL PÉRIODIQUE
+───────────────────────────────────────────
+  actualites/tasks.py :
+    @shared_task
+    def recalculer_chiffres_cles():
+        """ Tâche planifiée (toutes les heures, django-celery-beat) qui
+            met à jour chaque ChiffreCle où calcule_auto=True selon son
+            code_calcul (ex. NB_VICTOIRES_SAISON, NB_SELECTIONS_TOTAL,
+            NB_ARTICLES_PUBLIES...), pour que la page Actualités affiche
+            toujours des chiffres exacts sans ressaisie manuelle. """
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+J. SIGNALS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  comptes/signals.py
+    post_save(Utilisateur, created=True) → email de bienvenue avec identifiant
+
+  actualites/signals.py
+    post_save(Article) quand statut passe à PUBLIE → notifie les abonnés
+    newsletter (optionnel, digest quotidien plutôt qu'immédiat)
+
+  competitions/signals.py
+    post_save(Match) → recalcul automatique (PARTIE II.I.3) — signal central
+    de toute l'automatisation du site
+
+  vitrine/signals.py → voir PARTIE IV.B.6 (2 signals supplémentaires)
+
+TOTAL BACK-OFFICE : 3 signals   (+ 2 signals publics en PARTIE IV)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+K. TÂCHES CELERY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  actualites/tasks.py
+    recalculer_chiffres_cles()                [périodique — chaque heure]
+    envoyer_digest_newsletter()               [périodique — chaque jour à 8h]
+
+  competitions/tasks.py
+    generer_calendrier_pdf(competition_id)    → export ReportLab téléchargeable
+    rappel_match_a_venir()                    [périodique — chaque jour,
+                                                notifie la rédaction des
+                                                matchs du jour à préparer]
+
+  comptes/tasks.py
+    send_welcome_email(utilisateur_id)
+    send_password_reset_email(utilisateur_id, token)
+
+  vitrine/tasks.py → voir PARTIE IV.B.7 (2 tâches supplémentaires)
+
+TOTAL BACK-OFFICE : 6 tâches Celery   (+ 2 tâches publiques en PARTIE IV)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+L. SETTINGS — BASE / DEV / PROD
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+config/settings/base.py
+────────────────────────
+DJANGO_APPS = [
+    'django.contrib.admin', 'django.contrib.auth',
+    'django.contrib.contenttypes', 'django.contrib.sessions',
+    'django.contrib.messages', 'django.contrib.staticfiles',
+]
+
+THIRD_PARTY_APPS = [
+    'rest_framework', 'rest_framework_simplejwt',
+    'corsheaders', 'django_filters', 'drf_spectacular',
+    'celery', 'django_celery_beat', 'django_celery_results',
+    'channels', 'ckeditor', 'imagekit',
+]
+
+LOCAL_APPS = [
+    'apps.core', 'apps.comptes', 'apps.actualites', 'apps.joueurs',
+    'apps.competitions', 'apps.expatries', 'apps.galerie', 'apps.vitrine',
+]
+
+AUTH_USER_MODEL = 'comptes.Utilisateur'
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.IsAuthenticated'],
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+        'rest_framework.filters.SearchFilter',
+        'rest_framework.filters.OrderingFilter',
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 20,
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.ScopedRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'public': '20/hour',        # formulaires publics (contact, newsletter)
+        'public-read': '300/hour',  # lecture publique (articles, matchs, classement)
+    },
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': True,
+}
+
+ASGI_APPLICATION = 'config.asgi.application'
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {'hosts': [env('REDIS_URL', default='redis://localhost:6379/1')]},
+    },
+}
+
+CELERY_BROKER_URL     = env('REDIS_URL', default='redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = env('REDIS_URL', default='redis://localhost:6379/0')
+CELERY_TIMEZONE       = 'America/Port-au-Prince'
+
+LANGUAGE_CODE = 'fr'
+TIME_ZONE     = 'America/Port-au-Prince'
+USE_TZ        = True
+
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:5173',                # back-office (dev)
+    'http://localhost:5174',                # site vitrine (dev)
+    'https://redaction.globeinfosport.ht',  # back-office (prod)
+    'https://www.globeinfosport.ht',        # site vitrine (prod)
+]
+CORS_ALLOW_CREDENTIALS = True
+
+RECAPTCHA_SECRET_KEY = env('RECAPTCHA_SECRET_KEY', default='')
+
+config/settings/development.py
+────────────────────────────────
+from .base import *
+DEBUG = True
+DATABASES = {'default': env.db('DATABASE_URL', default='postgres://...')}
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+config/settings/production.py
+───────────────────────────────
+from .base import *
+DEBUG = False
+DATABASES = {'default': env.db('DATABASE_URL')}
+SECURE_SSL_REDIRECT = True
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = env('EMAIL_HOST')
+DEFAULT_FILE_STORAGE = 'apps.core.storage.MediaStorage'   # S3-compatible
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+M. REQUIREMENTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+requirements/base.txt
+──────────────────────
+Django==4.2.13
+psycopg2-binary==2.9.9
+djangorestframework==3.15.1
+djangorestframework-simplejwt==5.3.1
+django-cors-headers==4.3.1
+django-filter==23.5
+drf-spectacular==0.27.2
+celery==5.3.6
+redis==5.0.3
+django-celery-beat==2.6.0
+channels==4.1.0
+channels-redis==4.2.0
+django-ckeditor==6.7.1
+django-imagekit==5.0.0
+reportlab==4.1.0
+python-decouple==3.8
+Pillow==10.3.0
+requests==2.31.0               # vérification reCAPTCHA côté serveur
+
+requirements/development.txt
+──────────────────────────────
+-r base.txt
+django-debug-toolbar==4.3.0
+ipython==8.22.2
+
+requirements/production.txt
+─────────────────────────────
+-r base.txt
+gunicorn==21.2.0
+daphne==4.1.2                  # serveur ASGI (Channels) en production
+sentry-sdk==1.40.6
+django-storages==1.14.2
+boto3==1.34.69
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+N. FIXTURES & DONNÉES INITIALES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+fixtures/roles.json
+  → REDACTEUR, EDITEUR_EN_CHEF, ADMINISTRATEUR
+
+fixtures/postes.json
+  → Gardien, Défenseur, Milieu de terrain, Attaquant
+
+fixtures/competitions.json
+  → Championnat National (saison en cours), Éliminatoires Coupe du Monde,
+    Ligue des Nations CONCACAF
+
+fixtures/clubs_championnat.json
+  → Violette AC, AS Capoise, Racing Club Haïtien, et autres clubs du
+    Championnat National (repris du contenu du site fourni)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+O. COMMANDES MANAGEMENT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  comptes/management/commands/create_roles.py
+    → crée RoleRedaction REDACTEUR / EDITEUR_EN_CHEF / ADMINISTRATEUR
+
+  comptes/management/commands/create_admin.py
+    → crée un compte ADMINISTRATEUR initial (interactif, mot de passe sécurisé)
+
+TOTAL : 2 commandes
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+P. RÉCAPITULATIF BACK-END
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Applications Django      : 8 apps (core, comptes, actualites, joueurs,
+                              competitions, expatries, galerie, vitrine)
+  Modèles                  : 21 modèles back-office + 4 modèles vitrine
+  Serializers DRF          : 21 serializers back-office + 4 publics
+  Vues API (ViewSets)      : 17 vues principales back-office + 6 publiques
+  URL patterns API         : 32 routes back-office + 16 routes publiques
+  Signals                  : 3 back-office + 2 vitrine
+  Tâches Celery            : 6 back-office + 2 vitrine
+  Commandes management     : 2
+  Automatisation           : recalcul classement + statistiques (signal
+                              Match), chiffres clés (tâche périodique),
+                              score en direct (Channels), génération PDF
+                              du calendrier (Celery)
+
+  (Détail complet de la partie "vitrine" : voir PARTIE IV.B)
+
+
+================================================================================
+PARTIE III — FRONT-END REACT (BACK-OFFICE RÉDACTION)
+================================================================================
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+A. ARBORESCENCE DU PROJET FRONT-END
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+globeinfosport-redaction/
+│
+├── public/
+├── src/
+│   ├── api/
+│   │   ├── axiosClient.js
+│   │   ├── authApi.js
+│   │   ├── utilisateursApi.js
+│   │   ├── articlesApi.js
+│   │   ├── joueursApi.js
+│   │   ├── competitionsApi.js
+│   │   ├── matchsApi.js
+│   │   ├── expatriesApi.js
+│   │   └── galerieApi.js
+│   │
+│   ├── store/
+│   │   ├── authStore.js            # Zustand : user, access token, rôle
+│   │   ├── uiStore.js              # sidebar, modals, toasts
+│   │   └── filtresStore.js         # filtres de recherche/listes
+│   │
+│   ├── hooks/
+│   │   ├── useAuth.js
+│   │   ├── useArticles.js          # useQuery/useMutation (articlesApi)
+│   │   ├── useJoueurs.js
+│   │   ├── useMatchs.js
+│   │   ├── useClassement.js
+│   │   ├── useExpatries.js
+│   │   ├── useGalerie.js
+│   │   └── useUtilisateurs.js
+│   │
+│   ├── components/
+│   │   ├── ui/                     # Bouton, Input, Select, Modal, Table,
+│   │   │                           # Badge, Toast, Pagination, RichTextEditor
+│   │   ├── layout/                 # Navbar, Sidebar, Footer
+│   │   ├── articles/                # ArticleCard, ArticleForm, StatutBadge,
+│   │   │                            # PublierModal, TagsInput
+│   │   ├── joueurs/                  # JoueurCard, JoueurForm, LegendeForm
+│   │   ├── competitions/             # MatchForm, SaisirResultatModal,
+│   │   │                            # ClassementTable, StatistiquesTable
+│   │   ├── expatries/                # TransfertForm, JoueurExpatrieCard
+│   │   ├── galerie/                  # AlbumForm, ImageUploader
+│   │   └── comptes/                  # UtilisateurForm, UtilisateurTable, RoleSelect
+│   │
+│   ├── pages/
+│   │   ├── auth/
+│   │   │   └── LoginPage.jsx
+│   │   ├── DashboardPage.jsx        # KPIs : articles à valider, matchs du
+│   │   │                            # jour, messages de contact non traités
+│   │   ├── articles/
+│   │   │   ├── ArticlesListPage.jsx        # «Rechercher/consulter»
+│   │   │   ├── ArticleCreatePage.jsx       # «Rédiger un article»
+│   │   │   └── ArticleEditPage.jsx         # «Modifier» / «Publier»
+│   │   ├── joueurs/
+│   │   │   ├── JoueursListPage.jsx
+│   │   │   ├── JoueurEditPage.jsx
+│   │   │   └── LegendesListPage.jsx
+│   │   ├── competitions/
+│   │   │   ├── ClubsListPage.jsx
+│   │   │   ├── MatchsListPage.jsx          # «Consulter le calendrier»
+│   │   │   ├── MatchCreatePage.jsx         # «Créer un match»
+│   │   │   ├── MatchResultatPage.jsx       # «Saisir le résultat»
+│   │   │   └── ClassementPage.jsx          # lecture seule (auto)
+│   │   ├── expatries/
+│   │   │   ├── ExpatriesListPage.jsx
+│   │   │   └── TransfertsListPage.jsx
+│   │   ├── galerie/
+│   │   │   └── GaleriePage.jsx
+│   │   ├── contact/
+│   │   │   └── MessagesContactPage.jsx     # messages reçus du site public
+│   │   └── comptes/
+│   │       └── ComptesListPage.jsx         # «Gérer les comptes» (Administrateur)
+│   │
+│   ├── layouts/
+│   │   ├── MainLayout.jsx          # Navbar + Sidebar + Outlet
+│   │   └── AuthLayout.jsx
+│   │
+│   ├── router/
+│   │   ├── index.jsx
+│   │   ├── PrivateRoute.jsx
+│   │   └── RoleRoute.jsx           # vérifie HIERARCHIE des rôles éditoriaux
+│   │
+│   ├── utils/
+│   │   ├── roleHierarchy.js
+│   │   └── formatDate.js
+│   │
+│   ├── App.jsx
+│   └── main.jsx
+│
+├── .env.example
+├── index.html
+├── package.json
+├── vite.config.js
+└── tailwind.config.js
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+B. COUCHE API (AXIOS)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+src/api/axiosClient.js :
+  const api = axios.create({
+      baseURL: import.meta.env.VITE_API_URL,
+      withCredentials: true,
+  });
+
+  api.interceptors.request.use((config) => {
+      const token = useAuthStore.getState().accessToken;
+      if (token) config.headers.Authorization = `Bearer ${token}`;
+      return config;
+  });
+
+  api.interceptors.response.use(
+      (res) => res,
+      async (error) => {
+          if (error.response?.status === 401) {
+              const { data } = await api.post('/auth/token/refresh/');
+              useAuthStore.getState().setAccessToken(data.access);
+              return api(error.config);
+          }
+          return Promise.reject(error);
+      }
+  );
+
+src/api/matchsApi.js :
+  export const getMatchs          = (params) => api.get('/matchs/', { params });
+  export const getMatch           = (id)     => api.get(`/matchs/${id}/`);
+  export const createMatch        = (data)   => api.post('/matchs/', data);
+  export const updateMatch        = (id, d)  => api.patch(`/matchs/${id}/`, d);
+  export const saisirResultat     = (id, d)  => api.post(`/matchs/${id}/saisir-resultat/`, d);
+  export const majScoreDirect     = (id, d)  => api.patch(`/matchs/${id}/score-direct/`, d);
+
+  (modules similaires pour articlesApi.js, joueursApi.js, expatriesApi.js,
+  galerieApi.js, utilisateursApi.js)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+C. ZUSTAND STORES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  authStore.js     : { user, accessToken, role, isAuthenticated }
+                     actions : login(), logout(), setAccessToken()
+  uiStore.js       : { sidebarOpen, activeModal }
+                     actions : toggleSidebar(), openModal(), closeModal()
+  filtresStore.js  : { recherche, categorieFiltre, statutFiltre, dateRange }
+                     actions : setFiltre(), resetFiltres()
+
+TOTAL : 3 stores
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+D. CUSTOM HOOKS (TANSTACK QUERY)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  useArticles.js
+    useArticlesQuery(filtres), useArticleQuery(id),
+    useCreateArticleMutation(), useUpdateArticleMutation(),
+    usePublierArticleMutation(), useDeleteArticleMutation()
+
+  useMatchs.js
+    useMatchsQuery(filtres), useMatchQuery(id),
+    useCreateMatchMutation(), useSaisirResultatMutation(),
+    useMajScoreDirectMutation()
+
+  useClassement.js
+    useClassementQuery(competitionId)      → invalidé automatiquement
+                                              après useSaisirResultatMutation()
+    useStatistiquesQuery(competitionId)
+
+  useJoueurs.js, useExpatries.js, useGalerie.js, useUtilisateurs.js
+    → mêmes conventions CRUD que useArticles.js
+
+  useAuth.js
+    useLoginMutation(), useLogoutMutation(), useCurrentUser()
+
+TOTAL : 8 fichiers de hooks
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+E. COMPOSANTS RÉUTILISABLES — RÉSUMÉ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ui/           → 9 composants (Bouton, Input, Select, Modal, Table, Badge,
+                   Toast, Pagination, RichTextEditor)
+  layout/       → 3 composants (Navbar, Sidebar, Footer)
+  articles/     → 4 composants (ArticleCard, ArticleForm, PublierModal, TagsInput)
+  joueurs/      → 3 composants (JoueurCard, JoueurForm, LegendeForm)
+  competitions/ → 4 composants (MatchForm, SaisirResultatModal,
+                   ClassementTable, StatistiquesTable)
+  expatries/    → 2 composants (TransfertForm, JoueurExpatrieCard)
+  galerie/      → 2 composants (AlbumForm, ImageUploader)
+  comptes/      → 3 composants (UtilisateurForm, UtilisateurTable, RoleSelect)
+
+TOTAL : 30 composants
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+F. PAGES (ROUTES) — OUTILS DE LA RÉDACTION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  auth/          → 1 page  (LoginPage)
+  dashboard/     → 1 page  (DashboardPage)
+  articles/      → 3 pages (Liste, Création, Édition/Publication)
+  joueurs/       → 3 pages (Liste joueurs, Édition, Liste légendes)
+  competitions/  → 5 pages (Clubs, Matchs/Calendrier, Création match,
+                   Saisie résultat, Classement — lecture seule)
+  expatries/     → 2 pages (Expatriés, Transferts)
+  galerie/       → 1 page  (Albums + upload)
+  contact/       → 1 page  (Messages reçus du site public)
+  comptes/       → 1 page  (Gestion des comptes — Administrateur)
+
+TOTAL : 17 pages
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+G. LAYOUTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  MainLayout  → Navbar + Sidebar (liens visibles selon rôle éditorial) + Outlet
+  AuthLayout  → Centré, fond neutre, sans navigation
+
+TOTAL : 2 layouts
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+H. ROUTER & PROTECTION DES ROUTES (PAR RÔLE)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+src/router/index.jsx :
+  Route publique (AuthLayout) :
+    /login                       → LoginPage
+
+  Routes privées (PrivateRoute + MainLayout) :
+    /                            → DashboardPage        (tous rôles connectés)
+    /articles                    → ArticlesListPage      (Rédacteur+)
+    /articles/nouveau             → ArticleCreatePage     (Rédacteur+)
+    /articles/:id/modifier        → ArticleEditPage       (Rédacteur+, bouton
+                                    "Publier" visible seulement dès Éditeur)
+    /joueurs                      → JoueursListPage       (Rédacteur+)
+    /joueurs/legendes             → LegendesListPage      (RoleRoute ['EDITEUR_EN_CHEF'])
+    /championnat/clubs            → ClubsListPage         (Rédacteur+)
+    /championnat/matchs           → MatchsListPage        (Rédacteur+)
+    /championnat/matchs/nouveau    → MatchCreatePage       (Rédacteur+)
+    /championnat/matchs/:id/resultat → MatchResultatPage   (Rédacteur+)
+    /championnat/classement        → ClassementPage        (Rédacteur+, lecture seule)
+    /expatries                     → ExpatriesListPage     (Rédacteur+)
+    /expatries/transferts          → TransfertsListPage    (Rédacteur+)
+    /galerie                       → GaleriePage           (Rédacteur+)
+    /messages-contact              → MessagesContactPage   (RoleRoute ['EDITEUR_EN_CHEF'])
+    /comptes                       → ComptesListPage       (RoleRoute ['ADMINISTRATEUR'])
+
+src/router/RoleRoute.jsx :
+  → compare HIERARCHIE[user.role] au niveau minimum requis pour la route ;
+    redirige vers "/" si insuffisant.
+
+  • Le bouton "Publier" sur ArticleEditPage n'est affiché que si
+    HIERARCHIE[user.role] >= HIERARCHIE['EDITEUR_EN_CHEF']
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+I. VARIABLES D'ENVIRONNEMENT FRONT-END
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+.env.example :
+  VITE_API_URL=http://localhost:8000/api/v1
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+J. RÉCAPITULATIF FRONT-END BACK-OFFICE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Pages React               : 17 pages
+  Composants réutilisables  : 30 composants
+  Layouts                   : 2
+  Zustand stores            : 3
+  Custom hooks              : 8 fichiers
+  Modules API axios         : 9
+  Groupes de routes protégées : 2 (rôles cumulatifs + routes réservées à
+                                   un rôle précis)
+
+
+================================================================================
+PARTIE IV — SITE VITRINE PUBLIC (RECONSTRUCTION DYNAMIQUE DU SITE FOURNI)
+================================================================================
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+A. OBJECTIF, CORRESPONDANCE AVEC LES PAGES HTML FOURNIES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+OBJECTIF :
+  Reconstruire à l'identique — dans la même charte graphique — les 6 pages
+  et toutes les sections du site fourni, mais en remplaçant chaque bloc de
+  contenu codé en dur par un appel à l'API publique, pour que la mise à
+  jour d'une actualité, d'un score ou d'un transfert soit IMMÉDIATEMENT
+  visible sur le site sans aucune modification de code.
+
+CORRESPONDANCE PAGE HTML FOURNIE → PAGE REACT DYNAMIQUE :
+  index.html        → / (Accueil)                — PARTIE IV.D.1
+  equipe.html        → /championnat (Championnat) — PARTIE IV.D.2
+  actualites.html    → /actualites                — PARTIE IV.D.3
+  calendrier.html    → /calendrier                — PARTIE IV.D.4
+  expatries.html     → /expatries                 — PARTIE IV.D.5
+  contact.html       → /contact                   — PARTIE IV.D.7
+  (galerie, intégrée à l'Accueil dans le fichier fourni, devient aussi
+   une page dédiée) → /galerie                    — PARTIE IV.D.6
+
+PÉRIMÈTRE TECHNIQUE :
+  • Projet front-end INDÉPENDANT ("globeinfosport-vitrine"), build et
+    déploiement séparés du back-office (domaines distincts, ex.
+    www.globeinfosport.ht vs redaction.globeinfosport.ht)
+  • Consomme la MÊME API Django, sur des routes dédiées préfixées /public/
+    (lecture anonyme, throttlée) — AUCUNE route d'écriture publique sauf
+    contact et newsletter (voir PARTIE IV.B)
+  • Aucune authentification visiteur : cohérent avec le site fourni, qui
+    ne propose aucun espace membre — c'est un site d'actualités, pas un
+    espace communautaire
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+B. BACK-END ADDITIONNEL — APPLICATION "vitrine" (INTERACTIONS PUBLIQUES)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+──────────────────────────────────────────────
+B.1 MODÈLES — vitrine/models.py
+──────────────────────────────────────────────
+  class MessageContact(TimeStampedModel):
+      """ Formulaire "Envoyez-nous un message" (page Contact) """
+      nom       = models.CharField(max_length=150)
+      email     = models.EmailField()
+      sujet     = models.CharField(max_length=200)
+      message   = models.TextField()
+      traite    = models.BooleanField(default=False)
+
+      class Meta:
+          ordering = ['-created_at']
+
+  class AbonneNewsletter(TimeStampedModel):
+      """ "Restez Connectés" / newsletter (footer + page Actualités) """
+      email       = models.EmailField(unique=True)
+      actif       = models.BooleanField(default=True)
+      token_desabonnement = models.CharField(max_length=64, unique=True)
+
+  class Partenaire(models.Model):
+      """ Section "Partenaires" du footer """
+      nom     = models.CharField(max_length=150)
+      logo    = models.ImageField(upload_to='partenaires/')
+      url     = models.URLField(blank=True)
+      ordre   = models.PositiveIntegerField(default=0)
+      actif   = models.BooleanField(default=True)
+
+      class Meta:
+          ordering = ['ordre']
+
+  class FAQ(models.Model):
+      """ "Questions Fréquentes" (page Contact) """
+      question = models.CharField(max_length=255)
+      reponse  = models.TextField()
+      ordre    = models.PositiveIntegerField(default=0)
+
+      class Meta:
+          ordering = ['ordre']
+          verbose_name = 'FAQ'
+          verbose_name_plural = 'FAQ'
+
+──────────────────────────────────────────────
+B.2 SERIALIZERS PUBLICS — vitrine/serializers.py
+──────────────────────────────────────────────
+  class MessageContactCreateSerializer(ModelSerializer):
+      honeypot = CharField(required=False, allow_blank=True, write_only=True)
+      recaptcha_token = CharField(write_only=True)
+      class Meta:
+          model = MessageContact
+          fields = ['nom', 'email', 'sujet', 'message', 'honeypot', 'recaptcha_token']
+
+      def validate_honeypot(self, value):
+          if value:
+              raise ValidationError("Requête invalide.")
+          return value
+
+      def validate_recaptcha_token(self, value):
+          if not verifier_recaptcha(value):        # appel à l'API Google
+              raise ValidationError("Vérification anti-spam échouée.")
+          return value
+
+  class AbonneNewsletterCreateSerializer(ModelSerializer):
+      honeypot = CharField(required=False, allow_blank=True, write_only=True)
+      class Meta:
+          model = AbonneNewsletter
+          fields = ['email', 'honeypot']
+
+      def validate_honeypot(self, value):
+          if value:
+              raise ValidationError("Requête invalide.")
+          return value
+
+  class PartenaireSerializer(ModelSerializer):
+      class Meta:
+          model = Partenaire
+          fields = ['id', 'nom', 'logo', 'url']
+
+  class FAQSerializer(ModelSerializer):
+      class Meta:
+          model = FAQ
+          fields = ['id', 'question', 'reponse']
+
+  (Les données "métier" publiques — articles, joueurs, classement, matchs,
+  expatriés, galerie, chiffres clés — sont exposées par des serializers
+  PUBLICS ALLÉGÉS définis directement dans chaque app d'origine, ex.
+  ArticlePublicSerializer dans actualites/serializers.py, qui exclut les
+  champs internes comme `auteur` détaillé ou `statut`.)
+
+──────────────────────────────────────────────
+B.3 VUES API PUBLIQUES
+──────────────────────────────────────────────
+  # actualites/views.py (section publique)
+  class ArticlePublicListView(ListAPIView):
+      queryset = Article.objects.filter(statut='PUBLIE').order_by('-date_publication')
+      serializer_class = ArticlePublicListSerializer
+      permission_classes = [AllowAny]
+      throttle_scope = 'public-read'
+      filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+      search_fields = ['titre', 'chapo']
+      filterset_fields = ['categorie', 'tags', 'a_la_une']
+
+  class ArticlePublicDetailView(RetrieveAPIView):
+      queryset = Article.objects.filter(statut='PUBLIE')
+      serializer_class = ArticlePublicDetailSerializer
+      lookup_field = 'slug'
+      permission_classes = [AllowAny]
+      throttle_scope = 'public-read'
+
+      def retrieve(self, request, *args, **kwargs):
+          instance = self.get_object()
+          Article.objects.filter(pk=instance.pk).update(
+              compteur_vues=F('compteur_vues') + 1)
+          return super().retrieve(request, *args, **kwargs)
+
+  # competitions/views.py (section publique)
+  class ClassementPublicView(ListAPIView):
+      serializer_class = ClassementLigneSerializer
+      permission_classes = [AllowAny]
+      throttle_scope = 'public-read'
+      def get_queryset(self):
+          return ClassementLigne.objects.filter(
+              competition_id=self.kwargs['competition_id'])
+
+  class MatchPublicListView(ListAPIView):
+      # alimente le Calendrier et les résultats sur l'Accueil
+      queryset = Match.objects.all().select_related('club_domicile', 'club_exterieur')
+      serializer_class = MatchPublicSerializer
+      permission_classes = [AllowAny]
+      throttle_scope = 'public-read'
+      filter_backends = [DjangoFilterBackend, OrderingFilter]
+      filterset_fields = ['competition', 'statut']
+
+  class StatistiquesPublicView(ListAPIView):
+      # "Meilleur Buteur", "Meilleur Passeur", etc.
+      serializer_class = StatistiqueJoueurSerializer
+      permission_classes = [AllowAny]
+      throttle_scope = 'public-read'
+      def get_queryset(self):
+          return StatistiqueJoueur.objects.filter(
+              competition_id=self.kwargs['competition_id'])
+
+  # vitrine/views.py
+  class MessageContactCreateView(CreateAPIView):
+      serializer_class = MessageContactCreateSerializer
+      permission_classes = [AllowAny]
+      throttle_scope = 'public'
+      def perform_create(self, serializer):
+          message = serializer.save()
+          notifier_nouveau_message_contact.delay(message.id)
+
+  class AbonneNewsletterCreateView(CreateAPIView):
+      serializer_class = AbonneNewsletterCreateSerializer
+      permission_classes = [AllowAny]
+      throttle_scope = 'public'
+      def perform_create(self, serializer):
+          abonne = serializer.save(token_desabonnement=generer_token())
+          envoyer_email_bienvenue_newsletter.delay(abonne.id)
+
+  class PartenaireListView(ListAPIView):
+      queryset = Partenaire.objects.filter(actif=True)
+      serializer_class = PartenaireSerializer
+      permission_classes = [AllowAny]
+      throttle_scope = 'public-read'
+
+  class FAQListView(ListAPIView):
+      queryset = FAQ.objects.all()
+      serializer_class = FAQSerializer
+      permission_classes = [AllowAny]
+      throttle_scope = 'public-read'
+
+  (les vues publiques équivalentes pour joueurs, légendes, clubs, expatriés,
+  transferts, galerie et chiffres clés suivent EXACTEMENT le même schéma :
+  ListAPIView/RetrieveAPIView, AllowAny, throttle_scope='public-read', et
+  un serializer public allégé propre à chaque application)
+
+──────────────────────────────────────────────
+B.4 URLS PUBLIQUES — préfixe /public/
+──────────────────────────────────────────────
+  urlpatterns = [
+      path('articles/', ArticlePublicListView.as_view()),
+      path('articles/<slug:slug>/', ArticlePublicDetailView.as_view()),
+      path('joueurs/', JoueurPublicListView.as_view()),
+      path('legendes/', LegendePublicListView.as_view()),
+      path('clubs/', ClubPublicListView.as_view()),
+      path('classement/<int:competition_id>/', ClassementPublicView.as_view()),
+      path('matchs/', MatchPublicListView.as_view()),
+      path('statistiques/<int:competition_id>/', StatistiquesPublicView.as_view()),
+      path('expatries/', JoueurExpatriePublicListView.as_view()),
+      path('transferts/', TransfertPublicListView.as_view()),
+      path('galerie/', ImageGaleriePublicListView.as_view()),
+      path('chiffres-cles/', ChiffreCleListView.as_view()),
+      path('faq/', FAQListView.as_view()),
+      path('partenaires/', PartenaireListView.as_view()),
+      path('contact/', MessageContactCreateView.as_view()),
+      path('newsletter/abonnement/', AbonneNewsletterCreateView.as_view()),
+  ]
+  # Inclus dans config/api_urls.py sous le préfixe /public/
+  # + route WebSocket ws/matchs/<id>/ (Django Channels, PARTIE II.I.4)
+
+──────────────────────────────────────────────
+B.5 PERMISSIONS, ANTI-SPAM ET RATE-LIMITING
+──────────────────────────────────────────────
+  • Toutes les vues d'écriture publique (contact, newsletter) :
+      permission_classes = [AllowAny]
+      throttle_scope = 'public'          → 20 requêtes / heure / IP
+  • Champ honeypot invisible (CSS) — tout robot qui le remplit est
+    automatiquement rejeté
+  • Vérification Google reCAPTCHA v3 côté serveur (score minimal 0.5) sur
+    le formulaire de contact
+  • Les vues de lecture (articles, matchs, classement, galerie, chiffres
+    clés...) restent AllowAny mais throttlées à un niveau plus permissif
+    ('public-read': 300/hour, car interrogées fréquemment par le polling
+    des scores en direct)
+
+──────────────────────────────────────────────
+B.6 SIGNALS — vitrine/signals.py
+──────────────────────────────────────────────
+  post_save(MessageContact, created=True)
+    → déclenche notifier_nouveau_message_contact.delay() (email rédaction)
+
+  post_save(AbonneNewsletter, created=True)
+    → déclenche envoyer_email_bienvenue_newsletter.delay()
+
+TOTAL : 2 signals
+
+──────────────────────────────────────────────
+B.7 TÂCHES CELERY — vitrine/tasks.py
+──────────────────────────────────────────────
+  notifier_nouveau_message_contact(message_id)
+    → email à la rédaction (Éditeur en chef+) avec le contenu du message
+
+  envoyer_email_bienvenue_newsletter(abonne_id)
+    → email de confirmation d'abonnement avec lien de désabonnement
+
+TOTAL : 2 tâches Celery
+
+──────────────────────────────────────────────
+B.8 ADMIN DJANGO — vitrine/admin.py
+──────────────────────────────────────────────
+  @admin.register(MessageContact)
+  class MessageContactAdmin(admin.ModelAdmin):
+      list_display = ['nom', 'sujet', 'created_at', 'traite']
+      list_filter = ['traite']
+      actions = ['marquer_traite']
+
+  @admin.register(AbonneNewsletter)
+  class AbonneNewsletterAdmin(admin.ModelAdmin):
+      list_display = ['email', 'actif', 'created_at']
+      list_filter = ['actif']
+
+  # Note : le traitement quotidien des messages de contact se fait plutôt
+  # via MessagesContactPage.jsx dans le BACK-OFFICE React (PARTIE III.F),
+  # l'admin Django restant un outil de secours pour l'Administrateur.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+C. FRONT-END — ARBORESCENCE COMPLÈTE DU SITE VITRINE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+globeinfosport-vitrine/
+├── public/
+│   ├── favicon.ico
+│   ├── robots.txt
+│   └── sitemap.xml
+│
+├── src/
+│   ├── main.jsx
+│   ├── App.jsx
+│   ├── index.css                    # reprend les variables --rouge/--bleu
+│   │                                 # du style.css fourni (PARTIE IV.J)
+│   │
+│   ├── router/
+│   │   └── index.jsx
+│   │
+│   ├── layouts/
+│   │   ├── PublicLayout.jsx
+│   │   └── components/
+│   │       ├── Header.jsx
+│   │       ├── NavBar.jsx
+│   │       ├── MobileMenu.jsx
+│   │       ├── Footer.jsx
+│   │       └── BackToTop.jsx        # équivalent du bouton "retour en haut"
+│   │                                # du script.js fourni
+│   │
+│   ├── pages/
+│   │   ├── Accueil.jsx                       # index.html
+│   │   ├── Championnat.jsx                   # equipe.html
+│   │   ├── Actualites.jsx                    # actualites.html
+│   │   ├── ArticleDetail.jsx
+│   │   ├── Calendrier.jsx                    # calendrier.html
+│   │   ├── Expatries.jsx                     # expatries.html
+│   │   ├── Galerie.jsx
+│   │   ├── Contact.jsx                       # contact.html
+│   │   ├── MentionsLegales.jsx
+│   │   ├── Confidentialite.jsx
+│   │   └── NotFound.jsx
+│   │
+│   ├── components/
+│   │   ├── home/
+│   │   │   ├── Hero.jsx                        # "La Passion du Football Haïtien"
+│   │   │   ├── EquipeNationaleSection.jsx      # "Les Grenadiers"
+│   │   │   ├── JoueursEmblematiques.jsx
+│   │   │   ├── InfrastructuresSection.jsx
+│   │   │   ├── HistoireSection.jsx
+│   │   │   ├── LegendesSection.jsx             # carrousel Legende
+│   │   │   ├── ActualitesPreview.jsx           # 3 derniers articles
+│   │   │   ├── CalendrierPreview.jsx
+│   │   │   └── GaleriePreview.jsx
+│   │   │
+│   │   ├── championnat/
+│   │   │   ├── ClassementTable.jsx
+│   │   │   ├── EquipesGrid.jsx                 # cartes Club
+│   │   │   ├── ProchainsMatchs.jsx
+│   │   │   └── StatistiquesGrid.jsx            # Buteur/Passeur/Défense/...
+│   │   │
+│   │   ├── actualites/
+│   │   │   ├── ArticleCard.jsx
+│   │   │   ├── ArticleContenu.jsx
+│   │   │   ├── ChiffresClesGrid.jsx
+│   │   │   ├── VideosSection.jsx
+│   │   │   ├── CitationsSection.jsx
+│   │   │   └── FiltresActualites.jsx
+│   │   │
+│   │   ├── calendrier/
+│   │   │   ├── CalendrierMois.jsx
+│   │   │   ├── MatchCard.jsx
+│   │   │   ├── ScoreLiveBadge.jsx               # polling/WebSocket score
+│   │   │   ├── FiltresCompetitions.jsx
+│   │   │   └── TelechargerCalendrierBouton.jsx
+│   │   │
+│   │   ├── expatries/
+│   │   │   ├── ArticleVedette.jsx
+│   │   │   ├── JoueurExpatrieCard.jsx
+│   │   │   ├── TransfertsListe.jsx
+│   │   │   └── SPIChiffresGrid.jsx
+│   │   │
+│   │   ├── galerie/
+│   │   │   ├── GalerieGrid.jsx
+│   │   │   ├── AlbumSelector.jsx
+│   │   │   └── ImageViewer.jsx
+│   │   │
+│   │   ├── contact/
+│   │   │   ├── ContactForm.jsx
+│   │   │   ├── CarteLocalisation.jsx
+│   │   │   ├── ReseauxSociaux.jsx
+│   │   │   └── FAQAccordeon.jsx
+│   │   │
+│   │   └── common/
+│   │       ├── Bouton.jsx
+│   │       ├── Modal.jsx
+│   │       ├── Loader.jsx
+│   │       ├── Toast.jsx
+│   │       ├── Honeypot.jsx
+│   │       ├── SEO.jsx
+│   │       ├── NewsletterForm.jsx
+│   │       └── PartenairesBar.jsx
+│   │
+│   ├── store/
+│   │   ├── index.js
+│   │   └── slices/
+│   │       └── uiSlice.js
+│   │
+│   ├── services/
+│   │   ├── api.js
+│   │   ├── articleService.js
+│   │   ├── joueurService.js
+│   │   ├── championnatService.js
+│   │   ├── matchService.js
+│   │   ├── expatrieService.js
+│   │   ├── galerieService.js
+│   │   ├── contactService.js
+│   │   └── newsletterService.js
+│   │
+│   ├── hooks/
+│   │   ├── useArticlesPublics.js
+│   │   ├── useJoueursPublics.js
+│   │   ├── useClassementPublic.js
+│   │   ├── useMatchsPublics.js          # inclut le polling des matchs live
+│   │   ├── useScoreLive.js               # WebSocket (option Channels)
+│   │   ├── useExpatriesPublics.js
+│   │   ├── useGaleriePublique.js
+│   │   ├── useContact.js
+│   │   └── useNewsletter.js
+│   │
+│   ├── utils/
+│   │   ├── formatters.js
+│   │   └── validators.js
+│   │
+│   ├── styles/
+│   │   └── tailwind.config.js
+│   │
+│   └── assets/
+│       └── images/
+│           ├── home/
+│           ├── championnat/
+│           ├── galerie/
+│           └── backgrounds/
+│
+├── index.html
+├── vite.config.js
+├── tailwind.config.js
+└── package.json
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+D. PAGES PUBLIQUES DÉTAILLÉES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  1. Accueil (/)  — reconstruit index.html
+       Hero plein écran, section "Équipe Nationale — Les Grenadiers"
+       (contenu géré via un modèle "PageContenu" simple pour l'histoire/les
+       infrastructures, éditable depuis le back-office), "Joueurs
+       Emblématiques" (GET /public/joueurs/?emblematique=true), "Légendes"
+       (GET /public/legendes/), aperçu Actualités (GET /public/articles/
+       ?a_la_une=true&limit=3), aperçu Calendrier (GET /public/matchs/
+       ?statut=A_VENIR&ordering=date_heure&limit=3), aperçu Galerie
+       (GET /public/galerie/?limit=6).
+
+  2. Championnat (/championnat) — reconstruit equipe.html
+       Classement (GET /public/classement/{competition_id}/) trié par
+       points puis différence de buts ; grille des clubs (GET
+       /public/clubs/) ; prochains matchs (GET /public/matchs/
+       ?statut=A_VENIR) ; statistiques du championnat en 6 blocs
+       (Meilleur Buteur, Meilleur Passeur, Meilleure Défense, Meilleure
+       Attaque, Meilleur Milieu, Meilleur Gardien) à partir de
+       GET /public/statistiques/{competition_id}/ trié côté front selon
+       le critère de chaque bloc.
+
+  3. Actualités (/actualites) — reconstruit actualites.html
+       Liste des articles publiés, filtrable par catégorie/tag/recherche
+       (GET /public/articles/?search=&categorie=) ; "Chiffres Clés" (GET
+       /public/chiffres-cles/) ; "Vidéos à la Une" (GET /public/videos/
+       ?a_la_une=true) ; "Paroles d'Acteurs" (GET /public/citations/) ;
+       formulaire newsletter ("Restez Connectés").
+
+  4. Détail article (/actualites/:slug)
+       GET /public/articles/{slug}/ — article complet, articles similaires
+       (même catégorie), citations et vidéos liées à l'article.
+
+  5. Calendrier (/calendrier) — reconstruit calendrier.html
+       Vue par mois (GET /public/matchs/?date_heure__month=&date_heure__year=),
+       filtrable par compétition (GET /public/competitions/) ; badge "En
+       direct" avec score live sur les matchs du jour (useScoreLive.js) ;
+       bouton "Télécharger le calendrier" → fichier PDF généré par Celery
+       (GET /public/matchs/calendrier/telecharger/).
+
+  6. Expatriés (/expatries) — reconstruit expatries.html
+       Article en vedette (GET /public/expatries/?en_vedette=true), liste
+       des joueurs expatriés (GET /public/expatries/), section Transferts
+       (GET /public/transferts/), "SPI en Chiffres" (sous-ensemble filtré
+       des Chiffres Clés), formulaire d'abonnement à la rubrique
+       (réutilise le service newsletter).
+
+  7. Galerie (/galerie)
+       GET /public/galerie/ — grille de photos groupées par album,
+       filtrable par match/évènement, visionneuse plein écran.
+
+  8. Contact (/contact) — reconstruit contact.html
+       Coordonnées (adresse, téléphone, email), réseaux sociaux,
+       ContactForm (POST /public/contact/ + honeypot + reCAPTCHA), FAQ
+       (GET /public/faq/), carte de localisation (Fédération Haïtienne de
+       Football).
+
+  9. Mentions légales / Confidentialité
+       Pages statiques.
+
+  10. 404 (*) — NotFound.jsx
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+E. COMPOSANTS PAR SECTION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  home/         → 9 composants
+  championnat/  → 4 composants
+  actualites/   → 6 composants
+  calendrier/   → 5 composants
+  expatries/    → 4 composants
+  galerie/      → 3 composants
+  contact/      → 4 composants
+  common/       → 8 composants
+
+TOTAL : 43 composants
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+F. COUCHE SERVICES (AXIOS)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+src/services/api.js :
+  const api = axios.create({
+      baseURL: import.meta.env.VITE_API_URL,     // ex. https://api.globeinfosport.ht/api/v1
+  });
+  // Aucun interceptor Authorization : site 100% public, sans token
+
+src/services/matchService.js :
+  export const getMatchsPublics   = (params) => api.get('/public/matchs/', { params });
+  export const getMatchLive       = (id)     => api.get(`/public/matchs/${id}/`);
+  export const telechargerCalendrier = ()    => api.get('/public/matchs/calendrier/telecharger/',
+                                                          { responseType: 'blob' });
+
+src/services/articleService.js :
+  export const getArticlesPublics = (params) => api.get('/public/articles/', { params });
+  export const getArticlePublic   = (slug)   => api.get(`/public/articles/${slug}/`);
+
+src/services/contactService.js :
+  export const envoyerMessageContact = (data) => api.post('/public/contact/', data);
+
+src/services/newsletterService.js :
+  export const sAbonnerNewsletter = (data) => api.post('/public/newsletter/abonnement/', data);
+
+  (championnatService.js, joueurService.js, expatrieService.js,
+  galerieService.js suivent le même schéma GET simple vers /public/...)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+G. STATE MANAGEMENT (ZUSTAND)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  uiSlice.js :
+    state    : { mobileMenuOpen, activeModal, toasts }
+    actions  : toggleMobileMenu(), openModal(), closeModal(), pushToast()
+
+TOTAL : 1 slice (le site n'ayant aucune authentification, aucun store
+        d'auth n'est nécessaire côté vitrine)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+H. HOOKS PERSONNALISÉS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  useArticlesPublics.js
+    useArticlesPublicsQuery(filtres), useArticlePublicQuery(slug)
+
+  useMatchsPublics.js
+    useMatchsPublicsQuery(filtres) — avec refetchInterval: 30000 quand un
+    filtre statut=EN_COURS est actif (Niveau 1 d'automatisation, PARTIE II.I.4)
+
+  useScoreLive.js
+    useScoreLiveSocket(matchId) — se connecte à ws/matchs/{id}/ (Niveau 2,
+    Django Channels) et retombe automatiquement sur le polling si la
+    connexion WebSocket échoue (dégradation progressive)
+
+  useClassementPublic.js, useJoueursPublics.js, useExpatriesPublics.js,
+  useGaleriePublique.js
+    → useQuery simples avec un staleTime généreux (contenu peu volatile)
+
+  useContact.js
+    useEnvoyerMessageMutation()
+
+  useNewsletter.js
+    useAbonnementMutation()
+
+TOTAL : 8 fichiers de hooks
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+I. ROUTER, SEO & ACCESSIBILITÉ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+src/router/index.jsx :
+  Routes publiques (PublicLayout) :
+    /                          → Accueil
+    /championnat               → Championnat
+    /actualites                → Actualites
+    /actualites/:slug          → ArticleDetail
+    /calendrier                → Calendrier
+    /expatries                 → Expatries
+    /galerie                   → Galerie
+    /contact                   → Contact
+    /mentions-legales          → MentionsLegales
+    /confidentialite           → Confidentialite
+    *                          → NotFound
+
+SEO (components/common/SEO.jsx) :
+  → react-helmet-async : <title>, <meta description>, Open Graph (og:title,
+    og:image, og:description) définis par page — essentiel pour un site
+    d'actualités sportives (partage des articles sur les réseaux sociaux,
+    référencement des résultats de matchs).
+  → sitemap.xml généré côté back-end (tâche Celery périodique) à partir
+    des articles publiés et des pages statiques.
+
+ACCESSIBILITÉ :
+  → attributs aria-* sur les formulaires et le menu mobile, contrastes
+    conformes WCAG AA (le rouge/bleu du drapeau haïtien du site fourni est
+    déjà contrasté, à conserver), navigation clavier complète, alt text
+    obligatoire sur toutes les images (galerie, articles, joueurs).
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+J. CHARTE GRAPHIQUE (REPRISE DU DESIGN EXISTANT)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Le style.css fourni définit déjà une identité visuelle forte, aux couleurs
+du drapeau haïtien, à reprendre telle quelle dans tailwind.config.js :
+
+  --rouge       : #DA291C
+  --bleu        : #00209F
+  --bleu-clair  : #1a3bb3
+  --blanc       : #FFFFFF
+  --noir        : #1A1A1A
+  --gris        : #F5F5F5
+  --gris-fonce  : #2c2f34
+  --transition  : cubic-bezier(0.175, 0.885, 0.32, 1.275) (rebond léger,
+                  utilisé sur les cartes et boutons du site fourni)
+
+  Police       : 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif
+  Icônes       : Font Awesome 6.4.0 (déjà utilisé dans le site fourni,
+                 conservé via CDN ou bundlé localement)
+
+Les animations déjà présentes dans script.js (menu mobile, bouton retour
+en haut, observation au scroll pour les cartes d'actualités, compteurs
+animés des Chiffres Clés) sont reproduites en React avec Framer Motion /
+IntersectionObserver natif, pour conserver EXACTEMENT la même expérience
+visuelle que le site fourni.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+K. FORMULAIRES PUBLICS & PROTECTION ANTI-SPAM
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Les 2 formulaires publics (Contact, Newsletter) partagent la même stratégie :
+
+  1. Validation front (react-hook-form + zod) : champs requis, format
+     email, longueur minimale du message.
+  2. Champ Honeypot.jsx : input caché hors écran (jamais display:none) —
+     rejeté côté back si rempli (validate_honeypot, PARTIE IV.B.2).
+  3. Google reCAPTCHA v3 (invisible) sur le formulaire de contact : score
+     vérifié côté serveur (≥ 0.5).
+  4. Throttling serveur : 20 requêtes/heure/IP (scope 'public').
+  5. Message de confirmation clair + email automatique (bienvenue
+     newsletter avec lien de désabonnement, accusé de réception du
+     message de contact) via Celery.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+L. VARIABLES D'ENVIRONNEMENT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+.env.example (globeinfosport-vitrine) :
+  VITE_API_URL=http://localhost:8000/api/v1
+  VITE_WS_URL=ws://localhost:8000/ws
+  VITE_RECAPTCHA_SITE_KEY=...
+  VITE_SITE_NAME="Globe Info Sport"
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+M. RÉCAPITULATIF SITE VITRINE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ── Back-end additionnel (app "vitrine") ────────────────────────────────
+  Modèles              : 4 (MessageContact, AbonneNewsletter, Partenaire, FAQ)
+  Serializers           : 4 publics dédiés (+ 1 serializer public par
+                          modèle métier existant : articles, joueurs,
+                          légendes, clubs, classement, matchs, statistiques,
+                          expatriés, transferts, galerie, chiffres clés)
+  Vues API               : 2 d'écriture publique (AllowAny) + 14 de
+                          lecture publique (AllowAny)
+  Routes API              : 16 routes publiques + 1 route WebSocket
+  Signals                 : 2
+  Tâches Celery            : 2
+
+  ── Front-end (globeinfosport-vitrine) ───────────────────────────────────
+  Pages                     : 10 pages
+  Composants réutilisables  : 43 composants
+  Layouts                    : 1 (PublicLayout)
+  Zustand slices               : 1
+  Custom hooks                  : 8 fichiers
+  Modules services axios         : 9
+  Protection anti-spam             : Honeypot + reCAPTCHA v3 + Throttling DRF
+  Score en direct                    : polling 30s (base) + WebSocket
+                                       Django Channels (option avancée)
+
+
+================================================================================
+PARTIE V — INTÉGRATION & DÉPLOIEMENT
+================================================================================
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+A. COMMUNICATION FRONT ↔ BACK (2 SPA ↔ 1 API)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  React Back-Office (5173) ──HTTPS/JSON────▶ Django (8000) /api/v1/...
+  React Vitrine      (5174) ──HTTPS/JSON────▶ Django (8000) /api/v1/public/...
+  React Vitrine      (5174) ──WebSocket─────▶ Django Channels /ws/matchs/{id}/
+  Django             ──TCP────────▶ PostgreSQL
+  Django             ──TCP────────▶ Redis (Celery broker + Channel layer + cache)
+  Django             ──SMTP───────▶ Serveur de messagerie (notifications)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+B. CONFIGURATION CORS (MULTI-ORIGINE)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  INSTALLED_APPS += ['corsheaders']
+  MIDDLEWARE.insert(0, 'corsheaders.middleware.CorsMiddleware')
+
+  CORS_ALLOWED_ORIGINS = [
+      'http://localhost:5173',                # back-office (dev)
+      'http://localhost:5174',                # vitrine (dev)
+      'https://redaction.globeinfosport.ht',  # back-office (prod)
+      'https://www.globeinfosport.ht',        # vitrine (prod)
+  ]
+  CORS_ALLOW_CREDENTIALS = True
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+C. DOCKER — SERVICES (BACK-OFFICE + VITRINE)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+docker-compose.yml (dev) — services :
+  db                → postgres:15
+  redis             → redis:7-alpine
+  backend           → Django (daphne, sert HTTP + WebSocket)
+  celery            → worker Celery
+  celery-beat       → scheduler Celery Beat
+  frontend-redaction → Node 20 + Vite dev server (port 5173)
+  frontend-vitrine   → Node 20 + Vite dev server (port 5174)
+
+docker-compose.prod.yml — ajout :
+  nginx             → reverse proxy servant les 2 builds statiques + proxy
+                       WebSocket
+                       (redaction.globeinfosport.ht → frontend-redaction/dist,
+                        www.globeinfosport.ht        → frontend-vitrine/dist,
+                        api.globeinfosport.ht        → backend via daphne)
+
+COMMANDES UTILES :
+  docker compose up -d
+  docker compose exec backend python manage.py migrate
+  docker compose exec backend python manage.py create_roles
+  docker compose exec backend python manage.py create_admin
+  docker compose exec backend python manage.py loaddata fixtures/postes.json
+  docker compose exec backend python manage.py loaddata fixtures/competitions.json
+  docker compose exec backend python manage.py loaddata fixtures/clubs_championnat.json
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+D. VARIABLES D'ENVIRONNEMENT GLOBALES (.env.example)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# Django
+SECRET_KEY=...
+DEBUG=True
+DATABASE_URL=postgres://globeinfosport:password@db:5432/globeinfosport
+REDIS_URL=redis://redis:6379/0
+ALLOWED_HOSTS=localhost,127.0.0.1,redaction.globeinfosport.ht,www.globeinfosport.ht,api.globeinfosport.ht
+
+# Email
+EMAIL_HOST=smtp.example.com
+EMAIL_PORT=587
+EMAIL_HOST_USER=...
+EMAIL_HOST_PASSWORD=...
+
+# reCAPTCHA (site vitrine)
+RECAPTCHA_SECRET_KEY=...
+
+# React — Back-Office (Vite)
+VITE_API_URL=http://localhost:8000/api/v1
+
+# React — Site Vitrine (Vite)
+VITE_API_URL=http://localhost:8000/api/v1
+VITE_WS_URL=ws://localhost:8000/ws
+VITE_RECAPTCHA_SITE_KEY=...
+VITE_SITE_NAME="Globe Info Sport"
+
+
+================================================================================
+RÉCAPITULATIF GLOBAL DU PROJET
+================================================================================
+
+  ── BACK-END ────────────────────────────────────────────────────────────
+  Applications Django      : 8 apps (core, comptes, actualites, joueurs,
+                              competitions, expatries, galerie, vitrine)
+  Modèles                  : 21 modèles métier + 4 modèles vitrine = 25
+  Serializers DRF          : 21 back-office + 4 publics dédiés + serializers
+                              publics allégés dans chaque app = ~30
+  Vues API (ViewSets)      : 17 principales back-office + 16 publiques = 33
+  URL patterns API         : 32 back-office + 16 vitrine + 1 WebSocket = 49
+  Signals                  : 3 back-office + 2 vitrine = 5
+  Tâches Celery            : 6 back-office + 2 vitrine = 8
+  Commandes management     : 2
+  Automatisation clé        : recalcul classement + statistiques joueurs
+                              (signal Match), chiffres clés (Celery beat),
+                              score en direct (polling + Channels),
+                              PDF calendrier (Celery)
+
+  ── FRONT-END ───────────────────────────────────────────────────────────
+  Projets React               : 2 (globeinfosport-redaction / back-office,
+                                    globeinfosport-vitrine / site public)
+  Pages React                  : 17 (back-office) + 10 (vitrine) = 27
+  Composants réutilisables     : 30 (back-office) + 43 (vitrine) = 73
+  Layouts                       : 2 (back-office) + 1 (vitrine) = 3
+  Zustand stores/slices          : 3 (back-office) + 1 (vitrine) = 4
+  Custom hooks                    : 8 fichiers (back-office) + 8 (vitrine) = 16
+  Modules API/services axios       : 9 (back-office) + 9 (vitrine) = 18
+  Groupes de routes protégées       : 2 (back-office, rôles cumulatifs) ;
+                                       aucun côté vitrine (site 100% public)
+
+  ── INFRASTRUCTURE ──────────────────────────────────────────────────────
+  Base de données          : PostgreSQL 15
+  Cache / Broker / Channel layer : Redis 7
+  Conteneurs Docker          : 7 services (dev) + Nginx en prod
+  Temps réel                  : Django Channels (WebSocket, scores en direct)
+  Génération de documents      : ReportLab (PDF calendrier) via Celery
+  Documentation API              : drf-spectacular (OpenAPI / Swagger)
+  Anti-spam vitrine                : Honeypot + reCAPTCHA v3 + throttling DRF
+
+  ── FIDÉLITÉ AU SITE EXISTANT FOURNI ────────────────────────────────────
+  ✓ 6 pages HTML fournies → 10 pages React dynamiques (les 6 + Galerie
+    dédiée + détail article + mentions légales/confidentialité)
+  ✓ Charte graphique (couleurs, police, animations, icônes) intégralement
+    reprise dans tailwind.config.js et les composants React
+  ✓ Chaque section codée en dur dans le HTML fourni (classement, joueurs
+    emblématiques, légendes, actualités, calendrier, expatriés, galerie,
+    contact) devient une section alimentée par un endpoint /public/... dédié
+  ✓ Automatisation ajoutée par rapport au site fourni : classement et
+    statistiques recalculés automatiquement à la saisie d'un résultat de
+    match, chiffres clés toujours exacts, score en direct pendant les
+    matchs — un niveau d'automatisation comparable à un site officiel de
+    fédération sportive
+
+================================================================================
+FIN DU PLAN COMPLET — GLOBE INFO SPORT Django + React (Back-Office + Site Vitrine)
+================================================================================
