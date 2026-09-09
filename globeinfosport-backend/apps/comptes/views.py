@@ -10,6 +10,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
+from drf_spectacular.utils import extend_schema
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from .models import Utilisateur
@@ -86,6 +87,7 @@ class CookieTokenRefreshView(TokenRefreshView):
         return response
 
 
+@extend_schema(request=None, responses={204: None})
 class LogoutView(APIView):
     """Révoque le refresh HTTP-only et retire son cookie du navigateur."""
 
@@ -108,6 +110,7 @@ class LogoutView(APIView):
         return response
 
 
+@extend_schema(responses=UtilisateurSerializer)
 class CurrentUserView(APIView):
     """Retourne le profil du membre connecté pour restaurer la session SPA."""
 

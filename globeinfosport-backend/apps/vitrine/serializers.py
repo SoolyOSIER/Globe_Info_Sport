@@ -101,6 +101,13 @@ class AbonneNewsletterCreateSerializer(serializers.ModelSerializer):
         return abonne
 
 
+class NewsletterUnsubscribeSerializer(serializers.Serializer):
+    """Schéma explicite de la route de désabonnement par jeton d'URL."""
+
+    # Le jeton est un paramètre de chemin, il n'y a donc pas de corps à valider.
+    pass
+
+
 class MessageContactSerializer(serializers.ModelSerializer):
     class Meta:
         model = MessageContact

@@ -8,6 +8,7 @@ from apps.actualites.views import (
     CategorieViewSet,
     ChiffreCleListView,
     CitationViewSet,
+    FluxSyndicationViewSet,
     TagViewSet,
     VideoViewSet,
 )
@@ -16,6 +17,7 @@ from apps.competitions.views import (
     ClubViewSet,
     CompetitionViewSet,
     MatchViewSet,
+    ParcoursClubViewSet,
     StatistiqueJoueurListView,
 )
 from apps.comptes.views import (
@@ -43,10 +45,12 @@ router.register("categories", CategorieViewSet, basename="categorie")
 router.register("tags", TagViewSet, basename="tag")
 router.register("videos", VideoViewSet, basename="video")
 router.register("citations", CitationViewSet, basename="citation")
+router.register("flux-syndication", FluxSyndicationViewSet, basename="flux-syndication")
 router.register("joueurs", JoueurViewSet, basename="joueur")
 router.register("legendes", LegendeViewSet, basename="legende")
 router.register("competitions", CompetitionViewSet, basename="competition")
 router.register("clubs", ClubViewSet, basename="club")
+router.register("parcours-clubs", ParcoursClubViewSet, basename="parcours-club")
 router.register("matchs", MatchViewSet, basename="match")
 router.register("clubs-etrangers", ClubEtrangerViewSet, basename="club-etranger")
 router.register("joueurs-expatries", JoueurExpatrieViewSet, basename="joueur-expatrie")

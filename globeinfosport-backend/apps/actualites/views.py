@@ -13,19 +13,23 @@ from rest_framework.response import Response
 from apps.core.permissions import IsEditeurOuPlus, IsRedacteurOuPlus, has_minimum_role
 
 from .filters import ArticleFilter
-from .models import Article, Categorie, ChiffreCle, Citation, Tag, Video
+from .models import ActualiteSyndiquee, Article, Categorie, ChiffreCle, Citation, FluxSyndication, Tag, Video
 from .serializers import (
     ArticleCreateSerializer,
     ArticleDetailSerializer,
     ArticleListSerializer,
     ArticlePublicDetailSerializer,
     ArticlePublicListSerializer,
+    ActualiteSyndiqueePublicSerializer,
+    CategoriePublicSerializer,
     CategorieSerializer,
     ChiffreCleSerializer,
     CitationSerializer,
     TagSerializer,
     VideoSerializer,
+    FluxSyndicationSerializer,
 )
+from .tasks import synchroniser_flux_rss
 
 
 class ArticleViewSet(viewsets.ModelViewSet):
@@ -38,6 +42,8 @@ class ArticleViewSet(viewsets.ModelViewSet):
     ordering = ["-date_publication", "-created_at"]
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
+        if getattr(self, "swagger_fake_view", False):
+            return Article.objects.none()
         queryset = (
             Article.objects.select_related("categorie", "auteur", "auteur__role_redaction")
             .prefetch_related("tags", "videos", "citations")
@@ -131,6 +137,21 @@ class CitationViewSet(EditorialReferenceViewSet):
     ordering_fields = ["ordre", "created_at"]
 
 
+class FluxSyndicationViewSet(viewsets.ModelViewSet):
+    queryset = FluxSyndication.objects.select_related("categorie").all()
+    serializer_class = FluxSyndicationSerializer
+    permission_classes = [IsEditeurOuPlus]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ["actif", "categorie"]
+    search_fields = ["nom", "url"]
+    ordering_fields = ["nom", "dernier_import"]
+
+    @action(detail=False, methods=["post"])
+    def synchroniser(self, request):  # type: ignore[no-untyped-def]
+        task = synchroniser_flux_rss.delay()
+        return Response({"detail": "Synchronisation lancée.", "task_id": task.id}, status=status.HTTP_202_ACCEPTED)
+
+
 class ChiffreCleListView(ListAPIView):
     """Lecture seule au back-office; les tâches Celery alimentent ces valeurs."""
 
@@ -157,6 +178,19 @@ class ArticlePublicListView(ListAPIView):
             .select_related("categorie")
             .prefetch_related("tags")
         )
+
+
+class CategoriePublicListView(ListAPIView):
+    """Référentiel léger des rubriques proposées aux lecteurs."""
+
+    queryset = Categorie.objects.all()
+    serializer_class = CategoriePublicSerializer
+    permission_classes = [AllowAny]
+    throttle_scope = "public-read"
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ["nom"]
+    ordering_fields = ["nom"]
+    ordering = ["nom"]
 
 
 class ArticlePublicDetailView(RetrieveAPIView):
@@ -187,6 +221,18 @@ class ChiffreClePublicListView(ListAPIView):
     serializer_class = ChiffreCleSerializer
     permission_classes = [AllowAny]
     throttle_scope = "public-read"
+
+
+class ActualiteSyndiqueePublicListView(ListAPIView):
+    queryset = ActualiteSyndiquee.objects.select_related("flux", "flux__categorie").all()
+    serializer_class = ActualiteSyndiqueePublicSerializer
+    permission_classes = [AllowAny]
+    throttle_scope = "public-read"
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ["flux", "flux__categorie"]
+    search_fields = ["titre", "resume", "flux__nom"]
+    ordering_fields = ["date_source", "created_at"]
+    ordering = ["-date_source", "-created_at"]
 
 
 class VideoPublicListView(ListAPIView):

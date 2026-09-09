@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils.text import slugify
 
 from apps.core.models import TimeStampedModel
 
@@ -39,17 +40,52 @@ class Club(TimeStampedModel):
     """Un club local participant notamment au Championnat National."""
 
     nom = models.CharField(max_length=150, unique=True)
+    slug = models.SlugField(max_length=170, unique=True, blank=True, null=True)
     ville = models.CharField(max_length=100, blank=True)
     logo = models.ImageField(upload_to="clubs/", null=True, blank=True)
     stade = models.CharField(max_length=150, blank=True)
     fondation = models.PositiveIntegerField(null=True, blank=True)
+    histoire = models.TextField(blank=True)
+    description = models.TextField(blank=True)
     palmares = models.TextField(blank=True)
+    couleurs = models.CharField(max_length=100, blank=True)
+    site_web = models.URLField(blank=True)
 
     class Meta:
         ordering = ["nom"]
 
     def __str__(self) -> str:
         return self.nom
+
+    def save(self, *args, **kwargs) -> None:  # type: ignore[no-untyped-def]
+        if not self.slug:
+            base = slugify(self.nom) or "club"
+            candidate, suffix = base, 2
+            while Club.objects.exclude(pk=self.pk).filter(slug=candidate).exists():
+                candidate = f"{base}-{suffix}"
+                suffix += 1
+            self.slug = candidate
+        super().save(*args, **kwargs)
+
+
+class ParcoursClub(TimeStampedModel):
+    """Une étape historique ou sportive affichée sur la fiche d'un club."""
+
+    club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name="parcours")
+    saison = models.CharField(max_length=30)
+    competition = models.CharField(max_length=150)
+    position_finale = models.CharField(max_length=100, blank=True)
+    bilan = models.CharField(max_length=150, blank=True)
+    recit = models.TextField(blank=True)
+    ordre = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["-saison", "ordre", "-created_at"]
+        verbose_name = "parcours de club"
+        verbose_name_plural = "parcours des clubs"
+
+    def __str__(self) -> str:
+        return f"{self.club} — {self.competition} ({self.saison})"
 
 
 class ClassementLigne(TimeStampedModel):

@@ -4,7 +4,7 @@ from rest_framework import serializers
 
 from apps.comptes.serializers import UtilisateurSerializer
 
-from .models import Article, Categorie, ChiffreCle, Citation, Tag, Video
+from .models import ActualiteSyndiquee, Article, Categorie, ChiffreCle, Citation, FluxSyndication, Tag, Video
 
 
 class CategorieSerializer(serializers.ModelSerializer):
@@ -12,6 +12,10 @@ class CategorieSerializer(serializers.ModelSerializer):
         model = Categorie
         fields = ["id", "nom", "slug"]
         read_only_fields = ["id"]
+
+
+class CategoriePublicSerializer(CategorieSerializer):
+    """Catégorie éditoriale exposée aux filtres de la vitrine."""
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -174,3 +178,19 @@ class ChiffreCleSerializer(serializers.ModelSerializer):
         model = ChiffreCle
         fields = ["id", "libelle", "valeur", "icone", "ordre"]
         read_only_fields = fields
+
+
+class FluxSyndicationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FluxSyndication
+        fields = ["id", "nom", "url", "categorie", "actif", "dernier_import", "dernier_statut", "created_at", "updated_at"]
+        read_only_fields = ["id", "dernier_import", "dernier_statut", "created_at", "updated_at"]
+
+
+class ActualiteSyndiqueePublicSerializer(serializers.ModelSerializer):
+    source = serializers.CharField(source="flux.nom", read_only=True)
+    categorie = CategoriePublicSerializer(source="flux.categorie", read_only=True)
+
+    class Meta:
+        model = ActualiteSyndiquee
+        fields = ["id", "titre", "url", "resume", "image_url", "date_source", "source", "categorie"]

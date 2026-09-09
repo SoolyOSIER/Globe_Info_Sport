@@ -173,3 +173,41 @@ class ChiffreCle(models.Model):
 
     def __str__(self) -> str:
         return f"{self.libelle} : {self.valeur}"
+
+
+class FluxSyndication(TimeStampedModel):
+    """Flux RSS autorisé, géré par la rédaction et non par scraping."""
+
+    nom = models.CharField(max_length=120)
+    url = models.URLField(unique=True)
+    categorie = models.ForeignKey(
+        Categorie, null=True, blank=True, on_delete=models.SET_NULL, related_name="flux_syndication"
+    )
+    actif = models.BooleanField(default=True)
+    dernier_import = models.DateTimeField(null=True, blank=True)
+    dernier_statut = models.CharField(max_length=250, blank=True)
+
+    class Meta:
+        ordering = ["nom"]
+
+    def __str__(self) -> str:
+        return self.nom
+
+
+class ActualiteSyndiquee(TimeStampedModel):
+    """Extrait attribué à sa source, publiable uniquement comme lien externe."""
+
+    flux = models.ForeignKey(FluxSyndication, on_delete=models.CASCADE, related_name="actualites")
+    titre = models.CharField(max_length=300)
+    url = models.URLField(unique=True)
+    resume = models.TextField(blank=True)
+    image_url = models.URLField(blank=True)
+    date_source = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-date_source", "-created_at"]
+        verbose_name = "actualité syndiquée"
+        verbose_name_plural = "actualités syndiquées"
+
+    def __str__(self) -> str:
+        return self.titre

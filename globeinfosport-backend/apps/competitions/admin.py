@@ -8,6 +8,7 @@ from apps.competitions.models import (
     Club,
     Competition,
     Match,
+    ParcoursClub,
     ParticipationMatch,
     StatistiqueJoueur,
 )
@@ -24,6 +25,13 @@ class CompetitionAdmin(admin.ModelAdmin):
 class ClubAdmin(admin.ModelAdmin):
     list_display = ("nom", "ville", "stade", "fondation")
     search_fields = ("nom", "ville", "stade")
+
+
+@admin.register(ParcoursClub)
+class ParcoursClubAdmin(admin.ModelAdmin):
+    list_display = ("club", "competition", "saison", "position_finale", "ordre")
+    list_filter = ("saison",)
+    search_fields = ("club__nom", "competition", "position_finale")
 
 
 class ButeurMatchInline(admin.TabularInline):

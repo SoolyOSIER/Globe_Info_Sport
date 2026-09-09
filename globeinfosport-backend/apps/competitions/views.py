@@ -12,6 +12,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.generics import ListAPIView, RetrieveAPIView
+from drf_spectacular.utils import OpenApiTypes, extend_schema
 
 from apps.competitions.consumers import diffuser_score_live
 from apps.competitions.filters import (
@@ -20,11 +21,12 @@ from apps.competitions.filters import (
     MatchFilter,
     StatistiqueJoueurFilter,
 )
-from apps.competitions.models import ClassementLigne, Club, Competition, Match, StatistiqueJoueur
+from apps.competitions.models import ClassementLigne, Club, Competition, Match, ParcoursClub, StatistiqueJoueur
 from apps.competitions.serializers import (
     ClassementLigneSerializer,
     ClassementPublicSerializer,
     ClubPublicSerializer,
+    ClubPublicDetailSerializer,
     ClubSerializer,
     CompetitionPublicSerializer,
     CompetitionSerializer,
@@ -32,6 +34,7 @@ from apps.competitions.serializers import (
     MatchListSerializer,
     MatchPublicSerializer,
     MatchResultatSerializer,
+    ParcoursClubSerializer,
     ScoreDirectSerializer,
     StatistiqueJoueurPublicSerializer,
     StatistiqueJoueurSerializer,
@@ -68,6 +71,14 @@ class ClubViewSet(ReadRedacteurWriteEditeurMixin, viewsets.ModelViewSet):
     ordering_fields = ["nom", "ville", "created_at"]
 
 
+class ParcoursClubViewSet(ReadRedacteurWriteEditeurMixin, viewsets.ModelViewSet):
+    queryset = ParcoursClub.objects.select_related("club").all()
+    serializer_class = ParcoursClubSerializer
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filterset_fields = ["club", "saison"]
+    ordering_fields = ["saison", "ordre", "created_at"]
+
+
 class ClassementListView(ListAPIView):
     """Classement de back-office, strictement en lecture seule."""
 
@@ -76,7 +87,7 @@ class ClassementListView(ListAPIView):
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
         return ClassementLigne.objects.filter(
-            competition_id=self.kwargs["competition_id"]
+            competition_id=self.kwargs.get("competition_id")
         ).select_related("club", "competition")
 
 
@@ -193,12 +204,18 @@ class ClubPublicListView(_PublicReadMixin, ListAPIView):
     ordering_fields = ["nom", "ville"]
 
 
+class ClubPublicDetailView(_PublicReadMixin, RetrieveAPIView):
+    queryset = Club.objects.prefetch_related("parcours").all()
+    serializer_class = ClubPublicDetailSerializer
+    lookup_field = "slug"
+
+
 class ClassementPublicView(_PublicReadMixin, ListAPIView):
     serializer_class = ClassementPublicSerializer
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
         return ClassementLigne.objects.filter(
-            competition_id=self.kwargs["competition_id"]
+            competition_id=self.kwargs.get("competition_id")
         ).select_related("club", "competition")
 
 
@@ -232,6 +249,7 @@ class StatistiquesPublicView(_PublicReadMixin, ListAPIView):
         ).select_related("joueur", "joueur__poste", "competition")
 
 
+@extend_schema(responses={(200, "application/pdf"): OpenApiTypes.BINARY})
 class CalendrierPublicDownloadView(_PublicReadMixin, APIView):
     """Téléchargement public du calendrier PDF, filtrable par compétition."""
 

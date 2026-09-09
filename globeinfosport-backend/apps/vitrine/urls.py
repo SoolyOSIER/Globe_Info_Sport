@@ -5,6 +5,8 @@ from django.urls import path
 from apps.actualites.views import (
     ArticlePublicDetailView,
     ArticlePublicListView,
+    ActualiteSyndiqueePublicListView,
+    CategoriePublicListView,
     CitationPublicListView,
     ChiffreClePublicListView,
     VideoPublicListView,
@@ -13,6 +15,7 @@ from apps.competitions.views import (
     CalendrierPublicDownloadView,
     ClassementPublicView,
     ClubPublicListView,
+    ClubPublicDetailView,
     CompetitionPublicListView,
     MatchPublicDetailView,
     MatchPublicListView,
@@ -33,11 +36,14 @@ from .views import (
 
 urlpatterns = [
     path("articles/", ArticlePublicListView.as_view()),
+    path("fil-externe/", ActualiteSyndiqueePublicListView.as_view()),
     path("articles/<slug:slug>/", ArticlePublicDetailView.as_view()),
+    path("categories/", CategoriePublicListView.as_view()),
     path("joueurs/", JoueurPublicListView.as_view()),
     path("legendes/", LegendePublicListView.as_view()),
     path("competitions/", CompetitionPublicListView.as_view()),
     path("clubs/", ClubPublicListView.as_view()),
+    path("clubs/<slug:slug>/", ClubPublicDetailView.as_view()),
     path("classement/<int:competition_id>/", ClassementPublicView.as_view()),
     path("matchs/calendrier/telecharger/", CalendrierPublicDownloadView.as_view()),
     path("matchs/", MatchPublicListView.as_view()),

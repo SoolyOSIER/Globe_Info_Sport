@@ -15,6 +15,7 @@ from .serializers import (
     FAQSerializer,
     MessageContactCreateSerializer,
     MessageContactSerializer,
+    NewsletterUnsubscribeSerializer,
     PageContenuPublicSerializer,
     PageContenuSerializer,
     PartenairePublicSerializer,
@@ -47,6 +48,7 @@ class PublicNewsletterSubscriptionView(generics.CreateAPIView):
 
 
 class PublicNewsletterUnsubscribeView(generics.GenericAPIView):
+    serializer_class = NewsletterUnsubscribeSerializer
     permission_classes = [AllowAny]
     throttle_classes = [PublicAnonThrottle]
     throttle_scope = "public"

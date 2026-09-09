@@ -32,7 +32,7 @@ try {
 }
 
 # Les enfants héritent des variables d'environnement du processus courant.
-Start-Process -FilePath $python -ArgumentList "manage.py", "runserver", "127.0.0.1:8000" -WorkingDirectory $backend -WindowStyle Hidden
+Start-Process -FilePath $python -ArgumentList "manage.py", "runserver", "127.0.0.1:8000", "--noreload" -WorkingDirectory $backend -WindowStyle Hidden
 Start-Process -FilePath "npm.cmd" -ArgumentList "run", "dev", "--", "--host", "127.0.0.1", "--port", "5173" -WorkingDirectory $redaction -WindowStyle Hidden
 Start-Process -FilePath "npm.cmd" -ArgumentList "run", "dev", "--", "--host", "127.0.0.1", "--port", "5174" -WorkingDirectory $vitrine -WindowStyle Hidden
 

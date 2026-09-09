@@ -13,6 +13,7 @@ from apps.competitions.models import (
     Club,
     Competition,
     Match,
+    ParcoursClub,
     ParticipationMatch,
     StatistiqueJoueur,
 )
@@ -38,11 +39,16 @@ class ClubSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "nom",
+            "slug",
             "ville",
             "logo",
             "stade",
             "fondation",
+            "description",
+            "histoire",
             "palmares",
+            "couleurs",
+            "site_web",
             "created_at",
             "updated_at",
         ]
@@ -52,11 +58,25 @@ class ClubSerializer(serializers.ModelSerializer):
 class ClubResumeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Club
-        fields = ["id", "nom", "ville", "logo"]
+        fields = ["id", "nom", "slug", "ville", "logo"]
 
 
 class ClubPublicSerializer(ClubResumeSerializer):
     """Fiche publique condensée d'un club."""
+
+
+class ParcoursClubSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ParcoursClub
+        fields = ["id", "club", "saison", "competition", "position_finale", "bilan", "recit", "ordre"]
+        read_only_fields = ["id"]
+
+
+class ClubPublicDetailSerializer(ClubSerializer):
+    parcours = ParcoursClubSerializer(many=True, read_only=True)
+
+    class Meta(ClubSerializer.Meta):
+        fields = ClubSerializer.Meta.fields + ["parcours"]
 
 
 class ClassementLigneSerializer(serializers.ModelSerializer):
@@ -197,7 +217,7 @@ class MatchListSerializer(serializers.ModelSerializer):
 class MatchDetailSerializer(MatchListSerializer):
     buteurs = ButeurMatchSerializer(many=True, read_only=True)
     participations = ParticipationMatchInputSerializer(many=True, read_only=True)
-    resume = serializers.CharField()
+    resume = serializers.CharField(required=False, allow_blank=True)
     created_at = serializers.DateTimeField(read_only=True)
     updated_at = serializers.DateTimeField(read_only=True)
 

@@ -14,6 +14,12 @@ racine du dépôt :
 .\scripts\start-local.ps1
 ```
 
+Pour ne lancer que Django depuis la racine, cette commande est aussi valable :
+
+```powershell
+python manage.py runserver
+```
+
 Le script applique les migrations sur `dev.sqlite3`, puis démarre :
 
 - API et documentation : `http://127.0.0.1:8000/api/v1/docs/`

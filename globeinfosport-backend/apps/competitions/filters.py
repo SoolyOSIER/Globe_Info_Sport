@@ -27,6 +27,13 @@ class MatchFilter(django_filters.FilterSet):
     date_fin = django_filters.IsoDateTimeFilter(field_name="date_heure", lookup_expr="lte")
     mois = django_filters.NumberFilter(field_name="date_heure", lookup_expr="month")
     annee = django_filters.NumberFilter(field_name="date_heure", lookup_expr="year")
+    # Alias documentés dans le contrat public de l'API.
+    date_heure__month = django_filters.NumberFilter(
+        field_name="date_heure", lookup_expr="month"
+    )
+    date_heure__year = django_filters.NumberFilter(
+        field_name="date_heure", lookup_expr="year"
+    )
 
     class Meta:
         model = Match

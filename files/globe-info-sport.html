@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Globe Info Sport — Le football haïtien, ici et partout</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,500;0,600;0,700;0,800;1,700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy-deep:#0a1440;
+    --navy-mid:#0e1a52;
+    --blue-royal:#1b2c8f;
+    --blue-bright:#2438b8;
+    --red:#e31c3d;
+    --red-dark:#b6132f;
+    --gold:#f3c11d;
+    --gold-soft:#f7d867;
+    --bg-light:#f4f6fb;
+    --bg-card:#ffffff;
+    --ink:#0a1440;
+    --ink-soft:#4a5279;
+    --line:#e4e8f5;
+    --white:#ffffff;
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    font-family:'Manrope',sans-serif;
+    background:var(--bg-light);
+    color:var(--ink);
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,h4{
+    font-family:'Barlow Condensed',sans-serif;
+    font-weight:700;
+    line-height:1.05;
+    letter-spacing:.2px;
+  }
+  a{text-decoration:none;color:inherit;}
+  ul{list-style:none;}
+  img{max-width:100%;display:block;}
+  .wrap{max-width:1240px;margin:0 auto;padding:0 32px;}
+  @media(max-width:640px){.wrap{padding:0 20px;}}
+
+  /* ===================== Reduced motion ===================== */
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.001ms !important;animation-iteration-count:1 !important;transition-duration:0.001ms !important;scroll-behavior:auto !important;}
+  }
+
+  /* ===================== Ticker ===================== */
+  .ticker-bar{
+    background:var(--navy-deep);
+    color:var(--white);
+    font-size:13px;
+    border-bottom:1px solid rgba(255,255,255,.08);
+  }
+  .ticker-inner{
+    max-width:1240px;margin:0 auto;padding:0 32px;
+    display:flex;align-items:center;justify-content:space-between;
+    height:38px;
+  }
+  .ticker-tag{
+    display:flex;align-items:center;gap:8px;
+    font-weight:700;letter-spacing:.5px;font-size:11.5px;
+    color:var(--gold);white-space:nowrap;
+  }
+  .pulse-dot{
+    width:7px;height:7px;border-radius:50%;background:var(--red);
+    box-shadow:0 0 0 0 rgba(227,28,61,.7);
+    animation:pulse 2s infinite;
+  }
+  @keyframes pulse{
+    0%{box-shadow:0 0 0 0 rgba(227,28,61,.55);}
+    70%{box-shadow:0 0 0 7px rgba(227,28,61,0);}
+    100%{box-shadow:0 0 0 0 rgba(227,28,61,0);}
+  }
+  .ticker-link{
+    font-weight:600;color:rgba(255,255,255,.8);
+    display:flex;align-items:center;gap:4px;
+    transition:color .2s;
+  }
+  .ticker-link:hover{color:var(--gold);}
+
+  /* ===================== Header ===================== */
+  header{
+    background:linear-gradient(90deg,var(--blue-royal),var(--blue-bright));
+    position:sticky;top:0;z-index:100;
+    box-shadow:0 4px 24px rgba(10,20,64,.18);
+  }
+  .nav-inner{
+    max-width:1240px;margin:0 auto;padding:0 32px;
+    display:flex;align-items:center;justify-content:space-between;
+    height:82px;
+  }
+  .brand{display:flex;align-items:center;gap:12px;}
+  .brand-mark{
+    width:46px;height:46px;border-radius:50%;
+    background:radial-gradient(circle at 32% 28%,#ffe9a8,var(--gold) 55%,#c98e0a 100%);
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 3px 10px rgba(0,0,0,.25);
+    position:relative;
+    flex-shrink:0;
+  }
+  .brand-mark svg{width:26px;height:26px;}
+  .brand-text{color:var(--white);}
+  .brand-text .l1{
+    font-family:'Barlow Condensed';font-weight:800;font-size:19px;
+    letter-spacing:.3px;line-height:1;
+  }
+  .brand-text .l2{
+    font-size:10.5px;letter-spacing:2px;color:var(--gold-soft);
+    font-weight:700;margin-top:3px;
+  }
+  nav.primary{display:flex;gap:6px;}
+  nav.primary a{
+    color:rgba(255,255,255,.82);
+    font-weight:600;font-size:15px;
+    padding:10px 16px;border-radius:8px;
+    position:relative;
+    transition:color .2s, background .2s;
+  }
+  nav.primary a:hover{color:var(--white);background:rgba(255,255,255,.08);}
+  nav.primary a.active{color:var(--white);background:rgba(255,255,255,.14);}
+  nav.primary a.active::after{
+    content:"";position:absolute;left:16px;right:16px;bottom:6px;height:2px;
+    background:var(--gold);border-radius:2px;
+  }
+  .nav-toggle{display:none;}
+  @media(max-width:900px){
+    nav.primary{
+      position:fixed;inset:82px 0 0 0;background:var(--navy-deep);
+      flex-direction:column;padding:20px 24px;gap:2px;
+      transform:translateX(100%);transition:transform .35s ease;
+      overflow-y:auto;
+    }
+    nav.primary.open{transform:translateX(0);}
+    nav.primary a{font-size:20px;padding:16px 8px;border-bottom:1px solid rgba(255,255,255,.06);border-radius:0;}
+    .nav-toggle{
+      display:flex;flex-direction:column;gap:5px;justify-content:center;align-items:center;
+      width:40px;height:40px;background:none;border:none;cursor:pointer;
+    }
+    .nav-toggle span{width:22px;height:2px;background:#fff;border-radius:2px;transition:.3s;}
+  }
+
+  /* ===================== Hero ===================== */
+  .hero{
+    position:relative;
+    background:var(--navy-deep);
+    overflow:hidden;
+    padding:90px 0 120px;
+    isolation:isolate;
+  }
+  .hero::before{
+    content:"";position:absolute;inset:0;
+    background:
+      radial-gradient(ellipse 900px 600px at 78% 15%, rgba(227,28,61,.25), transparent 60%),
+      radial-gradient(ellipse 700px 500px at 10% 90%, rgba(27,44,143,.55), transparent 65%),
+      linear-gradient(120deg, var(--navy-deep) 35%, var(--blue-royal) 75%, var(--blue-bright) 110%);
+    z-index:-2;
+  }
+  .pitch-lines{
+    position:absolute;inset:0;z-index:-1;opacity:.35;
+    background-image:
+      linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
+    background-size:64px 64px;
+    mask-image:linear-gradient(to bottom, black, transparent 85%);
+  }
+  .hero-arc{
+    position:absolute;right:-180px;top:-180px;width:560px;height:560px;
+    border:1.5px solid rgba(255,255,255,.09);border-radius:50%;z-index:-1;
+  }
+  .hero-arc.small{right:-60px;top:60px;width:320px;height:320px;border-color:rgba(243,193,29,.14);}
+
+  .hero-grid{
+    display:grid;grid-template-columns:1.25fr 1fr;gap:56px;align-items:center;
+  }
+  @media(max-width:960px){.hero-grid{grid-template-columns:1fr;gap:40px;}}
+
+  .eyebrow-pill{
+    display:inline-flex;align-items:center;gap:9px;
+    background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);
+    color:var(--gold-soft);font-weight:700;font-size:12.5px;letter-spacing:1px;
+    padding:8px 16px;border-radius:100px;margin-bottom:26px;
+    backdrop-filter:blur(6px);
+  }
+  .eyebrow-pill .rf{width:14px;height:14px;color:var(--gold-soft);animation:spinSlow 6s linear infinite;}
+  @keyframes spinSlow{to{transform:rotate(360deg);}}
+
+  .hero h1{
+    color:var(--white);
+    font-size:clamp(40px,6vw,68px);
+    font-weight:800;
+    max-width:15ch;
+  }
+  .hero h1 .accent{color:var(--gold);position:relative;}
+
+  .hero p.lede{
+    color:rgba(255,255,255,.68);
+    font-size:17.5px;line-height:1.65;
+    max-width:46ch;margin:26px 0 34px;
+  }
+  .hero-cta{display:flex;gap:14px;flex-wrap:wrap;}
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;
+    font-weight:700;font-size:15px;padding:15px 26px;border-radius:10px;
+    transition:transform .25s cubic-bezier(.2,.8,.2,1), box-shadow .25s, background .25s;
+    cursor:pointer;border:none;
+  }
+  .btn-primary{
+    background:var(--red);color:var(--white);
+    box-shadow:0 8px 24px -6px rgba(227,28,61,.55);
+  }
+  .btn-primary:hover{transform:translateY(-3px);box-shadow:0 14px 30px -6px rgba(227,28,61,.65);background:var(--red-dark);}
+  .btn-outline{
+    background:transparent;color:var(--white);border:1.5px solid rgba(255,255,255,.35);
+  }
+  .btn-outline:hover{border-color:var(--gold);color:var(--gold);transform:translateY(-3px);}
+
+  .hero-stats{display:flex;gap:32px;margin-top:46px;flex-wrap:wrap;}
+  .hero-stat b{
+    display:block;font-family:'Barlow Condensed';font-size:30px;color:var(--white);font-weight:800;
+  }
+  .hero-stat span{font-size:12.5px;color:rgba(255,255,255,.55);letter-spacing:.4px;}
+
+  /* match card */
+  .match-card{
+    background:rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.14);
+    border-radius:20px;padding:28px;
+    backdrop-filter:blur(14px);
+    box-shadow:0 24px 60px -20px rgba(0,0,0,.5);
+    position:relative;
+  }
+  .match-card::before{
+    content:"";position:absolute;top:0;left:24px;right:24px;height:1px;
+    background:linear-gradient(90deg,transparent,rgba(243,193,29,.5),transparent);
+  }
+  .match-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px;}
+  .badge-next{
+    background:rgba(243,193,29,.15);color:var(--gold);
+    font-size:11.5px;font-weight:800;letter-spacing:.8px;
+    padding:6px 12px;border-radius:100px;
+    display:flex;align-items:center;gap:6px;
+  }
+  .badge-next .dot{width:6px;height:6px;border-radius:50%;background:var(--gold);}
+  .match-date{color:rgba(255,255,255,.55);font-size:12.5px;font-weight:600;}
+  .match-teams{
+    display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center;
+    padding:8px 0 22px;
+  }
+  .team{text-align:center;}
+  .team-crest{
+    width:58px;height:58px;border-radius:16px;margin:0 auto 10px;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Barlow Condensed';font-weight:800;font-size:19px;color:var(--navy-deep);
+  }
+  .team-crest.c1{background:linear-gradient(145deg,var(--gold-soft),var(--gold));}
+  .team-crest.c2{background:linear-gradient(145deg,#8fa0ff,#5468e6);color:#fff;}
+  .team-name{color:var(--white);font-weight:700;font-size:14.5px;}
+  .vs-pill{
+    width:42px;height:42px;border-radius:50%;background:var(--white);color:var(--navy-deep);
+    display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;
+    font-family:'Barlow Condensed';
+  }
+  .match-meta{
+    display:flex;justify-content:space-between;align-items:center;
+    border-top:1px solid rgba(255,255,255,.12);padding-top:18px;
+  }
+  .match-meta .loc{color:rgba(255,255,255,.6);font-size:13px;display:flex;gap:7px;align-items:center;}
+  .countdown{display:flex;gap:8px;}
+  .countdown .c{
+    background:rgba(255,255,255,.08);border-radius:8px;padding:6px 9px;text-align:center;min-width:42px;
+  }
+  .countdown .c b{display:block;font-family:'Barlow Condensed';font-size:17px;color:var(--white);}
+  .countdown .c span{font-size:9px;color:rgba(255,255,255,.5);letter-spacing:.4px;}
+
+  /* ===================== Section shell ===================== */
+  section{padding:96px 0;}
+  .section-dark{
+    background:linear-gradient(180deg,var(--navy-deep),var(--navy-mid));
+    color:var(--white);position:relative;overflow:hidden;
+  }
+  .section-dark .pitch-lines{opacity:.18;}
+  .sec-head{
+    display:flex;justify-content:space-between;align-items:flex-end;gap:24px;
+    margin-bottom:44px;flex-wrap:wrap;
+  }
+  .kicker{
+    display:flex;align-items:center;gap:10px;
+    font-weight:700;font-size:12.5px;letter-spacing:1.6px;
+    color:var(--red);margin-bottom:14px;
+  }
+  .section-dark .kicker{color:var(--gold);}
+  .kicker .bar{width:26px;height:3px;background:var(--red);border-radius:3px;}
+  .section-dark .kicker .bar{background:var(--gold);}
+  .sec-head h2{font-size:clamp(28px,3.4vw,40px);}
+  .sec-head p{color:var(--ink-soft);font-size:15.5px;max-width:46ch;margin-top:10px;}
+  .section-dark .sec-head p{color:rgba(255,255,255,.6);}
+  .see-all{
+    display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:14.5px;
+    color:var(--red);white-space:nowrap;padding-bottom:6px;border-bottom:2px solid transparent;
+    transition:border-color .2s, gap .2s;
+  }
+  .see-all:hover{border-color:var(--red);gap:10px;}
+  .section-dark .see-all{color:var(--gold);}
+  .section-dark .see-all:hover{border-color:var(--gold);}
+  .see-all svg{width:15px;height:15px;transition:transform .2s;}
+  .see-all:hover svg{transform:translate(2px,-2px);}
+
+  /* reveal on scroll (single orchestrated pattern) */
+  .reveal{opacity:0;transform:translateY(26px);transition:opacity .7s cubic-bezier(.2,.7,.2,1), transform .7s cubic-bezier(.2,.7,.2,1);}
+  .reveal.in{opacity:1;transform:none;}
+
+  /* ===================== A la une (featured) ===================== */
+  .featured-grid{display:grid;grid-template-columns:1.5fr 1fr;gap:28px;}
+  @media(max-width:900px){.featured-grid{grid-template-columns:1fr;}}
+  .feature-main{
+    position:relative;border-radius:22px;overflow:hidden;min-height:420px;
+    display:flex;align-items:flex-end;
+    background:
+      linear-gradient(0deg, rgba(6,10,36,.92) 0%, rgba(6,10,36,.35) 55%, rgba(6,10,36,.1) 100%),
+      linear-gradient(135deg,#1b2c8f,#0a1440 60%);
+    box-shadow:0 24px 50px -20px rgba(10,20,64,.4);
+  }
+  .feature-main::after{
+    content:"";position:absolute;inset:0;
+    background-image:radial-gradient(circle at 75% 30%, rgba(243,193,29,.18), transparent 55%);
+  }
+  .feature-jersey{
+    position:absolute;right:6%;top:8%;width:230px;opacity:.9;
+    filter:drop-shadow(0 20px 30px rgba(0,0,0,.4));
+  }
+  .feature-body{position:relative;padding:36px;z-index:2;}
+  .tag-pill{
+    display:inline-block;background:var(--red);color:#fff;font-size:11.5px;font-weight:800;
+    letter-spacing:.6px;padding:6px 13px;border-radius:100px;margin-bottom:16px;
+  }
+  .feature-body h3{color:#fff;font-size:clamp(24px,3vw,34px);max-width:16ch;}
+  .feature-body p{color:rgba(255,255,255,.72);margin:14px 0 18px;max-width:48ch;font-size:15px;line-height:1.6;}
+  .feature-foot{display:flex;justify-content:space-between;align-items:center;}
+  .feature-date{color:rgba(255,255,255,.55);font-size:13px;display:flex;gap:7px;align-items:center;}
+  .read-link{color:var(--gold);font-weight:700;font-size:14.5px;display:flex;align-items:center;gap:6px;}
+
+  .side-col{display:flex;flex-direction:column;gap:22px;}
+  .focus-card{
+    background:linear-gradient(150deg,var(--blue-royal),var(--navy-deep));
+    color:#fff;border-radius:22px;padding:32px;position:relative;overflow:hidden;flex:1;
+  }
+  .focus-card::before{
+    content:"";position:absolute;width:220px;height:220px;border:40px solid rgba(255,255,255,.04);
+    border-radius:50%;right:-70px;bottom:-90px;
+  }
+  .focus-card .tag{color:var(--gold);font-weight:700;font-size:11.5px;letter-spacing:1.2px;margin-bottom:12px;display:block;}
+  .focus-card h3{font-size:26px;margin-bottom:12px;}
+  .focus-card p{color:rgba(255,255,255,.68);font-size:14.5px;line-height:1.6;margin-bottom:22px;}
+  .mini-stats{display:flex;gap:20px;border-top:1px solid rgba(255,255,255,.14);padding-top:18px;margin-bottom:20px;}
+  .mini-stats div b{display:block;font-family:'Barlow Condensed';font-size:22px;color:var(--gold-soft);}
+  .mini-stats div span{font-size:11px;color:rgba(255,255,255,.55);}
+  .focus-card .explore{
+    display:inline-flex;align-items:center;gap:7px;color:#fff;font-weight:700;font-size:14px;
+    border-bottom:2px solid var(--gold);padding-bottom:4px;
+  }
+
+  .news-card{
+    background:var(--bg-card);border:1px solid var(--line);border-radius:18px;padding:26px;
+    box-shadow:0 6px 18px -12px rgba(10,20,64,.15);
+  }
+  .news-card .tag{color:var(--red);font-weight:700;font-size:11.5px;letter-spacing:1.2px;margin-bottom:10px;display:block;}
+  .news-card h3{font-size:22px;color:var(--ink);margin-bottom:8px;}
+  .news-empty{
+    border:1.5px dashed var(--line);border-radius:12px;padding:16px;margin-top:14px;
+    font-size:13.5px;color:var(--ink-soft);line-height:1.6;
+  }
+  .news-empty a{color:var(--red);font-weight:700;}
+
+  /* ===================== Calendrier / talents ===================== */
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:32px;}
+  @media(max-width:800px){.two-col{grid-template-columns:1fr;}}
+
+  .match-row{
+    display:flex;align-items:center;gap:16px;
+    background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
+    border-radius:16px;padding:18px 20px;
+    transition:background .25s, transform .25s, border-color .25s;
+  }
+  .match-row:hover{background:rgba(255,255,255,.09);transform:translateX(4px);border-color:rgba(243,193,29,.3);}
+  .match-row .cal-ico{
+    width:44px;height:44px;border-radius:12px;background:rgba(227,28,61,.16);
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--red);
+  }
+  .match-row .info b{color:#fff;font-size:16px;font-weight:700;}
+  .match-row .info div{color:rgba(255,255,255,.5);font-size:13px;margin-top:3px;}
+  .match-row .chev{margin-left:auto;color:rgba(255,255,255,.35);}
+  .match-list{display:flex;flex-direction:column;gap:14px;}
+
+  .player-card{
+    background:var(--bg-card);border-radius:20px;overflow:hidden;
+    box-shadow:0 10px 26px -16px rgba(10,20,64,.25);border:1px solid var(--line);
+    transition:transform .3s, box-shadow .3s;
+  }
+  .player-card:hover{transform:translateY(-6px);box-shadow:0 20px 36px -16px rgba(10,20,64,.3);}
+  .player-photo{
+    height:230px;position:relative;overflow:hidden;
+    background:linear-gradient(160deg,#c9d2ea,#8a97c9);
+  }
+  .player-photo svg{position:absolute;bottom:0;left:50%;transform:translateX(-50%);height:100%;}
+  .player-num{
+    position:absolute;top:14px;right:14px;background:rgba(10,20,64,.75);color:var(--gold);
+    font-family:'Barlow Condensed';font-weight:800;font-size:20px;padding:4px 12px;border-radius:8px;
+  }
+  .player-info{padding:18px 20px;}
+  .player-info b{font-size:18px;color:var(--ink);}
+  .player-info span{display:block;color:var(--red);font-weight:700;font-size:12.5px;letter-spacing:.4px;margin-top:4px;}
+
+  /* ===================== Explore chips (regards internationaux) ===================== */
+  .chip-note{
+    background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);
+    border-radius:14px;padding:16px 20px;font-size:14px;color:rgba(255,255,255,.65);
+    margin-bottom:32px;
+  }
+  .chip-note b{color:var(--gold-soft);}
+  .chip-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+  @media(max-width:800px){.chip-grid{grid-template-columns:1fr;}}
+  .chip-card{
+    background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);
+    border-radius:18px;padding:26px;transition:transform .3s, background .3s, border-color .3s;
+    position:relative;
+  }
+  .chip-card:hover{transform:translateY(-5px);background:rgba(255,255,255,.07);border-color:rgba(243,193,29,.4);}
+  .chip-ico{
+    width:46px;height:46px;border-radius:12px;background:rgba(243,193,29,.15);color:var(--gold);
+    display:flex;align-items:center;justify-content:center;margin-bottom:18px;
+  }
+  .chip-card h4{color:#fff;font-size:19px;margin-bottom:6px;}
+  .chip-card p{color:rgba(255,255,255,.55);font-size:13.5px;}
+  .chip-arrow{position:absolute;top:24px;right:22px;color:rgba(255,255,255,.35);transition:transform .25s, color .25s;}
+  .chip-card:hover .chip-arrow{transform:translate(3px,-3px);color:var(--gold);}
+
+  /* ===================== Newsletter band ===================== */
+  .band{
+    background:linear-gradient(100deg,var(--red),var(--red-dark));
+    color:#fff;border-radius:26px;padding:52px;
+    display:flex;justify-content:space-between;align-items:center;gap:32px;flex-wrap:wrap;
+    position:relative;overflow:hidden;
+  }
+  .band::before{
+    content:"";position:absolute;right:-40px;top:-60px;width:240px;height:240px;
+    border:36px solid rgba(255,255,255,.08);border-radius:50%;
+  }
+  .band h3{font-size:30px;max-width:16ch;}
+  .band p{color:rgba(255,255,255,.85);margin-top:10px;font-size:14.5px;max-width:38ch;}
+  .band form{display:flex;gap:10px;flex-wrap:wrap;}
+  .band input{
+    border:none;border-radius:10px;padding:14px 18px;min-width:230px;font-size:14.5px;
+    font-family:'Manrope';
+  }
+  .band .btn-primary{background:var(--navy-deep);box-shadow:0 8px 24px -8px rgba(0,0,0,.4);}
+  .band .btn-primary:hover{background:#050a28;}
+
+  /* ===================== Footer ===================== */
+  footer{background:var(--navy-deep);color:rgba(255,255,255,.7);padding:70px 0 0;}
+  .foot-grid{
+    display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:48px;padding-bottom:52px;
+    border-bottom:1px solid rgba(255,255,255,.08);
+  }
+  @media(max-width:800px){.foot-grid{grid-template-columns:1fr;gap:36px;}}
+  .foot-brand{display:flex;align-items:center;gap:12px;margin-bottom:18px;}
+  .foot-brand .brand-text .l1{color:#fff;}
+  footer p.desc{font-size:14.5px;line-height:1.7;max-width:34ch;margin-bottom:20px;}
+  .motto{color:var(--gold);font-weight:700;font-size:12.5px;letter-spacing:1.4px;}
+  footer h4{color:#fff;font-family:'Barlow Condensed';font-size:16px;font-weight:700;letter-spacing:.4px;margin-bottom:20px;}
+  footer .cols{display:flex;gap:40px;}
+  footer .cols ul{display:flex;flex-direction:column;gap:13px;}
+  footer .cols a{font-size:14.5px;transition:color .2s, padding-left .2s;}
+  footer .cols a:hover{color:var(--gold);padding-left:4px;}
+  footer .ext::after{content:"↗";font-size:11px;margin-left:5px;opacity:.6;}
+  .foot-bottom{
+    display:flex;justify-content:space-between;align-items:center;padding:26px 0;
+    font-size:13px;color:rgba(255,255,255,.4);flex-wrap:wrap;gap:12px;
+  }
+  .socials{display:flex;gap:10px;}
+  .socials a{
+    width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.06);
+    display:flex;align-items:center;justify-content:center;transition:background .2s, transform .2s;
+  }
+  .socials a:hover{background:var(--red);transform:translateY(-3px);}
+
+  /* back to top */
+  .to-top{
+    position:fixed;right:26px;bottom:26px;width:50px;height:50px;border-radius:50%;
+    background:var(--red);color:#fff;display:flex;align-items:center;justify-content:center;
+    box-shadow:0 10px 26px -8px rgba(227,28,61,.6);cursor:pointer;z-index:200;
+    opacity:0;transform:translateY(16px) scale(.8);pointer-events:none;
+    transition:opacity .3s, transform .3s, background .2s;
+  }
+  .to-top.show{opacity:1;transform:none;pointer-events:auto;}
+  .to-top:hover{background:var(--red-dark);}
+</style>
+</head>
+<body>
+
+<!-- ===================== Ticker ===================== -->
+<div class="ticker-bar">
+  <div class="ticker-inner">
+    <div class="ticker-tag"><span class="pulse-dot"></span> LE FOOTBALL HAÏTIEN, ICI ET PARTOUT</div>
+    <a href="#" class="ticker-link">FHF <span style="font-size:11px">↗</span></a>
+  </div>
+</div>
+
+<!-- ===================== Header ===================== -->
+<header>
+  <div class="nav-inner">
+    <a href="#" class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" stroke="#0a1440" stroke-width="1.6"/><path d="M12 3v18M3 12h18M5.5 6.5c3 2 10 2 13 0M5.5 17.5c3-2 10-2 13 0" stroke="#0a1440" stroke-width="1.3"/></svg>
+      </div>
+      <div class="brand-text">
+        <div class="l1">Globe Info Sport</div>
+        <div class="l2">FOOTBALL HAÏTIEN</div>
+      </div>
+    </a>
+    <button class="nav-toggle" id="navToggle" aria-label="Menu"><span></span><span></span><span></span></button>
+    <nav class="primary" id="primaryNav">
+      <a href="#" class="active">Accueil</a>
+      <a href="#actualites">Actualités</a>
+      <a href="#championnat">Championnat</a>
+      <a href="#calendrier">Calendrier</a>
+      <a href="#expatries">Expatriés</a>
+      <a href="#galerie">Galerie</a>
+      <a href="#contact">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<!-- ===================== Hero ===================== -->
+<div class="hero">
+  <div class="pitch-lines"></div>
+  <div class="hero-arc"></div>
+  <div class="hero-arc small"></div>
+  <div class="wrap hero-grid">
+    <div>
+      <div class="eyebrow-pill">
+        <svg class="rf" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M12 3v18M3 12h18" stroke="currentColor" stroke-width="1.3"/></svg>
+        LE MÉDIA DU FOOTBALL HAÏTIEN
+      </div>
+      <h1>Les histoires qui font vibrer <span class="accent">Haïti.</span></h1>
+      <p class="lede">Une lecture ambitieuse du football local, des Grenadiers et de la diaspora — avec les résultats, les récits et les rendez-vous qui comptent.</p>
+      <div class="hero-cta">
+        <a href="#actualites" class="btn btn-primary">Lire l'actualité</a>
+        <a href="#calendrier" class="btn btn-outline">Voir les matchs</a>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat"><b class="counter" data-target="1925">0</b><span>Héritage du football</span></div>
+        <div class="hero-stat"><b class="counter" data-target="18">0</b><span>Clubs au championnat</span></div>
+        <div class="hero-stat"><b class="counter" data-target="40">0</b><span>Talents en diaspora</span></div>
+      </div>
+    </div>
+
+    <div class="match-card reveal">
+      <div class="match-top">
+        <span class="badge-next"><span class="dot"></span> PROCHAIN MATCH</span>
+        <span class="match-date">18 sept. 2026, 11:00</span>
+      </div>
+      <div class="match-teams">
+        <div class="team">
+          <div class="team-crest c1">AC</div>
+          <div class="team-name">AS Capoise</div>
+        </div>
+        <div class="vs-pill">VS</div>
+        <div class="team">
+          <div class="team-crest c2">AM</div>
+          <div class="team-name">AS Mirebalais</div>
+        </div>
+      </div>
+      <div class="match-meta">
+        <div class="loc">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 22s7-7.4 7-12.5A7 7 0 0 0 5 9.5C5 14.6 12 22 12 22Z" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="9.5" r="2.4" stroke="currentColor" stroke-width="1.6"/></svg>
+          Championnat national
+        </div>
+        <div class="countdown" id="countdown">
+          <div class="c"><b id="cd-d">--</b><span>JRS</span></div>
+          <div class="c"><b id="cd-h">--</b><span>HRS</span></div>
+          <div class="c"><b id="cd-m">--</b><span>MIN</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== À la une ===================== -->
+<section id="actualites">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div>
+        <div class="kicker"><span class="bar"></span>À LA UNE</div>
+        <h2>L'actualité à ne pas manquer</h2>
+        <p>Le regard Globe Info Sport sur les terrains d'Haïti et du monde.</p>
+      </div>
+      <a href="#" class="see-all">Toutes les actualités <svg viewBox="0 0 24 24" fill="none"><path d="M7 17 17 7M8 7h9v9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+    </div>
+
+    <div class="featured-grid reveal">
+      <div class="feature-main">
+        <svg class="feature-jersey" viewBox="0 0 200 220" fill="none">
+          <path d="M60 20 L20 55 L40 85 L60 70 L60 200 L140 200 L140 70 L160 85 L180 55 L140 20 C140 20 125 35 100 35 C75 35 60 20 60 20Z" fill="#ffffff" fill-opacity="0.9"/>
+          <path d="M60 20 L20 55 L40 85 L60 70 L60 200 L140 200 L140 70 L160 85 L180 55 L140 20 C140 20 125 35 100 35 C75 35 60 20 60 20Z" stroke="#f3c11d" stroke-width="3"/>
+          <text x="100" y="140" font-family="Barlow Condensed" font-weight="800" font-size="55" fill="#0a1440" text-anchor="middle">10</text>
+        </svg>
+        <div class="feature-body">
+          <span class="tag-pill">CHAMPIONNAT</span>
+          <h3>Mbappé brille encore avec le Real Madrid</h3>
+          <p>L'attaquant français continue d'impressionner avec ses performances et son efficacité offensive.</p>
+          <div class="feature-foot">
+            <div class="feature-date">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M3 10h18M8 3v4M16 3v4" stroke="currentColor" stroke-width="1.6"/></svg>
+              7 sept. 2026
+            </div>
+            <a href="#" class="read-link">Lire <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+          </div>
+        </div>
+      </div>
+
+      <div class="side-col">
+        <div class="focus-card">
+          <span class="tag">FOCUS NATIONAL</span>
+          <h3>Les Grenadiers et le football local, au premier plan.</h3>
+          <p>Sélections nationales, clubs, résultats et visages du pays : retrouvez une information organisée pour suivre chaque histoire au plus près.</p>
+          <div class="mini-stats">
+            <div><b>1925</b><span>un héritage sportif</span></div>
+            <div><b>Local</b><span>clubs &amp; championnat</span></div>
+            <div><b>Diaspora</b><span>talents à suivre</span></div>
+          </div>
+          <a href="#championnat" class="explore">Explorer le championnat →</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="wrap" style="padding:0;margin-top:28px;">
+      <div class="news-card reveal">
+        <span class="tag">ACTUALITÉS NATIONALES</span>
+        <h3>Au rythme des Rouges et Bleus</h3>
+        <div class="news-empty">
+          Publiez vos articles dans les catégories « Sélection nationale » ou « Championnat » : ils seront automatiquement mis en avant ici — <a href="#">en savoir plus</a>.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== Calendrier / Talents ===================== -->
+<section class="section-dark" id="calendrier">
+  <div class="pitch-lines"></div>
+  <div class="wrap">
+    <div class="two-col">
+      <div class="reveal">
+        <div class="kicker"><span class="bar"></span>CALENDRIER</div>
+        <h2 style="margin-bottom:30px;">Les prochains rendez-vous</h2>
+        <div class="match-list">
+          <div class="match-row">
+            <div class="cal-ico">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M3 10h18M8 3v4M16 3v4" stroke="currentColor" stroke-width="1.7"/></svg>
+            </div>
+            <div class="info">
+              <b>AS Capoise vs AS Mirebalais</b>
+              <div>vendredi 18 septembre 2026 à 11:00</div>
+            </div>
+            <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="m9 6 6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div class="match-row">
+            <div class="cal-ico">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M3 10h18M8 3v4M16 3v4" stroke="currentColor" stroke-width="1.7"/></svg>
+            </div>
+            <div class="info">
+              <b>Victory SC vs Real Hope</b>
+              <div>dimanche 27 septembre 2026 à 15:30</div>
+            </div>
+            <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="m9 6 6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div class="match-row">
+            <div class="cal-ico">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M3 10h18M8 3v4M16 3v4" stroke="currentColor" stroke-width="1.7"/></svg>
+            </div>
+            <div class="info">
+              <b>Haïti vs Jamaïque — Amical</b>
+              <div>mardi 6 octobre 2026 à 18:00</div>
+            </div>
+            <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="m9 6 6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="reveal" id="expatries">
+        <div class="kicker"><span class="bar"></span>TALENTS</div>
+        <h2 style="margin-bottom:30px;">Les visages à suivre</h2>
+        <div class="player-card">
+          <div class="player-photo">
+            <span class="player-num">9</span>
+            <svg viewBox="0 0 200 240" width="100%" height="100%">
+              <ellipse cx="100" cy="230" rx="70" ry="16" fill="rgba(10,20,64,.15)"/>
+              <circle cx="100" cy="70" r="34" fill="#3a4470"/>
+              <path d="M50 240 C50 170 65 140 100 140 C135 140 150 170 150 240 Z" fill="#1b2c8f"/>
+              <path d="M50 240 C50 170 65 140 100 140 C135 140 150 170 150 240 Z" fill="none" stroke="#f3c11d" stroke-width="3"/>
+            </svg>
+          </div>
+          <div class="player-info">
+            <b>Storly Osier</b>
+            <span>ATTAQUANT</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== Regards internationaux ===================== -->
+<section class="section-dark" id="championnat" style="padding-top:0;">
+  <div class="pitch-lines"></div>
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div>
+        <div class="kicker"><span class="bar"></span>REGARDS INTERNATIONAUX</div>
+        <h2>Suivez les Grenadiers à l'étranger et les compétitions qui font l'actualité du football.</h2>
+      </div>
+      <a href="#expatries" class="see-all">Voir les expatriés <svg viewBox="0 0 24 24" fill="none"><path d="M7 17 17 7M8 7h9v9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+    </div>
+
+    <div class="chip-note reveal">Les contenus classés « <b>International</b> » seront présentés dans cette sélection.</div>
+
+    <div class="chip-grid reveal">
+      <a href="#" class="chip-card">
+        <svg class="chip-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M7 17 17 7M8 7h9v9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div class="chip-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="1.7"/><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="1.7"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="1.7"/></svg></div>
+        <h4>FHF</h4>
+        <p>Le football national</p>
+      </a>
+      <a href="#" class="chip-card">
+        <svg class="chip-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M7 17 17 7M8 7h9v9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div class="chip-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/><path d="M3 12h18M12 3c2.5 2.7 4 6 4 9s-1.5 6.3-4 9c-2.5-2.7-4-6-4-9s1.5-6.3 4-9Z" stroke="currentColor" stroke-width="1.7"/></svg></div>
+        <h4>FIFA World Cup 26™</h4>
+        <p>La scène mondiale</p>
+      </a>
+      <a href="#" class="chip-card">
+        <svg class="chip-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M7 17 17 7M8 7h9v9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div class="chip-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0V4Z" stroke="currentColor" stroke-width="1.7"/><path d="M7 5H4a1 1 0 0 0-1 1c0 3 2 5 4 5M17 5h3a1 1 0 0 1 1 1c0 3-2 5-4 5" stroke="currentColor" stroke-width="1.7"/></svg></div>
+        <h4>Champions League</h4>
+        <p>Les grands rendez-vous européens</p>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== Galerie teaser ===================== -->
+<section id="galerie">
+  <div class="wrap">
+    <div class="band reveal">
+      <div>
+        <h3>Restez connecté aux Grenadiers</h3>
+        <p>Recevez les résultats, les convocations et les grands rendez-vous du football haïtien, directement dans votre boîte mail.</p>
+      </div>
+      <form onsubmit="return false;">
+        <input type="email" placeholder="Votre adresse e-mail" required>
+        <button type="submit" class="btn btn-primary">S'abonner</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== Footer ===================== -->
+<footer id="contact">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <a href="#" class="foot-brand">
+          <div class="brand-mark">
+            <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#0a1440" stroke-width="1.6"/><path d="M12 3v18M3 12h18M5.5 6.5c3 2 10 2 13 0M5.5 17.5c3-2 10-2 13 0" stroke="#0a1440" stroke-width="1.3"/></svg>
+          </div>
+          <div class="brand-text">
+            <div class="l1">Globe Info Sport</div>
+          </div>
+        </a>
+        <p class="desc">Le média qui suit les Grenadiers, le championnat local et les talents haïtiens à travers le monde.</p>
+        <div class="motto">INFORMER · RACONTER · RASSEMBLER</div>
+      </div>
+
+      <div>
+        <h4>Explorer</h4>
+        <div class="cols">
+          <ul>
+            <li><a href="#actualites">Actualités</a></li>
+            <li><a href="#calendrier">Calendrier</a></li>
+            <li><a href="#galerie">Galerie</a></li>
+          </ul>
+          <ul>
+            <li><a href="#championnat">Championnat</a></li>
+            <li><a href="#expatries">Expatriés</a></li>
+            <li><a href="#contact">Contact</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div>
+        <h4>Suivre le football</h4>
+        <ul>
+          <li><a href="#" class="ext">Fédération Haïtienne de Football</a></li>
+          <li><a href="#" class="ext">Coupe du Monde FIFA 26™</a></li>
+          <li><a href="mailto:redaction@globeinfosport.ht">redaction@globeinfosport.ht</a></li>
+          <li><a href="#">Mentions légales</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="foot-bottom">
+      <span>© 2026 Globe Info Sport · Tous droits réservés</span>
+      <div class="socials">
+        <a href="#" aria-label="Facebook"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M14 9h3V5h-3c-2.2 0-4 1.8-4 4v2H7v4h3v6h4v-6h3l1-4h-4V9c0-.6.4-1 1-1Z" fill="currentColor"/></svg></a>
+        <a href="#" aria-label="Instagram"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="5" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.7"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg></a>
+        <a href="#" aria-label="X"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 4l16 16M20 4 4 20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<div class="to-top" id="toTop" aria-label="Retour en haut">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 19V5M5 12l7-7 7 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</div>
+
+<script>
+  // Mobile nav toggle
+  const navToggle = document.getElementById('navToggle');
+  const primaryNav = document.getElementById('primaryNav');
+  navToggle.addEventListener('click', () => primaryNav.classList.toggle('open'));
+  primaryNav.querySelectorAll('a').forEach(a => a.addEventListener('click', () => primaryNav.classList.remove('open')));
+
+  // Back to top
+  const toTop = document.getElementById('toTop');
+  window.addEventListener('scroll', () => {
+    toTop.classList.toggle('show', window.scrollY > 500);
+  });
+  toTop.addEventListener('click', () => window.scrollTo({top:0, behavior:'smooth'}));
+
+  // Scroll reveal (single orchestrated pattern, staggered within each group)
+  const reveals = document.querySelectorAll('.reveal');
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting) {
+        setTimeout(() => entry.target.classList.add('in'), i * 60);
+        io.unobserve(entry.target);
+      }
+    });
+  }, {threshold:0.12});
+  reveals.forEach(el => io.observe(el));
+
+  // Counter animation for hero stats
+  const counters = document.querySelectorAll('.counter');
+  const counterIO = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const el = entry.target;
+        const target = parseInt(el.dataset.target, 10);
+        const dur = 1400;
+        const start = performance.now();
+        function tick(now){
+          const p = Math.min(1, (now - start) / dur);
+          const eased = 1 - Math.pow(1 - p, 3);
+          el.textContent = Math.round(eased * target);
+          if (p < 1) requestAnimationFrame(tick);
+        }
+        requestAnimationFrame(tick);
+        counterIO.unobserve(el);
+      }
+    });
+  }, {threshold:0.4});
+  counters.forEach(el => counterIO.observe(el));
+
+  // Countdown to next match: 18 sept 2026, 11:00
+  const target = new Date('2026-09-18T11:00:00');
+  function updateCountdown(){
+    const now = new Date();
+    let diff = target - now;
+    if (diff < 0) diff = 0;
+    const d = Math.floor(diff / 86400000);
+    const h = Math.floor((diff % 86400000) / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    document.getElementById('cd-d').textContent = String(d).padStart(2,'0');
+    document.getElementById('cd-h').textContent = String(h).padStart(2,'0');
+    document.getElementById('cd-m').textContent = String(m).padStart(2,'0');
+  }
+  updateCountdown();
+  setInterval(updateCountdown, 30000);
+</script>
+
+</body>
+</html>

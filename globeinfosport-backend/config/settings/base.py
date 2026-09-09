@@ -138,6 +138,8 @@ CORS_ALLOWED_ORIGINS = env.list(
     default=[
         "http://localhost:5173",
         "http://localhost:5174",
+        "http://127.0.0.1:5173",
+        "http://127.0.0.1:5174",
         "https://redaction.globeinfosport.ht",
         "https://www.globeinfosport.ht",
     ],
@@ -151,6 +153,12 @@ CELERY_RESULT_BACKEND = REDIS_URL
 CELERY_RESULT_EXTENDED = True
 CELERY_TIMEZONE = TIME_ZONE
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
+CELERY_BEAT_SCHEDULE = {
+    "synchroniser-les-flux-rss": {
+        "task": "apps.actualites.tasks.synchroniser_flux_rss",
+        "schedule": timedelta(minutes=10),
+    },
+}
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",

@@ -14,7 +14,7 @@ export function EmptyState({ label = "Aucun contenu disponible." }) {
 }
 
 export function SectionTitle({ eyebrow, title, children }) {
-  return <div className="mb-8 max-w-3xl"><p className="mb-2 text-sm font-bold uppercase tracking-[.18em] text-haiti-red">{eyebrow}</p><h2 className="font-display text-3xl font-black text-haiti-ink sm:text-4xl">{title}</h2>{children && <p className="mt-3 text-slate-600">{children}</p>}</div>;
+  return <div className="mb-8 max-w-3xl"><p className="headline-rule mb-3 text-[11px] font-extrabold uppercase tracking-[.2em] text-haiti-red">{eyebrow}</p><h2 className="font-display text-3xl font-black tracking-tight text-haiti-ink sm:text-4xl">{title}</h2>{children && <p className="mt-3 leading-7 text-slate-600">{children}</p>}</div>;
 }
 
 export function BackToTop() {
