@@ -13,6 +13,16 @@ from django.db.models import QuerySet
 from django.utils import timezone
 
 from apps.competitions.models import Competition, Match
+from apps.competitions.services import (
+    FootballDataConfigurationError,
+    FootballDataRequestError,
+    synchroniser_football_data,
+)
+
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 def _matches_calendrier(competition_id: int | None = None) -> QuerySet[Match]:
@@ -134,3 +144,16 @@ def rappel_match_a_venir() -> int:
         fail_silently=not settings.DEBUG,
     )
     return len(matchs)
+
+
+@shared_task
+def synchroniser_football_automatique() -> dict[str, int | bool]:
+    """Actualise les compétitions connectées quand une clé fournisseur est définie."""
+
+    if not settings.FOOTBALL_DATA_API_TOKEN:
+        return {"configured": False}
+    try:
+        return {"configured": True, **synchroniser_football_data()}
+    except (FootballDataConfigurationError, FootballDataRequestError, ValueError):
+        logger.exception("La synchronisation football-data.org a échoué.")
+        raise

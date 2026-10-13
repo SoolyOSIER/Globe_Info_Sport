@@ -2,10 +2,11 @@ import { LoaderCircle, X } from "lucide-react";
 import { useUiStore } from "../../store/uiStore";
 export const Loading = () => <div className="flex min-h-28 items-center justify-center gap-2 text-slate-500"><LoaderCircle className="h-5 animate-spin" />Chargement…</div>;
 const errorText = (error) => {
+  if (!error?.response && error?.isAxiosError) return "Impossible de joindre l'API. Vérifiez que le serveur Django est démarré, puis réessayez.";
   const data = error?.response?.data;
   if (typeof data?.detail === "string") return data.detail;
   if (data && typeof data === "object") {
-    const messages = Object.entries(data).flatMap(([field, values]) => {
+    const messages = Object.entries(data).filter(([field]) => field !== "status_code").flatMap(([field, values]) => {
       const value = Array.isArray(values) ? values.join(" ") : String(values);
       return `${field} : ${value}`;
     });

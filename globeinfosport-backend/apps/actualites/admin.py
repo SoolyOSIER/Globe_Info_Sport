@@ -72,3 +72,9 @@ class ChiffreCleAdmin(admin.ModelAdmin):
     list_editable = ("ordre",)
     list_filter = ("calcule_auto",)
     search_fields = ("libelle", "code_calcul")
+
+
+from .models import Sport, Pays, Selection
+admin.site.register(Sport)
+admin.site.register(Pays)
+admin.site.register(Selection)

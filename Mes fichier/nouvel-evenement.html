@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nouvel événement — SYGMEBEC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0e1830;
+    --navy-2:#131f3d;
+    --navy-line:rgba(255,255,255,0.07);
+    --cream:#f7f1e3;
+    --cream-2:#f2ead8;
+    --bg:#f7f5f0;
+    --card:#ffffff;
+    --border:#eae5d8;
+    --text:#211f1a;
+    --text-dim:#78746a;
+    --text-faint:#a39e91;
+    --gold:#b6903f;
+    --gold-light:#d9b876;
+    --gold-soft:rgba(182,144,63,0.12);
+    --green:#1fa060;
+    --green-soft:#dcf4e6;
+    --blue:#3768d6;
+    --blue-soft:#dfe8fb;
+    --amber:#c17f18;
+    --amber-soft:#faecd2;
+    --purple:#7c50d1;
+    --purple-soft:#ece2fb;
+    --red:#c94f43;
+    --red-soft:#fbe4e1;
+    --radius-lg:20px;
+    --radius-md:14px;
+    --radius-sm:9px;
+    --ease:cubic-bezier(.22,1,.36,1);
+    --shadow: 0 1px 0 rgba(255,255,255,0.6) inset, 0 18px 40px -26px rgba(30,25,10,0.18);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    font-family:'Inter', sans-serif; background:var(--bg); color:var(--text);
+    -webkit-font-smoothing:antialiased; min-height:100vh;
+  }
+  ::selection{ background:var(--gold-soft); color:var(--gold); }
+
+  .app{ display:grid; grid-template-columns:264px 1fr; min-height:100vh; }
+
+  /* ============ SIDEBAR ============ */
+  .sidebar{
+    background: linear-gradient(190deg, var(--navy-2), var(--navy) 60%);
+    color:#fff; padding:22px 16px; display:flex; flex-direction:column;
+    position:sticky; top:0; height:100vh; border-right:1px solid rgba(0,0,0,0.2);
+  }
+  .brand{ display:flex; align-items:center; gap:12px; padding:6px 8px 26px; }
+  .brand-mark{
+    width:42px; height:42px; border-radius:50%; flex-shrink:0;
+    background: radial-gradient(circle at 32% 28%, var(--gold-light), var(--gold) 70%);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Fraunces', serif; font-weight:700; font-size:15.5px; color:#241a05;
+    box-shadow: 0 6px 16px -4px rgba(182,144,63,0.55), inset 0 1px 1px rgba(255,255,255,0.4);
+    position:relative;
+  }
+  .brand-mark::after{ content:''; position:absolute; inset:-3px; border-radius:50%; border:1px solid rgba(217,184,118,0.35); }
+  .brand-name{ font-weight:800; font-size:15.5px; letter-spacing:0.4px; line-height:1.1; }
+  .brand-sub{ font-size:10px; color:#8891ab; letter-spacing:1.6px; margin-top:3px; font-weight:600; }
+
+  .navlist{ list-style:none; display:flex; flex-direction:column; gap:2px; }
+  .navitem{
+    display:flex; align-items:center; gap:12px; padding:11px 14px; border-radius:11px;
+    font-size:13.6px; font-weight:500; color:#9aa3bd; cursor:pointer; position:relative;
+    transition: color .25s var(--ease), background .25s var(--ease), transform .25s var(--ease);
+  }
+  .navitem svg{ width:17px; height:17px; opacity:0.8; flex-shrink:0; }
+  .navitem:hover{ color:#fff; background:rgba(255,255,255,0.045); transform:translateX(2px); }
+  .navitem.active{
+    color:#fff; background: linear-gradient(90deg, rgba(182,144,63,0.22), rgba(182,144,63,0.02));
+    border:1px solid rgba(182,144,63,0.3); font-weight:600;
+  }
+  .navitem.active svg{ opacity:1; color:var(--gold-light); }
+  .navitem.active::before{
+    content:''; position:absolute; left:-16px; top:8px; bottom:8px; width:3px; border-radius:4px;
+    background:linear-gradient(180deg, var(--gold-light), var(--gold));
+  }
+
+  .sidebar-foot{ margin-top:auto; }
+  .foot-card{
+    background:rgba(255,255,255,0.04); border:1px solid var(--navy-line); border-radius:var(--radius-md);
+    padding:14px; margin-bottom:10px; font-size:11.5px; color:#8891ab;
+  }
+  .foot-card b{ color:#fff; display:block; font-size:12.5px; margin-bottom:2px; }
+  .logout-item{ color:#e7a89c; }
+  .logout-item svg{ color:#e7a89c; opacity:1;}
+  .logout-item:hover{ background:var(--red-soft); color:var(--red); }
+  .logout-item:hover svg{ color:var(--red); }
+
+  /* ============ MAIN ============ */
+  .main{ min-width:0; display:flex; flex-direction:column; }
+
+  .topbar{
+    background: linear-gradient(120deg, var(--cream), var(--cream-2));
+    border-bottom:1px solid var(--border); padding:14px 34px;
+    display:flex; align-items:center; gap:22px; position:sticky; top:0; z-index:20;
+  }
+  .top-tabs{ display:flex; align-items:center; gap:4px; }
+  .top-tab{
+    display:flex; align-items:center; gap:7px; font-size:12.8px; font-weight:600; color:var(--text-dim);
+    padding:8px 13px; border-radius:9px; cursor:pointer; transition: all .22s var(--ease); white-space:nowrap;
+  }
+  .top-tab svg{ width:15px; height:15px; }
+  .top-tab:hover{ background:rgba(255,255,255,0.55); color:var(--text); }
+  .top-tab.active{ background:#fff; color:var(--blue); box-shadow:0 4px 12px -6px rgba(0,0,0,0.15); }
+  .top-tab.t-purple{ color:var(--purple); }
+  .top-tab.t-green{ color:var(--green); }
+
+  .search-wrap{ position:relative; margin-left:auto; }
+  .search-wrap svg{ position:absolute; left:15px; top:50%; transform:translateY(-50%); width:16px; height:16px; color:var(--text-faint); }
+  .search-wrap input{
+    width:230px; font-family:inherit; font-size:13px; padding:10px 40px 10px 38px;
+    border-radius:30px; border:1px solid transparent; background:rgba(255,255,255,0.65); color:var(--text);
+    transition: all .25s var(--ease);
+  }
+  .search-wrap input::placeholder{ color:var(--text-faint); }
+  .search-wrap input:focus{ outline:none; background:#fff; border-color:var(--gold-light); box-shadow:0 0 0 4px var(--gold-soft); width:270px; }
+  .kbd{
+    position:absolute; right:10px; top:50%; transform:translateY(-50%); font-size:10.5px; font-weight:700;
+    color:var(--text-faint); background:#fff; border:1px solid var(--border); padding:2px 7px; border-radius:6px;
+  }
+
+  .top-actions{ display:flex; align-items:center; gap:14px; }
+  .icon-circle{
+    width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    background:rgba(255,255,255,0.55); border:1px solid rgba(0,0,0,0.04); cursor:pointer; position:relative;
+    transition: all .25s var(--ease); color:var(--text-dim);
+  }
+  .icon-circle:hover{ background:#fff; transform:translateY(-1px); box-shadow:0 6px 14px -6px rgba(0,0,0,0.15); color:var(--gold); }
+  .icon-circle svg{ width:16px; height:16px; }
+  .notif-dot{
+    position:absolute; top:5px; right:5px; width:8px; height:8px; border-radius:50%;
+    background:var(--red); border:2px solid var(--cream); animation: notifPulse 2s ease-in-out infinite;
+  }
+  @keyframes notifPulse{ 0%,100%{ box-shadow:0 0 0 0 rgba(201,79,67,0.5);} 70%{ box-shadow:0 0 0 6px rgba(201,79,67,0); } }
+
+  .profile-chip{ display:flex; align-items:center; gap:9px; cursor:pointer; padding:4px 8px 4px 4px; border-radius:30px; transition:background .25s var(--ease); }
+  .profile-chip:hover{ background:rgba(255,255,255,0.6); }
+  .profile-avatar{
+    width:33px; height:33px; border-radius:10px; flex-shrink:0;
+    background:linear-gradient(150deg,#a06fe8,#7c50d1);
+    display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12.5px; color:#fff;
+    box-shadow:0 2px 8px rgba(124,80,209,0.3); position:relative;
+  }
+  .profile-avatar::after{
+    content:''; position:absolute; bottom:-2px; right:-2px; width:9px; height:9px; border-radius:50%;
+    background:var(--green); border:2px solid var(--cream);
+  }
+  .profile-name{ font-size:12.8px; font-weight:700; line-height:1.2; }
+  .profile-role{ font-size:10.5px; color:var(--text-faint); font-weight:500; }
+
+  /* ============ CONTENT ============ */
+  .content{ padding:32px 34px 90px; flex:1; }
+
+  .page-head{ margin-bottom:26px; opacity:0; animation: rise .6s var(--ease) forwards; }
+  h1{ font-family:'Fraunces', serif; font-size:29px; font-weight:600; letter-spacing:-0.3px; }
+  .page-head p{ color:var(--text-dim); font-size:13.3px; margin-top:6px; }
+
+  @keyframes rise{ to{ opacity:1; transform:translateY(0); } }
+
+  .layout-grid{ display:grid; grid-template-columns: 1.55fr 1fr; gap:22px; align-items:flex-start; }
+
+  /* ---- Form panel ---- */
+  .form-panel{
+    background:var(--card); border:1px solid var(--border); border-radius:var(--radius-lg); box-shadow:var(--shadow);
+    overflow:hidden; opacity:0; transform:translateY(16px); animation: rise .6s var(--ease) .08s forwards;
+  }
+  .fp-head{ padding:22px 28px; display:flex; align-items:center; gap:14px; border-bottom:1px solid var(--border); }
+  .fp-icon{
+    width:40px; height:40px; border-radius:12px; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    background:var(--purple-soft); color:var(--purple);
+  }
+  .fp-icon svg{ width:19px; height:19px; }
+  .fp-head h2{ font-family:'Fraunces', serif; font-size:18px; font-weight:600; }
+  .fp-head p{ font-size:12.3px; color:var(--text-faint); margin-top:2px; }
+
+  .fp-body{ padding:26px 28px 28px; display:flex; flex-direction:column; gap:22px; }
+
+  .field{ display:flex; flex-direction:column; gap:7px; }
+  .field label{ font-size:12.6px; font-weight:600; color:var(--text); display:flex; align-items:center; gap:4px; }
+  .field label .req{ color:var(--red); }
+  .field label .opt{ font-size:11px; color:var(--text-faint); font-weight:500; margin-left:auto; }
+
+  .field-row{ display:grid; grid-template-columns:1fr 1fr; gap:22px; }
+
+  .input-wrap{ position:relative; }
+  .input-wrap svg{
+    position:absolute; left:13px; top:16px; width:15px; height:15px; color:var(--text-faint);
+    pointer-events:none; transition:color .2s var(--ease);
+  }
+  .input-wrap input, .input-wrap select, .input-wrap textarea{
+    width:100%; font-family:inherit; font-size:13.3px; padding:13px 14px 13px 38px; border-radius:11px;
+    border:1px solid var(--border); background:#fcfbf8; color:var(--text); transition: all .22s var(--ease);
+    appearance:none;
+  }
+  .input-wrap textarea{ resize:vertical; min-height:110px; line-height:1.55; }
+  .input-wrap select{ cursor:pointer; }
+  .input-wrap.select-arrow::after{
+    content:''; position:absolute; right:15px; top:19px; width:6px; height:6px;
+    border-right:1.6px solid var(--text-faint); border-bottom:1.6px solid var(--text-faint); transform:rotate(45deg);
+    pointer-events:none;
+  }
+  .input-wrap input::placeholder, .input-wrap textarea::placeholder{ color:var(--text-faint); }
+  .input-wrap input:focus, .input-wrap select:focus, .input-wrap textarea:focus{
+    outline:none; border-color:var(--gold-light); box-shadow:0 0 0 4px var(--gold-soft); background:#fff;
+  }
+
+  /* Type d'événement chips */
+  .type-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:11px; }
+  .type-chip{
+    border:1px solid var(--border); border-radius:12px; padding:14px 10px; text-align:center; cursor:pointer;
+    transition: all .22s var(--ease); background:#fcfbf8; position:relative;
+  }
+  .type-chip input{ position:absolute; opacity:0; }
+  .type-chip:hover{ border-color:var(--gold-light); }
+  .type-chip:has(input:checked){
+    border-color:var(--gold); background:var(--gold-soft);
+    box-shadow:0 6px 16px -10px rgba(182,144,63,0.5);
+  }
+  .type-icon{
+    width:34px; height:34px; border-radius:9px; margin:0 auto 8px; display:flex; align-items:center; justify-content:center;
+    background:var(--tint); color:var(--tint-color);
+  }
+  .type-icon svg{ width:16px; height:16px; }
+  .type-chip:nth-child(1) .type-icon{ --tint:var(--green-soft); --tint-color:var(--green); }
+  .type-chip:nth-child(2) .type-icon{ --tint:var(--purple-soft); --tint-color:var(--purple); }
+  .type-chip:nth-child(3) .type-icon{ --tint:var(--blue-soft); --tint-color:var(--blue); }
+  .type-chip:nth-child(4) .type-icon{ --tint:var(--amber-soft); --tint-color:var(--amber); }
+  .type-name{ font-size:12px; font-weight:700; }
+
+  /* Cover dropzone */
+  .dropzone{
+    border:1.6px dashed var(--border); border-radius:14px; padding:22px 20px; text-align:center;
+    cursor:pointer; transition: all .25s var(--ease); background:#fcfbf8;
+  }
+  .dropzone:hover{ border-color:var(--gold-light); background:var(--gold-soft); }
+  .dropzone .dz-icon{
+    width:42px; height:42px; border-radius:50%; margin:0 auto 10px; display:flex; align-items:center; justify-content:center;
+    background:var(--gold-soft); color:var(--gold);
+  }
+  .dropzone .dz-icon svg{ width:19px; height:19px; }
+  .dropzone .dz-title{ font-size:12.8px; font-weight:700; }
+  .dropzone .dz-sub{ font-size:11.3px; color:var(--text-faint); margin-top:3px; }
+  .dropzone input[type=file]{ display:none; }
+
+  /* Toggle: notification */
+  .switch-row{ display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border:1px solid var(--border); border-radius:12px; background:#fcfbf8; }
+  .switch-row-label{ font-size:12.8px; font-weight:600; }
+  .switch-row-sub{ font-size:11.3px; color:var(--text-faint); margin-top:2px; }
+  .switch{ position:relative; width:42px; height:24px; flex-shrink:0; cursor:pointer; }
+  .switch input{ opacity:0; width:0; height:0; position:absolute; }
+  .switch-track{ position:absolute; inset:0; background:#e9e4d5; border:1px solid var(--border); border-radius:20px; transition: background .3s var(--ease); }
+  .switch-thumb{ position:absolute; top:2.5px; left:3px; width:17px; height:17px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,0.2); transition: transform .32s var(--ease); }
+  .switch input:checked + .switch-track{ background:var(--green); border-color:var(--green); }
+  .switch input:checked + .switch-track .switch-thumb{ transform:translateX(17px); }
+
+  /* ---- Action bar ---- */
+  .action-bar{
+    padding:20px 28px; border-top:1px solid var(--border); background:#fcfbf8;
+    display:flex; align-items:center; justify-content:flex-end; gap:12px;
+  }
+  .btn{
+    font-family:inherit; font-size:13.3px; font-weight:600; padding:11px 22px; border-radius:11px;
+    border:1px solid var(--border); background:#fff; color:var(--text-dim); cursor:pointer;
+    display:flex; align-items:center; gap:8px; transition:all .22s var(--ease);
+  }
+  .btn svg{ width:15px; height:15px; }
+  .btn:hover{ border-color:var(--red); color:var(--red); }
+  .btn-save{ background:linear-gradient(150deg, #2bb87a, #1c8f5c); border:none; color:#fff; }
+  .btn-save:hover{ color:#fff; filter:brightness(1.06); box-shadow:0 10px 24px -10px rgba(31,160,96,0.55); transform:translateY(-1px); border-color:transparent; }
+
+  /* ---- Preview panel ---- */
+  .preview-col{ position:sticky; top:96px; display:flex; flex-direction:column; gap:16px;
+    opacity:0; transform:translateY(16px); animation: rise .6s var(--ease) .18s forwards; }
+
+  .preview-label{ font-size:11px; letter-spacing:1.6px; text-transform:uppercase; color:var(--gold); font-weight:700; padding-left:4px; }
+
+  .preview-card{
+    background:var(--card); border:1px solid var(--border); border-radius:var(--radius-lg); box-shadow:var(--shadow);
+    overflow:hidden;
+  }
+  .preview-cover{
+    height:110px; background: linear-gradient(135deg, var(--purple-soft), var(--gold-soft));
+    display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden;
+  }
+  .preview-cover img{ width:100%; height:100%; object-fit:cover; }
+  .preview-cover svg{ width:34px; height:34px; color:var(--purple); opacity:0.5; }
+  .preview-type-badge{
+    position:absolute; top:12px; left:12px; font-size:10.5px; font-weight:700; letter-spacing:.3px;
+    padding:5px 11px; border-radius:20px; background:rgba(255,255,255,0.85); color:var(--purple); backdrop-filter:blur(4px);
+  }
+  .preview-body{ padding:20px; }
+  .preview-title{ font-family:'Fraunces', serif; font-size:18px; font-weight:600; line-height:1.25; min-height:23px; }
+  .preview-title.placeholder{ color:var(--text-faint); font-style:italic; font-weight:500; font-size:15px; }
+  .preview-meta{ display:flex; flex-direction:column; gap:9px; margin-top:14px; }
+  .preview-meta-row{ display:flex; align-items:center; gap:9px; font-size:12.5px; color:var(--text-dim); }
+  .preview-meta-row svg{ width:14px; height:14px; color:var(--gold); flex-shrink:0; }
+  .preview-meta-row.empty{ color:var(--text-faint); font-style:italic; }
+  .preview-desc{ font-size:12.3px; color:var(--text-faint); line-height:1.6; margin-top:14px; padding-top:14px; border-top:1px dashed var(--border); }
+
+  .tips-card{
+    background:var(--gold-soft); border:1px solid rgba(182,144,63,0.25); border-radius:var(--radius-md);
+    padding:16px 18px;
+  }
+  .tips-card-head{ display:flex; align-items:center; gap:8px; font-size:12.5px; font-weight:700; color:var(--gold); margin-bottom:9px; }
+  .tips-card-head svg{ width:15px; height:15px; }
+  .tips-card ul{ list-style:none; display:flex; flex-direction:column; gap:7px; }
+  .tips-card li{ font-size:12px; color:var(--text-dim); display:flex; gap:7px; line-height:1.5; }
+  .tips-card li::before{ content:'—'; color:var(--gold); flex-shrink:0; }
+
+  @media (max-width: 1050px){
+    .layout-grid{ grid-template-columns:1fr; }
+    .preview-col{ position:static; }
+  }
+  @media (max-width: 900px){
+    .app{ grid-template-columns:1fr; }
+    .sidebar{ display:none; }
+    .content{ padding:24px 18px 80px; }
+    .field-row, .type-grid{ grid-template-columns:1fr 1fr; }
+    .top-tabs .top-tab span{ display:none; }
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{ animation-duration:.001ms !important; transition-duration:.001ms !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ================= SIDEBAR ================= -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">EB</div>
+      <div>
+        <div class="brand-name">SYGMEBEC</div>
+        <div class="brand-sub">E.B.E.C.</div>
+      </div>
+    </div>
+
+    <ul class="navlist">
+      <li class="navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 11.5L12 4l8 7.5"/><path d="M6 10v9a1 1 0 001 1h10a1 1 0 001-1v-9"/></svg>Tableau de bord</li>
+      <li class="navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3"/><path d="M3.5 19c1-3.2 3-4.8 5.5-4.8s4.5 1.6 5.5 4.8"/><circle cx="17" cy="8.5" r="2.4"/><path d="M15 14.5c2 .1 3.4 1.4 4.2 3.8"/></svg>Membres</li>
+      <li class="navitem active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/></svg>Événements</li>
+      <li class="navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 3.5h8l3.5 3.5V20a1 1 0 01-1 1H7a1 1 0 01-1-1V4.5a1 1 0 011-1z"/><path d="M9 12h6M9 15.5h6M9 8.5h3"/></svg>Rapports</li>
+      <li class="navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9.5" cy="8.5" r="3"/><path d="M4 19c1-3 3-4.6 5.5-4.6"/><path d="M16.5 6.5l3 3-3 3"/></svg>Comptes</li>
+      <li class="navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20V11M10 20V6M16 20v-7M22 20H2"/></svg>Statistiques</li>
+    </ul>
+
+    <div class="sidebar-foot">
+      <div class="foot-card">
+        <b>Nouvel événement</b>
+        Les champs marqués d'un * sont obligatoires
+      </div>
+      <ul class="navlist">
+        <li class="navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 3.5v2M12 18.5v2M3.5 12h2M18.5 12h2M6 6l1.4 1.4M16.6 16.6L18 18M18 6l-1.4 1.4M7.4 16.6L6 18"/></svg>Paramètres</li>
+        <li class="navitem logout-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 4H6a1.5 1.5 0 00-1.5 1.5v13A1.5 1.5 0 006 20h3"/><path d="M15.5 16l4-4-4-4M19 12H9"/></svg>Déconnexion</li>
+      </ul>
+    </div>
+  </aside>
+
+  <!-- ================= MAIN ================= -->
+  <div class="main">
+
+    <div class="topbar">
+      <div class="top-tabs">
+        <div class="top-tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3"/><path d="M3.5 19c1-3.2 3-4.8 5.5-4.8s4.5 1.6 5.5 4.8"/></svg><span>Nouveau membre</span></div>
+        <div class="top-tab active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/></svg><span>Nouvel événement</span></div>
+        <div class="top-tab t-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 3.5h8l3.5 3.5V20a1 1 0 01-1 1H7a1 1 0 01-1-1V4.5a1 1 0 011-1z"/><path d="M9 12h6M9 15.5h6M9 8.5h3"/></svg><span>Générer rapport</span></div>
+      </div>
+      <div class="search-wrap">
+        <input type="text" placeholder="Rechercher…">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <span class="kbd">⌘K</span>
+      </div>
+      <div class="top-actions">
+        <div class="icon-circle" title="Basculer le thème"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 14.5A8.5 8.5 0 119.5 4a7 7 0 0010.5 10.5z"/></svg></div>
+        <div class="icon-circle" title="Notifications">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9.5a6 6 0 1112 0c0 4 1.4 5.6 2 6.4H4c.6-.8 2-2.4 2-6.4z"/><path d="M9.5 19.5a2.6 2.6 0 005 0"/></svg>
+          <span class="notif-dot"></span>
+        </div>
+        <div class="profile-chip">
+          <div class="profile-avatar">A</div>
+          <div>
+            <div class="profile-name">admin</div>
+            <div class="profile-role">Administrateur</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <div class="page-head">
+        <h1>Nouvel événement</h1>
+        <p>Créer un nouvel événement pour l'église</p>
+      </div>
+
+      <div class="layout-grid">
+
+        <!-- ===== FORM ===== -->
+        <form id="eventForm">
+          <div class="form-panel">
+            <div class="fp-head">
+              <div class="fp-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/></svg></div>
+              <div>
+                <h2>Détails de l'événement</h2>
+                <p>Renseignez les informations principales</p>
+              </div>
+            </div>
+
+            <div class="fp-body">
+              <div class="field">
+                <label>Titre de l'événement <span class="req">*</span></label>
+                <div class="input-wrap">
+                  <input type="text" id="fTitle" placeholder="Ex: Culte dominical, Réunion de prière…">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 3.5h8l3.5 3.5V20a1 1 0 01-1 1H7a1 1 0 01-1-1V4.5a1 1 0 011-1z"/><path d="M9 12h6M9 15.5h6M9 8.5h3"/></svg>
+                </div>
+              </div>
+
+              <div class="field">
+                <label>Type d'événement</label>
+                <div class="type-grid" id="typeGrid">
+                  <label class="type-chip">
+                    <input type="radio" name="etype" value="Culte" checked>
+                    <div class="type-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 18V6l9 6-9 6z"/></svg></div>
+                    <div class="type-name">Culte</div>
+                  </label>
+                  <label class="type-chip">
+                    <input type="radio" name="etype" value="Cérémonie">
+                    <div class="type-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="8.5"/></svg></div>
+                    <div class="type-name">Cérémonie</div>
+                  </label>
+                  <label class="type-chip">
+                    <input type="radio" name="etype" value="Conférence">
+                    <div class="type-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3"/><path d="M3.5 19c1-3.2 3-4.8 5.5-4.8s4.5 1.6 5.5 4.8"/><circle cx="17" cy="8.5" r="2.4"/></svg></div>
+                    <div class="type-name">Conférence</div>
+                  </label>
+                  <label class="type-chip">
+                    <input type="radio" name="etype" value="Formation">
+                    <div class="type-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5V6a2 2 0 012-2h9l5 5v10.5"/><path d="M8 10h6M8 14h8"/></svg></div>
+                    <div class="type-name">Formation</div>
+                  </label>
+                </div>
+              </div>
+
+              <div class="field-row">
+                <div class="field">
+                  <label>Date et heure <span class="req">*</span></label>
+                  <div class="input-wrap">
+                    <input type="datetime-local" id="fDate">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/></svg>
+                  </div>
+                </div>
+                <div class="field">
+                  <label>Lieu <span class="req">*</span></label>
+                  <div class="input-wrap">
+                    <input type="text" id="fLieu" placeholder="Lieu de l'événement">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s7-6.2 7-11.5A7 7 0 105 9.5C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.4"/></svg>
+                  </div>
+                </div>
+              </div>
+
+              <div class="field">
+                <label>Description <span class="opt">Optionnel</span></label>
+                <div class="input-wrap">
+                  <textarea id="fDesc" placeholder="Description détaillée de l'événement (optionnel)"></textarea>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="top:16px;"><path d="M4 19.5V6a2 2 0 012-2h9l5 5v10.5"/><path d="M8 10h6M8 14h8"/></svg>
+                </div>
+              </div>
+
+              <div class="field-row">
+                <div class="field">
+                  <label>Responsable <span class="opt">Optionnel</span></label>
+                  <div class="input-wrap select-arrow">
+                    <select id="fResp">
+                      <option value="">Sélectionner un responsable</option>
+                      <option>Osier Storly</option>
+                      <option>Marie Charles</option>
+                      <option>RICHARD Raybene</option>
+                    </select>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.2"/><path d="M5 19c1.1-3.4 3.6-5.2 7-5.2s5.9 1.8 7 5.2"/></svg>
+                  </div>
+                </div>
+                <div class="field">
+                  <label>Image de couverture <span class="opt">Optionnel</span></label>
+                  <label class="dropzone" id="dropzone">
+                    <div class="dz-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 001 1h14a1 1 0 001-1v-3"/></svg></div>
+                    <div class="dz-title" id="dzTitle">Choisir une image</div>
+                    <div class="dz-sub" id="dzSub">PNG, JPG jusqu'à 5 Mo</div>
+                    <input type="file" id="coverInput" accept="image/*">
+                  </label>
+                </div>
+              </div>
+
+              <div class="switch-row">
+                <div>
+                  <div class="switch-row-label">Notifier les membres</div>
+                  <div class="switch-row-sub">Envoie une notification à l'ensemble de l'assemblée</div>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" checked>
+                  <span class="switch-track"><span class="switch-thumb"></span></span>
+                </label>
+              </div>
+            </div>
+
+            <div class="action-bar">
+              <button type="button" class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>Annuler</button>
+              <button type="submit" class="btn btn-save"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 12l5 5L20 6"/></svg>Enregistrer</button>
+            </div>
+          </div>
+        </form>
+
+        <!-- ===== PREVIEW ===== -->
+        <div class="preview-col">
+          <div class="preview-label">Aperçu en direct</div>
+
+          <div class="preview-card">
+            <div class="preview-cover" id="previewCover">
+              <span class="preview-type-badge" id="previewTypeBadge">Culte</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/></svg>
+            </div>
+            <div class="preview-body">
+              <div class="preview-title placeholder" id="previewTitle">Titre de l'événement…</div>
+              <div class="preview-meta">
+                <div class="preview-meta-row empty" id="previewDate">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/></svg>
+                  Date et heure à définir
+                </div>
+                <div class="preview-meta-row empty" id="previewLieu">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-6.2 7-11.5A7 7 0 105 9.5C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.4"/></svg>
+                  Lieu à définir
+                </div>
+                <div class="preview-meta-row empty" id="previewResp">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="3.2"/><path d="M5 19c1.1-3.4 3.6-5.2 7-5.2s5.9 1.8 7 5.2"/></svg>
+                  Responsable non assigné
+                </div>
+              </div>
+              <div class="preview-desc" id="previewDesc">La description apparaîtra ici au fur et à mesure de votre saisie.</div>
+            </div>
+          </div>
+
+          <div class="tips-card">
+            <div class="tips-card-head"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l2.4 5 5.6.5-4.2 3.7 1.3 5.4L12 15.8 6.9 18.6l1.3-5.4L4 9.5l5.6-.5z"/></svg>Conseils</div>
+            <ul>
+              <li>Un titre clair aide les membres à reconnaître l'événement dans leur calendrier.</li>
+              <li>Ajoutez un lieu précis pour faciliter l'orientation des visiteurs.</li>
+              <li>Activez la notification pour informer l'assemblée dès l'enregistrement.</li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const fTitle = document.getElementById('fTitle');
+  const fDate = document.getElementById('fDate');
+  const fLieu = document.getElementById('fLieu');
+  const fDesc = document.getElementById('fDesc');
+  const fResp = document.getElementById('fResp');
+
+  const previewTitle = document.getElementById('previewTitle');
+  const previewDate = document.getElementById('previewDate');
+  const previewLieu = document.getElementById('previewLieu');
+  const previewResp = document.getElementById('previewResp');
+  const previewDesc = document.getElementById('previewDesc');
+  const previewTypeBadge = document.getElementById('previewTypeBadge');
+
+  const dateIconSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/></svg>';
+  const lieuIconSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-6.2 7-11.5A7 7 0 105 9.5C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.4"/></svg>';
+  const respIconSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="3.2"/><path d="M5 19c1.1-3.4 3.6-5.2 7-5.2s5.9 1.8 7 5.2"/></svg>';
+
+  function formatDate(value){
+    if(!value) return null;
+    const d = new Date(value);
+    if(isNaN(d)) return null;
+    const opts = { day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' };
+    return d.toLocaleDateString('fr-FR', opts);
+  }
+
+  function updatePreview(){
+    // Title
+    if(fTitle.value.trim()){
+      previewTitle.textContent = fTitle.value.trim();
+      previewTitle.classList.remove('placeholder');
+    } else {
+      previewTitle.textContent = "Titre de l'événement…";
+      previewTitle.classList.add('placeholder');
+    }
+
+    // Date
+    const formatted = formatDate(fDate.value);
+    if(formatted){
+      previewDate.innerHTML = dateIconSvg + formatted;
+      previewDate.classList.remove('empty');
+    } else {
+      previewDate.innerHTML = dateIconSvg + 'Date et heure à définir';
+      previewDate.classList.add('empty');
+    }
+
+    // Lieu
+    if(fLieu.value.trim()){
+      previewLieu.innerHTML = lieuIconSvg + fLieu.value.trim();
+      previewLieu.classList.remove('empty');
+    } else {
+      previewLieu.innerHTML = lieuIconSvg + 'Lieu à définir';
+      previewLieu.classList.add('empty');
+    }
+
+    // Responsable
+    if(fResp.value){
+      previewResp.innerHTML = respIconSvg + fResp.value;
+      previewResp.classList.remove('empty');
+    } else {
+      previewResp.innerHTML = respIconSvg + 'Responsable non assigné';
+      previewResp.classList.add('empty');
+    }
+
+    // Description
+    previewDesc.textContent = fDesc.value.trim() ? fDesc.value.trim() : "La description apparaîtra ici au fur et à mesure de votre saisie.";
+
+    // Type badge
+    const checkedType = document.querySelector('input[name="etype"]:checked');
+    if(checkedType) previewTypeBadge.textContent = checkedType.value;
+  }
+
+  [fTitle, fDate, fLieu, fDesc, fResp].forEach(el => el.addEventListener('input', updatePreview));
+  fResp.addEventListener('change', updatePreview);
+  document.querySelectorAll('input[name="etype"]').forEach(r => r.addEventListener('change', updatePreview));
+
+  // Cover upload
+  const coverInput = document.getElementById('coverInput');
+  const dzTitle = document.getElementById('dzTitle');
+  const dzSub = document.getElementById('dzSub');
+  const previewCover = document.getElementById('previewCover');
+  coverInput.addEventListener('change', () => {
+    if(coverInput.files && coverInput.files.length){
+      const file = coverInput.files[0];
+      dzTitle.textContent = 'Image sélectionnée';
+      dzSub.textContent = file.name;
+      const reader = new FileReader();
+      reader.onload = e => {
+        previewCover.style.backgroundImage = `url(${e.target.result})`;
+        previewCover.style.backgroundSize = 'cover';
+        previewCover.style.backgroundPosition = 'center';
+        previewCover.querySelector('svg').style.display = 'none';
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  // Submit
+  document.getElementById('eventForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const saveBtn = e.target.querySelector('.btn-save');
+    const original = saveBtn.innerHTML;
+    saveBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M4 12l5 5L20 6"/></svg>Événement enregistré';
+    setTimeout(() => { saveBtn.innerHTML = original; }, 2200);
+  });
+
+  updatePreview();
+</script>
+</body>
+</html>

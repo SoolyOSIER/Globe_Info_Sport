@@ -1,0 +1,47 @@
+import { useEffect, useState } from "react";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { Building2, Flag, Trophy } from "lucide-react";
+import { api } from "../services/api";
+import { usePublicQuery } from "../hooks/publicHooks";
+import { SEO } from "../components/common/SEO";
+import { StoryCard } from "../components/common/Editorial";
+import { ErrorState, Loader } from "../components/common/UI";
+
+function EntityShelf({ title, icon: Icon, items, children }) {
+  if (!items?.length) return null;
+  return <section className="mt-14"><div className="mb-5 flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-xl bg-blue-50 text-haiti-blue"><Icon className="h-5 w-5" /></span><h2 className="font-display text-2xl font-black text-haiti-ink">{title}</h2></div><div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{children}</div></section>;
+}
+
+function EntityCard({ item, kind }) {
+  const destination = kind === "selection" ? `/selections/${item.id}` : kind === "club" ? `/clubs/${item.slug}` : `/competitions/${item.id}`;
+  const description = kind === "selection" ? [item.pays_detail?.nom, item.sport_detail?.nom].filter(Boolean).join(" · ") : kind === "club" ? item.ville || "Fiche club" : [item.saison, item.type?.replaceAll("_", " ")].filter(Boolean).join(" · ");
+  return <Link to={destination} className="group rounded-2xl border border-slate-100 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-card"><div className="flex items-center gap-4"><div className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-xl bg-slate-100 text-haiti-blue">{item.logo ? <img src={item.logo} alt="" className="h-full w-full object-cover" /> : kind === "selection" ? <Flag className="h-5 w-5" /> : <Trophy className="h-5 w-5" />}</div><div className="min-w-0"><h3 className="truncate font-display text-lg font-black text-haiti-ink group-hover:text-haiti-blue">{item.nom}</h3><p className="mt-1 text-sm text-slate-500">{description || "Fiche en préparation"}</p></div></div></Link>;
+}
+
+export default function Explorer() {
+  const location = useLocation(); const [params, setParams] = useSearchParams(); const [search, setSearch] = useState(params.get("search") || "");
+  const zone = location.pathname === "/haiti" ? "haiti" : location.pathname === "/international" ? "international" : "";
+  const title = zone === "haiti" ? "Haïti. Tous les terrains." : zone === "international" ? "Le monde est notre terrain." : "Explorez le sport.";
+  const sports = usePublicQuery("sports", "/sports/", { page_size: 200 }); const countries = usePublicQuery("pays", "/pays/", { page_size: 200 }); const competitions = usePublicQuery("competitions", "/competitions/", { page_size: 200 });
+  const haitiId = countries.data?.find((country) => country.code === "HT")?.id;
+  const selectedCountry = zone === "haiti" ? (haitiId ? String(haitiId) : "") : params.get("pays") || "";
+  const selectedSport = params.get("sport") || "";
+  const entityParams = { page_size: 12, zone, search: params.get("search") || "", region: params.get("region") || "", ...(selectedCountry ? { pays: selectedCountry } : {}), ...(selectedSport ? { sport: selectedSport } : {}) };
+  const selections = usePublicQuery("explorer-selections", "/selections/", entityParams); const clubs = usePublicQuery("explorer-clubs", "/clubs/", entityParams); const filteredCompetitions = usePublicQuery("explorer-competitions", "/competitions/", entityParams);
+  const athletes = usePublicQuery("explorer-athletes", "/joueurs/", entityParams);
+  const page = Math.max(1, Math.floor(Number(params.get("page")) || 1)); const queryParams = { ...Object.fromEntries(params), zone, page, page_size: 12 };
+  const articles = useQuery({ queryKey: ["explorer", queryParams], queryFn: async () => (await api.get("/public/articles/", { params: queryParams })).data });
+  const change = (key, value) => { const next = new URLSearchParams(params); value ? next.set(key, value) : next.delete(key); next.delete("page"); setParams(next); };
+  const stories = articles.data?.results ?? articles.data ?? []; const availableCountries = zone === "haiti" ? countries.data?.filter((country) => country.code === "HT") : countries.data;
+  const displayedCompetitions = filteredCompetitions.data ?? [];
+  useEffect(() => { setSearch(params.get("search") || ""); }, [params]);
+  return <div className="page-texture min-h-screen"><SEO title={zone === "haiti" ? "Haïti" : zone === "international" ? "International" : "Recherche sportive"} description="Articles, analyses, clubs, compétitions et athlètes : l’information sportive d’Haïti et du monde entier." /><header className="bg-haiti-ink text-white"><div className="mx-auto max-w-7xl px-5 py-16"><p className="text-xs font-bold uppercase tracking-[.25em] text-haiti-gold">Globe Info Sport / {zone || "Explorer"}</p><h1 className="mt-5 text-4xl font-black md:text-6xl">{title}</h1><p className="mt-5 max-w-2xl leading-7 text-slate-300">{zone === "haiti" ? "Sélections, clubs, athlètes et compétitions : une place particulière pour toutes les expressions du sport haïtien." : "Des histoires, des performances et des regards sur tous les sports. Suivez les sujets qui vous passionnent."}</p></div></header><section className="mx-auto max-w-7xl px-5 py-10"><form className="mb-8 grid gap-4 rounded-2xl border bg-white p-6 md:grid-cols-2 lg:grid-cols-4" onSubmit={(event) => { event.preventDefault(); change("search", search); }}><label className="text-sm font-bold">Rechercher<input className="mt-2 w-full rounded-lg border p-3" placeholder="Athlète, club, auteur, sujet…" value={search} onChange={(event) => setSearch(event.target.value)} /><button className="mt-2 text-haiti-blue">Rechercher →</button></label>{[["sport", "Sport", sports.data], ["pays", "Pays", availableCountries], ["competitions", "Compétition", competitions.data]].map(([key, label, items]) => <label key={key} className="text-sm font-bold">{label}<select className="mt-2 w-full rounded-lg border p-3" value={params.get(key) || (key === "pays" ? selectedCountry : "")} onChange={(event) => change(key, event.target.value)}><option value="">Tous</option>{items?.map((item) => <option key={item.id} value={item.id}>{item.nom}</option>)}</select></label>)}{zone === "international" && <label className="text-sm font-bold">Région<select className="mt-2 w-full rounded-lg border p-3" value={params.get("region") || ""} onChange={(event) => change("region", event.target.value)}><option value="">Toutes</option>{["Amérique du Nord", "Amérique centrale", "Caraïbes", "Amérique du Sud", "Europe", "Afrique", "Asie", "Océanie"].map((region) => <option key={region}>{region}</option>)}</select></label>}{params.get("tag") && <p>Tag : #{params.get("tag")} <button type="button" onClick={() => change("tag", "")}>Effacer</button></p>}</form>
+    <EntityShelf title="Sélections nationales" icon={Flag} items={selections.data}>{selections.data?.map((item) => <EntityCard key={item.id} item={item} kind="selection" />)}</EntityShelf>
+    {[selections, clubs, filteredCompetitions, athletes].some(query => query.isLoading) && <Loader />}
+    {[selections, clubs, filteredCompetitions, athletes].filter(query => query.isError).map((query, index) => <ErrorState key={index} error={query.error} />)}
+    <EntityShelf title="Athlètes" icon={Flag} items={athletes.data}>{athletes.data?.map(item => <Link key={item.id} to={`/recherche?athletes=${item.id}`} className="rounded-2xl border bg-white p-5"><h3 className="font-bold">{item.nom_complet}</h3><p>{item.club_actuel}</p><span className="text-haiti-blue">Lire les actualités associées →</span></Link>)}</EntityShelf>
+    <EntityShelf title="Clubs" icon={Building2} items={clubs.data}>{clubs.data?.map((item) => <EntityCard key={item.id} item={item} kind="club" />)}</EntityShelf>
+    <EntityShelf title="Compétitions" icon={Trophy} items={displayedCompetitions}>{displayedCompetitions.map((item) => <EntityCard key={item.id} item={item} kind="competition" />)}</EntityShelf>
+    <section className="mt-14"><div className="mb-5"><p className="text-xs font-bold uppercase tracking-[.2em] text-haiti-red">À lire</p><h2 className="mt-2 font-display text-2xl font-black text-haiti-ink">Les actualités correspondantes</h2></div>{articles.isLoading ? <Loader /> : articles.isError ? <ErrorState error={articles.error} /> : stories.length ? <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">{stories.map((article) => <StoryCard key={article.id} article={article} />)}</div> : <div className="rounded-2xl border bg-white p-12 text-center"><h2 className="text-xl font-bold">Cette rubrique attend ses prochaines histoires.</h2><p className="mt-3 text-slate-500">Aucun article publié ne correspond à ces critères.</p><Link className="mt-5 inline-block font-bold text-haiti-blue" to="/actualites">Toutes les actualités →</Link></div>}<nav className="mt-8 flex justify-between" aria-label="Pagination"><button disabled={!articles.data?.previous} className="rounded-lg border p-3 disabled:opacity-40" onClick={() => { const next = new URLSearchParams(params); next.set("page", page - 1); setParams(next); }}>Précédent</button><span>Page {page}</span><button disabled={!articles.data?.next} className="rounded-lg border p-3 disabled:opacity-40" onClick={() => { const next = new URLSearchParams(params); next.set("page", page + 1); setParams(next); }}>Suivant</button></nav></section></section></div>;
+}

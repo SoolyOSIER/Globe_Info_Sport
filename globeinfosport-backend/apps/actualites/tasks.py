@@ -15,6 +15,23 @@ import requests
 from .models import ActualiteSyndiquee, Article, ChiffreCle, FluxSyndication
 
 
+@shared_task
+def publier_articles_programmes() -> int:
+    from django.db import transaction
+    from .models import RevisionArticle
+    count = 0
+    with transaction.atomic():
+        for article in Article.objects.select_for_update().filter(
+            statut=Article.Statut.PROGRAMME, date_publication__lte=timezone.now()
+        ):
+            article.statut = Article.Statut.PUBLIE
+            article.save(update_fields=["statut", "updated_at"])
+            RevisionArticle.objects.create(article=article, action="publication_programmee",
+                donnees={"statut": article.statut, "date_publication": article.date_publication.isoformat()})
+            count += 1
+    return count
+
+
 def _rss_text(node, name: str) -> str:
     child = next((item for item in node if item.tag.rsplit("}", 1)[-1] == name), None)
     return (child.text or "").strip() if child is not None else ""

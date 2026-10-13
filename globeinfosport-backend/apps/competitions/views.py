@@ -40,6 +40,11 @@ from apps.competitions.serializers import (
     StatistiqueJoueurSerializer,
 )
 from apps.competitions.tasks import build_calendrier_pdf
+from apps.competitions.services import (
+    FootballDataConfigurationError,
+    FootballDataRequestError,
+    synchroniser_football_data,
+)
 from apps.core.permissions import IsEditeurOuPlus, IsRedacteurOuPlus
 from apps.vitrine.throttles import PublicReadThrottle
 
@@ -54,12 +59,32 @@ class ReadRedacteurWriteEditeurMixin:
 
 
 class CompetitionViewSet(ReadRedacteurWriteEditeurMixin, viewsets.ModelViewSet):
-    queryset = Competition.objects.all()
+    queryset = Competition.objects.select_related("sport", "pays").prefetch_related("clubs").all()
     serializer_class = CompetitionSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_class = CompetitionFilter
     search_fields = ["nom", "saison"]
     ordering_fields = ["nom", "saison", "actif"]
+
+    @action(detail=False, methods=["post"], url_path="synchroniser-donnees")
+    def synchroniser_donnees(self, request):  # type: ignore[no-untyped-def]
+        """Actualise les compétitions connectées depuis le fournisseur autorisé."""
+
+        codes = request.data.get("competitions")
+        if codes is not None and (
+            not isinstance(codes, list) or not all(isinstance(code, str) for code in codes)
+        ):
+            return Response(
+                {"detail": "competitions doit être une liste de codes de compétition."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            resume = synchroniser_football_data(codes)
+        except FootballDataConfigurationError as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_409_CONFLICT)
+        except (FootballDataRequestError, ValueError) as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(resume)
 
 
 class ClubViewSet(ReadRedacteurWriteEditeurMixin, viewsets.ModelViewSet):
@@ -188,11 +213,17 @@ class _PublicReadMixin:
 
 
 class CompetitionPublicListView(_PublicReadMixin, ListAPIView):
-    queryset = Competition.objects.filter(actif=True)
+    queryset = Competition.objects.filter(actif=True).select_related("sport", "pays").prefetch_related("clubs")
     serializer_class = CompetitionPublicSerializer
-    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ["nom", "saison"]
     filterset_class = CompetitionFilter
     ordering_fields = ["nom", "saison"]
+
+
+class CompetitionPublicDetailView(_PublicReadMixin, RetrieveAPIView):
+    queryset = Competition.objects.filter(actif=True).select_related("sport", "pays").prefetch_related("clubs")
+    serializer_class = CompetitionPublicSerializer
 
 
 class ClubPublicListView(_PublicReadMixin, ListAPIView):

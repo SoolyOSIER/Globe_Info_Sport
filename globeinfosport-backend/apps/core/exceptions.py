@@ -1,6 +1,8 @@
 """Erreurs métier et format d'erreur homogène de l'API."""
 
 from typing import Any
+from django.core.exceptions import ValidationError as DjangoValidationError
+from django.db.models.deletion import ProtectedError, RestrictedError
 
 from rest_framework import status
 from rest_framework.exceptions import APIException
@@ -34,6 +36,10 @@ class InvalidTransition(BusinessRuleViolation):
 def custom_exception_handler(exc: Exception, context: dict[str, Any]) -> Response | None:
     """Ajoute un statut lisible sans masquer le détail DRF d'origine."""
 
+    if isinstance(exc, (ProtectedError, RestrictedError)):
+        return Response({"detail": "Cet élément est encore utilisé. Modifiez ses liens avant de le supprimer.", "status_code": 409}, status=409)
+    if isinstance(exc, DjangoValidationError):
+        return Response(getattr(exc, "message_dict", {"detail": exc.messages}), status=400)
     response = drf_exception_handler(exc, context)
     if response is not None and isinstance(response.data, dict):
         response.data.setdefault("status_code", response.status_code)

@@ -16,14 +16,16 @@ from apps.competitions.models import (
 
 @admin.register(Competition)
 class CompetitionAdmin(admin.ModelAdmin):
-    list_display = ("nom", "type", "saison", "actif")
-    list_filter = ("type", "actif", "saison")
+    list_display = ("nom", "sport", "pays", "type", "saison", "actif", "derniere_synchronisation")
+    list_filter = ("sport", "pays", "type", "actif", "saison")
     search_fields = ("nom", "saison")
+    filter_horizontal = ("clubs",)
 
 
 @admin.register(Club)
 class ClubAdmin(admin.ModelAdmin):
-    list_display = ("nom", "ville", "stade", "fondation")
+    list_display = ("nom", "pays", "sport", "ville", "stade", "fondation")
+    list_filter = ("pays", "sport")
     search_fields = ("nom", "ville", "stade")
 
 

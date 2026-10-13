@@ -16,6 +16,7 @@ environ.Env.read_env(BASE_DIR.parent / ".env")
 SECRET_KEY = env("SECRET_KEY", default="unsafe-development-key-change-me")
 DEBUG = env("DEBUG")
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["localhost", "127.0.0.1"])
+PUBLIC_SITE_URL = env("PUBLIC_SITE_URL", default="http://localhost:5174").rstrip("/")
 
 DJANGO_APPS = [
     "django.contrib.admin",
@@ -35,7 +36,6 @@ THIRD_PARTY_APPS = [
     "django_celery_beat",
     "django_celery_results",
     "channels",
-    "ckeditor",
     "imagekit",
 ]
 LOCAL_APPS = [
@@ -101,6 +101,11 @@ MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 REST_FRAMEWORK = {
+    "DEFAULT_PARSER_CLASSES": [
+        "rest_framework.parsers.JSONParser",
+        "rest_framework.parsers.FormParser",
+        "apps.core.parsers.EditorialMultiPartParser",
+    ],
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
@@ -154,9 +159,14 @@ CELERY_RESULT_EXTENDED = True
 CELERY_TIMEZONE = TIME_ZONE
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 CELERY_BEAT_SCHEDULE = {
+    "publication-programmee": {"task": "apps.actualites.tasks.publier_articles_programmes", "schedule": timedelta(minutes=1)},
     "synchroniser-les-flux-rss": {
         "task": "apps.actualites.tasks.synchroniser_flux_rss",
         "schedule": timedelta(minutes=10),
+    },
+    "synchroniser-football": {
+        "task": "apps.competitions.tasks.synchroniser_football_automatique",
+        "schedule": timedelta(minutes=30),
     },
 }
 CHANNEL_LAYERS = {
@@ -174,3 +184,5 @@ EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="noreply@globeinfosport.ht")
 RECAPTCHA_SECRET_KEY = env("RECAPTCHA_SECRET_KEY", default="")
 RECAPTCHA_MIN_SCORE = env.float("RECAPTCHA_MIN_SCORE", default=0.5)
+FOOTBALL_DATA_API_TOKEN = env("FOOTBALL_DATA_API_TOKEN", default="")
+FOOTBALL_DATA_API_URL = env("FOOTBALL_DATA_API_URL", default="https://api.football-data.org/v4").rstrip("/")

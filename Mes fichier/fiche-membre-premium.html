@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Storly Osier — Fiche membre — SYGMEBEC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0e1830;
+    --navy-2:#131f3d;
+    --navy-3:#1c2c54;
+    --navy-line:rgba(255,255,255,0.07);
+    --cream:#f7f1e3;
+    --cream-2:#f2ead8;
+    --bg:#f7f5f0;
+    --card:#ffffff;
+    --border:#eae5d8;
+    --text:#211f1a;
+    --text-dim:#78746a;
+    --text-faint:#a39e91;
+    --gold:#b6903f;
+    --gold-light:#d9b876;
+    --gold-soft:rgba(182,144,63,0.12);
+    --green:#1fa060;
+    --green-soft:#dcf4e6;
+    --blue:#3768d6;
+    --blue-soft:#dfe8fb;
+    --amber:#c17f18;
+    --amber-soft:#faecd2;
+    --purple:#7c50d1;
+    --purple-soft:#ece2fb;
+    --red:#c94f43;
+    --red-soft:#fbe4e1;
+    --radius-lg:22px;
+    --radius-md:14px;
+    --ease:cubic-bezier(.22,1,.36,1);
+    --shadow: 0 1px 0 rgba(255,255,255,0.6) inset, 0 18px 40px -26px rgba(30,25,10,0.18);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    font-family:'Inter', sans-serif; background:var(--bg); color:var(--text);
+    -webkit-font-smoothing:antialiased; min-height:100vh;
+  }
+  ::selection{ background:var(--gold-soft); color:var(--gold); }
+
+  .app{ display:grid; grid-template-columns:264px 1fr; min-height:100vh; }
+
+  /* ============ SIDEBAR ============ */
+  .sidebar{
+    background: linear-gradient(190deg, var(--navy-2), var(--navy) 60%);
+    color:#fff; padding:22px 16px; display:flex; flex-direction:column;
+    position:sticky; top:0; height:100vh; border-right:1px solid rgba(0,0,0,0.2);
+  }
+  .brand{ display:flex; align-items:center; gap:12px; padding:6px 8px 26px; }
+  .brand-mark{
+    width:42px; height:42px; border-radius:50%; flex-shrink:0;
+    background: radial-gradient(circle at 32% 28%, var(--gold-light), var(--gold) 70%);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Fraunces', serif; font-weight:700; font-size:15.5px; color:#241a05;
+    box-shadow: 0 6px 16px -4px rgba(182,144,63,0.55), inset 0 1px 1px rgba(255,255,255,0.4);
+    position:relative;
+  }
+  .brand-mark::after{ content:''; position:absolute; inset:-3px; border-radius:50%; border:1px solid rgba(217,184,118,0.35); }
+  .brand-name{ font-weight:800; font-size:15.5px; letter-spacing:0.4px; line-height:1.1; }
+  .brand-sub{ font-size:10px; color:#8891ab; letter-spacing:1.6px; margin-top:3px; font-weight:600; }
+
+  .navlist{ list-style:none; display:flex; flex-direction:column; gap:2px; }
+  .navitem{
+    display:flex; align-items:center; gap:12px; padding:11px 14px; border-radius:11px;
+    font-size:13.6px; font-weight:500; color:#9aa3bd; cursor:pointer; position:relative;
+    transition: color .25s var(--ease), background .25s var(--ease), transform .25s var(--ease);
+  }
+  .navitem svg{ width:17px; height:17px; opacity:0.8; flex-shrink:0; }
+  .navitem:hover{ color:#fff; background:rgba(255,255,255,0.045); transform:translateX(2px); }
+  .navitem.active{
+    color:#fff; background: linear-gradient(90deg, rgba(182,144,63,0.22), rgba(182,144,63,0.02));
+    border:1px solid rgba(182,144,63,0.3); font-weight:600;
+  }
+  .navitem.active svg{ opacity:1; color:var(--gold-light); }
+  .navitem.active::before{
+    content:''; position:absolute; left:-16px; top:8px; bottom:8px; width:3px; border-radius:4px;
+    background:linear-gradient(180deg, var(--gold-light), var(--gold));
+  }
+  .sidebar-foot{ margin-top:auto; }
+  .foot-card{
+    background:rgba(255,255,255,0.04); border:1px solid var(--navy-line); border-radius:var(--radius-md);
+    padding:14px; margin-bottom:10px; font-size:11.5px; color:#8891ab;
+  }
+  .foot-card b{ color:#fff; display:block; font-size:12.5px; margin-bottom:2px; }
+  .logout-item{ color:#e7a89c; }
+  .logout-item svg{ color:#e7a89c; opacity:1;}
+  .logout-item:hover{ background:var(--red-soft); color:var(--red); }
+  .logout-item:hover svg{ color:var(--red); }
+
+  /* ============ MAIN ============ */
+  .main{ min-width:0; display:flex; flex-direction:column; }
+
+  .topbar{
+    background: linear-gradient(120deg, var(--cream), var(--cream-2));
+    border-bottom:1px solid var(--border); padding:16px 34px;
+    display:flex; align-items:center; gap:16px; position:sticky; top:0; z-index:30; flex-wrap:wrap;
+  }
+  .back-link{
+    display:flex; align-items:center; gap:6px; font-size:13px; font-weight:600; color:var(--text-dim);
+    cursor:pointer; transition: color .2s var(--ease);
+  }
+  .back-link:hover{ color:var(--gold); }
+  .back-link svg{ width:15px; height:15px; }
+  .topbar h1{ font-family:'Fraunces', serif; font-size:19px; font-weight:600; }
+  .status-pill-top{
+    font-size:11px; font-weight:700; padding:4px 11px; border-radius:20px;
+    background:var(--green-soft); color:var(--green); display:inline-flex; align-items:center; gap:5px;
+  }
+  .status-pill-top::before{ content:''; width:6px; height:6px; border-radius:50%; background:var(--green); animation: dotPulse 1.8s ease-in-out infinite; }
+  @keyframes dotPulse{ 0%,100%{ box-shadow:0 0 0 0 rgba(31,160,96,0.5);} 70%{ box-shadow:0 0 0 6px rgba(31,160,96,0);} }
+
+  .top-actions{ display:flex; align-items:center; gap:10px; margin-left:auto; }
+  .tbtn{
+    font-family:inherit; font-size:12.8px; font-weight:600; padding:9px 16px; border-radius:10px;
+    border:1px solid var(--border); background:#fff; color:var(--text-dim); cursor:pointer;
+    display:flex; align-items:center; gap:7px; transition:all .22s var(--ease);
+  }
+  .tbtn svg{ width:14.5px; height:14.5px; }
+  .tbtn:hover{ transform:translateY(-1px); box-shadow:0 8px 16px -10px rgba(0,0,0,0.2); }
+  .tbtn.status-btn{ color:var(--blue); border-color:rgba(55,104,214,0.3); }
+  .tbtn.status-btn:hover{ background:var(--blue-soft); }
+  .tbtn.edit-btn{ background:linear-gradient(150deg, var(--gold-light), var(--gold)); color:#241a05; border:none; }
+  .tbtn.edit-btn:hover{ filter:brightness(1.06); box-shadow:0 10px 22px -10px rgba(182,144,63,0.55); }
+  .tbtn.del-btn{ background:linear-gradient(150deg, #e07468, var(--red)); color:#fff; border:none; }
+  .tbtn.del-btn:hover{ filter:brightness(1.06); box-shadow:0 10px 22px -10px rgba(201,79,67,0.5); }
+
+  /* ============ CONTENT ============ */
+  .content{ padding:30px 34px 90px; flex:1; }
+  @keyframes rise{ to{ opacity:1; transform:translateY(0); } }
+
+  /* ---- HERO BANNER ---- */
+  .hero-banner{
+    position:relative; overflow:hidden; border-radius:var(--radius-lg);
+    background: linear-gradient(150deg, var(--navy-3) 0%, var(--navy) 55%, #060a17 130%);
+    padding:38px 34px; margin-bottom:20px; color:#fff;
+    display:grid; grid-template-columns: 260px 1fr; gap:36px; align-items:center;
+    opacity:0; transform:translateY(18px); animation: rise .65s var(--ease) .05s forwards;
+  }
+  .hero-banner::before{
+    content:''; position:absolute; width:340px; height:340px; border-radius:50%;
+    background:radial-gradient(circle, var(--gold) 0%, transparent 70%); opacity:0.16;
+    top:-130px; right:-80px; animation: floatGlow1 10s ease-in-out infinite;
+  }
+  .hero-banner::after{
+    content:''; position:absolute; width:260px; height:260px; border-radius:50%;
+    background:radial-gradient(circle, var(--purple) 0%, transparent 70%); opacity:0.14;
+    bottom:-110px; left:120px; animation: floatGlow2 12s ease-in-out infinite;
+  }
+  @keyframes floatGlow1{ 0%,100%{ transform:translate(0,0) scale(1);} 50%{ transform:translate(-16px,14px) scale(1.06);} }
+  @keyframes floatGlow2{ 0%,100%{ transform:translate(0,0) scale(1);} 50%{ transform:translate(14px,-12px) scale(1.08);} }
+  .hero-dots{ position:absolute; inset:0; opacity:0.05; background-image: radial-gradient(rgba(255,255,255,0.9) 1px, transparent 1px); background-size:18px 18px; }
+
+  /* ---- FLIP CARD ---- */
+  .flip-scene{ perspective:1400px; position:relative; z-index:1; }
+  .flip-card{
+    width:230px; height:290px; position:relative; transform-style:preserve-3d;
+    transition: transform .8s var(--ease); cursor:pointer;
+  }
+  .flip-card.flipped{ transform:rotateY(180deg); }
+  .flip-face{
+    position:absolute; inset:0; backface-visibility:hidden; border-radius:18px; overflow:hidden;
+    box-shadow:0 22px 50px -18px rgba(0,0,0,0.55);
+    display:flex; flex-direction:column;
+  }
+  .flip-front{
+    background: linear-gradient(165deg, #24345f, #101a34 75%);
+    padding:20px; text-align:center; align-items:center; justify-content:flex-start;
+    border:1px solid rgba(255,255,255,0.08);
+  }
+  .flip-front::before{
+    content:''; position:absolute; width:130px; height:130px; border-radius:50%;
+    background:radial-gradient(circle, var(--gold-light) 0%, transparent 70%); opacity:0.18; top:-40px; right:-30px;
+  }
+  .flip-org{ position:relative; font-size:9px; letter-spacing:1.8px; text-transform:uppercase; color:#b9c0d8; font-weight:700; margin-bottom:16px; }
+  .flip-avatar-wrap{ position:relative; width:82px; height:82px; margin-bottom:12px; }
+  .flip-avatar-wrap::before{
+    content:''; position:absolute; inset:-5px; border-radius:50%; border:1.4px solid rgba(217,184,118,0.4);
+    animation: ringPulse 2.6s ease-in-out infinite;
+  }
+  @keyframes ringPulse{ 0%,100%{ transform:scale(1); opacity:0.5;} 50%{ transform:scale(1.14); opacity:0.05;} }
+  .flip-avatar{
+    width:82px; height:82px; border-radius:50%;
+    background:linear-gradient(160deg,#e7dfc9,#c8b98f);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Fraunces', serif; font-size:27px; font-weight:700; color:#5a4620;
+    border:3px solid rgba(255,255,255,0.15);
+  }
+  .flip-name{ position:relative; font-family:'Fraunces', serif; font-size:18px; font-weight:600; }
+  .flip-sub{ position:relative; font-size:11px; color:#a8afc6; margin-top:3px; }
+  .flip-number{
+    position:relative; margin-top:auto; width:100%; background:rgba(255,255,255,0.08);
+    border:1px solid rgba(255,255,255,0.14); border-radius:11px; padding:10px 13px; text-align:left;
+  }
+  .flip-number-label{ font-size:8.5px; letter-spacing:1.1px; text-transform:uppercase; color:#9aa3bd; font-weight:700; }
+  .flip-number-val{ font-family:'Fraunces', serif; font-size:14.5px; font-weight:600; margin-top:2px; }
+  .flip-hint{ position:relative; font-size:9.5px; color:#7d86a0; margin-top:10px; display:flex; align-items:center; gap:5px; }
+  .flip-hint svg{ width:11px; height:11px; }
+
+  .flip-back{
+    background: linear-gradient(165deg, #1a2647, #0c1226 80%);
+    transform:rotateY(180deg); padding:20px; align-items:center; justify-content:center; gap:14px;
+    border:1px solid rgba(255,255,255,0.08);
+  }
+  .qr-box{
+    width:110px; height:110px; background:#fff; border-radius:12px; padding:10px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .qr-box svg{ width:100%; height:100%; }
+  .flip-back-title{ font-size:12.5px; font-weight:700; color:#fff; text-align:center; }
+  .flip-back-sub{ font-size:10.5px; color:#9aa3bd; text-align:center; line-height:1.5; padding:0 6px; }
+  .flip-back-church{ font-size:9.5px; color:#7d86a0; text-align:center; margin-top:4px; }
+
+  /* ---- Quick actions floating ---- */
+  .quick-actions{ position:relative; z-index:1; display:flex; gap:8px; margin-top:16px; justify-content:center; }
+  .qa-btn{
+    width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.14); color:#dfe3f0; cursor:pointer;
+    transition: all .22s var(--ease);
+  }
+  .qa-btn:hover{ background:var(--gold); color:#241a05; border-color:var(--gold); transform:translateY(-2px); }
+  .qa-btn svg{ width:14px; height:14px; }
+
+  /* ---- Hero right: stats + info ---- */
+  .hero-right{ position:relative; z-index:1; }
+  .hero-right-top{ display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:22px; gap:16px; flex-wrap:wrap; }
+  .hero-eyebrow{ font-size:10.5px; letter-spacing:1.8px; text-transform:uppercase; color:var(--gold-light); font-weight:700; }
+  .hero-title{ font-family:'Fraunces', serif; font-size:27px; font-weight:600; margin-top:6px; }
+  .hero-tags{ display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; }
+  .hero-tag{
+    font-size:10.8px; font-weight:700; padding:5px 12px; border-radius:20px;
+    background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.14); color:#dfe3f0;
+    display:flex; align-items:center; gap:5px;
+  }
+  .hero-tag svg{ width:11px; height:11px; color:var(--gold-light); }
+
+  .ring-stats{ display:flex; gap:22px; flex-wrap:wrap; }
+  .ring-stat{ display:flex; align-items:center; gap:12px; }
+  .ring-wrap{ position:relative; width:58px; height:58px; flex-shrink:0; }
+  .ring-wrap svg{ width:100%; height:100%; transform:rotate(-90deg); }
+  .ring-wrap circle{ fill:none; stroke-width:5.5; }
+  .ring-track{ stroke:rgba(255,255,255,0.12); }
+  .ring-val{ stroke-linecap:round; stroke-dasharray:0 1000; transition:stroke-dasharray 1.3s var(--ease) .4s; }
+  .ring-label{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:#fff; }
+  .ring-text .num{ font-family:'Fraunces', serif; font-size:16px; font-weight:600; color:#fff; }
+  .ring-text .lab{ font-size:10.8px; color:#9aa3bd; margin-top:2px; }
+
+  /* ---- TABS ---- */
+  .tabs-row{ display:flex; gap:4px; margin-bottom:20px; border-bottom:1px solid var(--border);
+    opacity:0; animation: rise .6s var(--ease) .15s forwards; }
+  .tab-btn{
+    font-family:inherit; font-size:13.3px; font-weight:600; color:var(--text-faint); background:none; border:none;
+    padding:12px 18px; cursor:pointer; position:relative; display:flex; align-items:center; gap:8px;
+    transition:color .22s var(--ease);
+  }
+  .tab-btn svg{ width:15px; height:15px; }
+  .tab-btn:hover{ color:var(--text); }
+  .tab-btn.active{ color:var(--gold); }
+  .tab-btn.active::after{
+    content:''; position:absolute; left:12px; right:12px; bottom:-1px; height:2.5px; border-radius:3px;
+    background:linear-gradient(90deg, var(--gold-light), var(--gold));
+  }
+  .tab-count{
+    font-size:10px; font-weight:700; background:var(--gold-soft); color:var(--gold); padding:1px 7px; border-radius:20px;
+  }
+
+  .tab-panel{ display:none; }
+  .tab-panel.active{ display:block; animation: fadeTab .4s var(--ease); }
+  @keyframes fadeTab{ from{ opacity:0; transform:translateY(6px);} to{ opacity:1; transform:translateY(0);} }
+
+  /* ---- Overview grid ---- */
+  .overview-grid{ display:grid; grid-template-columns: 1.4fr 0.85fr; gap:18px; align-items:start; }
+
+  .panel{
+    background:var(--card); border:1px solid var(--border); border-radius:var(--radius-lg); box-shadow:var(--shadow);
+    padding:22px 24px; margin-bottom:16px;
+    transition: box-shadow .3s var(--ease), transform .3s var(--ease);
+  }
+  .panel:hover{ box-shadow:0 20px 40px -24px rgba(30,25,10,0.26); transform:translateY(-2px); }
+  .panel-title{ display:flex; align-items:center; gap:9px; font-size:14px; font-weight:700; margin-bottom:16px; }
+  .panel-title svg{ width:16px; height:16px; color:var(--gold); }
+
+  .info-grid{ display:grid; grid-template-columns:1fr 1fr; gap:18px 24px; }
+  .info-item{ background:#fcfbf8; border:1px solid var(--border); border-radius:12px; padding:14px 16px; transition:all .2s var(--ease); }
+  .info-item:hover{ border-color:var(--gold-light); background:var(--gold-soft); }
+  .info-label{ font-size:10.3px; letter-spacing:.9px; text-transform:uppercase; color:var(--text-faint); font-weight:700; }
+  .info-value{ font-size:14px; font-weight:700; color:var(--text); display:flex; align-items:center; gap:7px; margin-top:6px; }
+  .info-value svg{ width:14px; height:14px; color:var(--gold); flex-shrink:0; }
+  .info-value.empty{ color:var(--text-faint); font-weight:500; font-style:italic; }
+
+  .contact-row{
+    display:flex; align-items:center; gap:12px; padding:13px 15px; background:#fcfbf8; border:1px solid var(--border);
+    border-radius:12px; font-size:13px; font-weight:600; color:var(--text); margin-bottom:10px; transition:all .2s var(--ease);
+  }
+  .contact-row:hover{ border-color:var(--gold-light); }
+  .contact-row:last-child{ margin-bottom:0; }
+  .contact-row svg{ width:16px; height:16px; color:var(--gold); flex-shrink:0; }
+  .contact-row .copy-btn{
+    margin-left:auto; width:28px; height:28px; border-radius:8px; display:flex; align-items:center; justify-content:center;
+    color:var(--text-faint); cursor:pointer; transition:all .2s var(--ease); background:none; border:none;
+  }
+  .contact-row .copy-btn:hover{ background:var(--gold-soft); color:var(--gold); }
+  .contact-row .copy-btn svg{ width:13px; height:13px; color:inherit; }
+
+  .empty-state{ display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:26px 10px; color:var(--text-faint); }
+  .empty-state svg{ width:30px; height:30px; margin-bottom:10px; opacity:0.5; }
+  .empty-state span{ font-size:12.5px; }
+
+  .fonctions-chips{ display:flex; gap:8px; flex-wrap:wrap; }
+  .fonction-chip{ font-size:12px; font-weight:700; padding:7px 13px; border-radius:20px; background:var(--purple-soft); color:var(--purple); }
+
+  /* ---- Mini membership summary card ---- */
+  .mini-card{
+    position:relative; overflow:hidden; border-radius:var(--radius-lg); color:#fff; padding:22px;
+    background: linear-gradient(150deg, var(--navy-3), var(--navy) 65%, #070c1a 130%);
+    margin-bottom:16px;
+  }
+  .mini-card::before{
+    content:''; position:absolute; width:160px; height:160px; border-radius:50%;
+    background:radial-gradient(circle, var(--gold) 0%, transparent 70%); opacity:0.16; top:-60px; right:-40px;
+  }
+  .mini-card-label{ position:relative; font-size:9.5px; letter-spacing:1.4px; text-transform:uppercase; color:#9aa3bd; font-weight:700; margin-bottom:12px; }
+  .mini-card-body{ position:relative; display:flex; flex-direction:column; gap:10px; }
+  .mini-stat-row{ display:flex; align-items:center; justify-content:space-between; font-size:12.3px; padding:9px 0; border-bottom:1px dashed rgba(255,255,255,0.1); }
+  .mini-stat-row:last-child{ border-bottom:none; }
+  .mini-stat-row .lab{ color:#9aa3bd; display:flex; align-items:center; gap:7px; }
+  .mini-stat-row .lab svg{ width:13px; height:13px; color:var(--gold-light); }
+  .mini-stat-row .val{ font-weight:700; }
+
+  /* ---- Timeline ---- */
+  .timeline{ position:relative; padding-left:28px; }
+  .timeline::before{ content:''; position:absolute; left:8px; top:4px; bottom:4px; width:2px; background:linear-gradient(180deg, var(--gold-light), var(--border)); }
+  .timeline-item{ position:relative; padding-bottom:24px; }
+  .timeline-item:last-child{ padding-bottom:0; }
+  .timeline-dot{
+    position:absolute; left:-28px; top:2px; width:18px; height:18px; border-radius:50%;
+    background:var(--card); border:2.5px solid var(--gold); display:flex; align-items:center; justify-content:center;
+  }
+  .timeline-dot svg{ width:9px; height:9px; color:var(--gold); }
+  .timeline-title{ font-size:13.3px; font-weight:700; }
+  .timeline-desc{ font-size:12.3px; color:var(--text-dim); margin-top:3px; line-height:1.5; }
+  .timeline-date{ font-size:11px; color:var(--text-faint); margin-top:4px; font-weight:600; }
+
+  .doc-row{
+    display:flex; align-items:center; gap:14px; padding:14px 16px; background:#fcfbf8; border:1px solid var(--border);
+    border-radius:12px; margin-bottom:10px; transition: all .2s var(--ease);
+  }
+  .doc-row:hover{ border-color:var(--gold-light); transform:translateX(3px); }
+  .doc-row:last-child{ margin-bottom:0; }
+  .doc-icon{ width:38px; height:38px; border-radius:10px; background:var(--purple-soft); color:var(--purple); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .doc-icon svg{ width:17px; height:17px; }
+  .doc-title{ font-size:13px; font-weight:700; }
+  .doc-sub{ font-size:11.3px; color:var(--text-faint); margin-top:2px; }
+  .doc-actions{ margin-left:auto; display:flex; gap:6px; }
+  .doc-link{ font-size:11.5px; font-weight:700; color:var(--text-dim); display:flex; align-items:center; gap:4px; cursor:pointer; transition:color .2s var(--ease); }
+  .doc-link:hover{ color:var(--gold); }
+  .doc-link svg{ width:12px; height:12px; }
+
+  @media (max-width: 1050px){
+    .hero-banner{ grid-template-columns:1fr; text-align:center; }
+    .flip-scene{ margin:0 auto; }
+    .hero-right-top{ justify-content:center; text-align:center; }
+    .ring-stats{ justify-content:center; }
+    .overview-grid{ grid-template-columns:1fr; }
+    .info-grid{ grid-template-columns:1fr; }
+  }
+  @media (max-width: 900px){
+    .app{ grid-template-columns:1fr; }
+    .sidebar{ display:none; }
+    .content{ padding:22px 18px 80px; }
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{ animation-duration:.001ms !important; transition-duration:.001ms !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ================= SIDEBAR ================= -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">EB</div>
+      <div>
+        <div class="brand-name">SYGMEBEC</div>
+        <div class="brand-sub">E.B.E.C.</div>
+      </div>
+    </div>
+
+    <ul class="navlist">
+      <li class="navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 11.5L12 4l8 7.5"/><path d="M6 10v9a1 1 0 001 1h10a1 1 0 001-1v-9"/></svg>Tableau de bord</li>
+      <li class="navitem active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3"/><path d="M3.5 19c1-3.2 3-4.8 5.5-4.8s4.5 1.6 5.5 4.8"/><circle cx="17" cy="8.5" r="2.4"/><path d="M15 14.5c2 .1 3.4 1.4 4.2 3.8"/></svg>Membres</li>
+      <li class="navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/></svg>Événements</li>
+      <li class="navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 3.5h8l3.5 3.5V20a1 1 0 01-1 1H7a1 1 0 01-1-1V4.5a1 1 0 011-1z"/><path d="M9 12h6M9 15.5h6M9 8.5h3"/></svg>Rapports</li>
+      <li class="navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3.5 5.5l17 6-7 2.4-2.4 7z"/></svg>Lettres</li>
+      <li class="navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20V11M10 20V6M16 20v-7M22 20H2"/></svg>Statistiques</li>
+    </ul>
+
+    <div class="sidebar-foot">
+      <div class="foot-card">
+        <b>Fiche membre</b>
+        Toute modification est historisée automatiquement
+      </div>
+      <ul class="navlist">
+        <li class="navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 3.5v2M12 18.5v2M3.5 12h2M18.5 12h2M6 6l1.4 1.4M16.6 16.6L18 18M18 6l-1.4 1.4M7.4 16.6L6 18"/></svg>Paramètres</li>
+        <li class="navitem logout-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 4H6a1.5 1.5 0 00-1.5 1.5v13A1.5 1.5 0 006 20h3"/><path d="M15.5 16l4-4-4-4M19 12H9"/></svg>Déconnexion</li>
+      </ul>
+    </div>
+  </aside>
+
+  <!-- ================= MAIN ================= -->
+  <div class="main">
+
+    <div class="topbar">
+      <div class="back-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 5l-7 7 7 7"/></svg>Retour</div>
+      <h1>Storly Osier</h1>
+      <span class="status-pill-top">Actif</span>
+      <div class="top-actions">
+        <button class="tbtn status-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12a8 8 0 0114-5.3M20 12a8 8 0 01-14 5.3"/><path d="M4 4v5h5M20 20v-5h-5"/></svg>Changer statut</button>
+        <button class="tbtn edit-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20l.8-4L17 3.8a1.7 1.7 0 012.4 0l.8.8a1.7 1.7 0 010 2.4L8 19 4 20z"/></svg>Modifier</button>
+        <button class="tbtn del-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9.5 7V4.5h5V7M6 7l1 13h10l1-13"/></svg>Supprimer</button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- ===== HERO BANNER ===== -->
+      <div class="hero-banner">
+        <div class="hero-dots"></div>
+
+        <div class="flip-scene">
+          <div class="flip-card" id="flipCard">
+            <div class="flip-face flip-front">
+              <div class="flip-org">EBEC · SYGMEBEC</div>
+              <div class="flip-avatar-wrap"><div class="flip-avatar">SO</div></div>
+              <div class="flip-name">Storly Osier</div>
+              <div class="flip-sub">Carte officielle de membre</div>
+              <div class="flip-number">
+                <div class="flip-number-label">Numéro de membre</div>
+                <div class="flip-number-val">EBEC-00003</div>
+              </div>
+              <div class="flip-hint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12a8 8 0 0114-5.3M20 12a8 8 0 01-14 5.3"/><path d="M4 4v5h5M20 20v-5h-5"/></svg>Cliquer pour retourner</div>
+            </div>
+            <div class="flip-face flip-back">
+              <div class="qr-box">
+                <svg viewBox="0 0 29 29"><path fill="#111" d="M0 0h7v7H0zM8 0h1v1H8zM11 0h3v1h-3zM16 0h1v3h-1zM18 0h1v1h-1zM22 0h7v7h-7zM1 1h5v5H1zM9 1h1v1H9zM12 1h1v3h-1zM14 1h1v1h-1zM19 1h2v1h-2zM23 1h5v5h-5zM2 2h3v3H2zM8 2h1v2H8zM17 2h1v3h-1zM19 2h1v3h-1zM24 2h3v3h-3zM10 3h1v1h-1zM13 3h1v3h-1zM21 3h1v1h-1zM9 4h1v3H9zM11 4h1v1h-1zM15 4h1v1h-1zM18 4h1v1h-1zM20 4h1v3h-1zM0 8h1v1H0zM3 8h1v1H3zM6 8h2v2H6zM9 8h2v1H9zM12 8h1v1h-1zM14 8h2v1h-2zM17 8h1v2h-1zM19 8h1v1h-1zM22 8h1v3h-1zM24 8h1v2h-1zM26 8h3v1h-3zM2 9h1v1H2zM4 9h2v1H4zM8 9h1v1H8zM11 9h1v2h-1zM13 9h1v3h-1zM15 9h1v3h-1zM20 9h2v1h-2zM25 9h1v3h-1zM27 9h2v1h-2zM0 10h2v1H0zM4 10h1v2H4zM9 10h1v3H9zM17 10h1v3h-1zM19 10h1v1h-1zM21 10h1v3h-1zM26 10h1v3h-1zM2 11h1v3H2zM6 11h2v1H6zM10 11h1v1h-1zM12 11h1v1h-1zM18 11h1v3h-1zM20 11h1v3h-1zM23 11h1v1h-1zM0 12h1v1H0zM8 12h1v1H8zM14 12h1v3h-1zM16 12h1v1h-1zM24 12h1v2h-1zM27 12h1v3h-1zM1 13h1v3H1zM4 13h2v1H4zM10 13h1v3h-1zM12 13h1v1h-1zM19 13h1v1h-1zM22 13h2v1h-2zM26 13h1v1h-1zM0 14h1v3H0zM6 14h1v2H6zM8 14h1v1H8zM15 14h1v2h-1zM17 14h1v1h-1zM21 14h1v1h-1zM23 14h1v3h-1zM25 14h1v2h-1zM3 15h1v1H3zM8 15h1v3H8zM11 15h1v3h-1zM13 15h1v3h-1zM19 15h1v3h-1zM26 15h1v1h-1zM28 15h1v1h-1zM2 16h1v1H2zM5 16h2v1H5zM9 16h1v1H9zM16 16h1v2h-1zM18 16h1v3h-1zM21 16h2v1h-2zM24 16h1v1h-1zM27 16h1v3h-1zM0 17h1v3H0zM4 17h1v3H4zM12 17h1v3h-1zM14 17h1v1h-1zM17 17h1v1h-1zM20 17h1v3h-1zM23 17h1v3h-1zM25 17h1v3h-1zM2 18h1v1H2zM6 18h1v2H6zM10 18h1v1h-1zM15 18h1v3h-1zM22 18h1v1h-1zM7 19h1v3H7zM9 19h2v1H9zM13 19h1v2h-1zM19 19h1v1h-1zM24 19h2v1h-2zM27 19h1v1h-1zM0 20h6v1H0zM8 20h1v1H8zM12 20h1v1h-1zM16 20h2v1h-2zM19 20h1v3h-1zM21 20h3v1h-3zM26 20h1v3h-1zM28 20h1v3h-1zM1 21h1v3h-1zM3 21h2v1h-2zM6 21h1v1H6zM9 21h1v3H9zM11 21h2v1h-2zM14 21h1v1h-1zM17 21h1v3h-1zM20 21h1v1h-1zM22 21h1v1h-1zM24 21h1v3h-1zM3 22h1v1H3zM5 22h1v3H5zM10 22h2v1h-2zM13 22h1v3h-1zM15 22h1v2h-1zM21 22h1v3h-1zM23 22h1v1h-1zM27 22h1v1h-1zM0 23h1v5h-1zM2 23h1v1H2zM7 23h1v3H7zM12 23h1v1h-1zM14 23h1v3h-1zM16 23h1v1h-1zM18 23h1v3h-1zM20 23h1v2h-1zM25 23h1v3h-1zM28 23h1v3h-1zM2 24h4v1H2zM8 24h2v1H8zM11 24h1v3h-1zM22 24h2v3h-2zM26 24h2v1h-2zM3 25h1v3H3zM6 25h3v1H6zM9 25h1v3H9zM12 25h1v1h-1zM17 25h1v3h-1zM19 25h1v1h-1zM26 25h1v1h-1zM2 26h1v1H2zM10 26h1v3h-1zM13 26h1v3h-1zM15 26h3v1h-3zM20 26h2v1h-2zM24 26h1v3h-1zM27 26h2v1h-2zM1 27h5v1H1zM8 27h1v2H8zM12 27h1v1h-1zM16 27h1v1h-1zM18 27h1v2h-1zM21 27h1v1h-1zM26 27h1v2h-1zM28 27h1v2h-1z"/></svg>
+              </div>
+              <div class="flip-back-title">Église Baptiste de l'Espoir</div>
+              <div class="flip-back-sub">Scanner ce code pour vérifier l'authenticité de la carte de membre</div>
+              <div class="flip-back-church">SYGMEBEC · Cap-Haïtien</div>
+            </div>
+          </div>
+
+          <div class="quick-actions">
+            <div class="qa-btn" title="Appeler"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h4l2 5-2.5 1.5a11 11 0 005 5L14 14l5 2v4a2 2 0 01-2 2C9.5 22 2 14.5 2 7a2 2 0 012-2z"/></svg></div>
+            <div class="qa-btn" title="Envoyer un e-mail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="5" width="19" height="14" rx="2.4"/><path d="M3 6.5l9 6.5 9-6.5"/></svg></div>
+            <div class="qa-btn" title="Imprimer la carte"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9V3h12v6"/><rect x="4" y="9" width="16" height="8" rx="1.6"/><path d="M6 14h12v7H6z"/></svg></div>
+            <div class="qa-btn" title="Partager"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="6" cy="12" r="2.4"/><circle cx="18" cy="6" r="2.4"/><circle cx="18" cy="18" r="2.4"/><path d="M8 10.7l8-4.4M8 13.3l8 4.4"/></svg></div>
+          </div>
+        </div>
+
+        <div class="hero-right">
+          <div class="hero-right-top">
+            <div>
+              <div class="hero-eyebrow">Fiche d'identification</div>
+              <div class="hero-title">Storly Osier</div>
+              <div class="hero-tags">
+                <span class="hero-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="3.2"/><path d="M5 19c1.1-3.4 3.6-5.2 7-5.2s5.9 1.8 7 5.2"/></svg>Membre</span>
+                <span class="hero-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17"/></svg>Depuis 15/08/2026</span>
+                <span class="hero-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-6.2 7-11.5A7 7 0 105 9.5C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.4"/></svg>Cap-Haïtien</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="ring-stats">
+            <div class="ring-stat">
+              <div class="ring-wrap">
+                <svg viewBox="0 0 58 58">
+                  <circle class="ring-track" cx="29" cy="29" r="24"></circle>
+                  <circle class="ring-val" cx="29" cy="29" r="24" stroke="#1fa060" data-pct="18"></circle>
+                </svg>
+                <div class="ring-label">0,2</div>
+              </div>
+              <div class="ring-text"><div class="num">0,2 an</div><div class="lab">Ancienneté</div></div>
+            </div>
+            <div class="ring-stat">
+              <div class="ring-wrap">
+                <svg viewBox="0 0 58 58">
+                  <circle class="ring-track" cx="29" cy="29" r="24"></circle>
+                  <circle class="ring-val" cx="29" cy="29" r="24" stroke="#d9b876" data-pct="60"></circle>
+                </svg>
+                <div class="ring-label">60%</div>
+              </div>
+              <div class="ring-text"><div class="num">60 %</div><div class="lab">Profil complété</div></div>
+            </div>
+            <div class="ring-stat">
+              <div class="ring-wrap">
+                <svg viewBox="0 0 58 58">
+                  <circle class="ring-track" cx="29" cy="29" r="24"></circle>
+                  <circle class="ring-val" cx="29" cy="29" r="24" stroke="#7c50d1" data-pct="35"></circle>
+                </svg>
+                <div class="ring-label">1</div>
+              </div>
+              <div class="ring-text"><div class="num">1 document</div><div class="lab">Lettre générée</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== TABS ===== -->
+      <div class="tabs-row">
+        <button class="tab-btn active" data-tab="apercu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.4"/><path d="M4.5 20c1.6-3.6 4.6-5.4 7.5-5.4s5.9 1.8 7.5 5.4"/></svg>Aperçu</button>
+        <button class="tab-btn" data-tab="historique"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>Historique</button>
+        <button class="tab-btn" data-tab="documents"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 3.5h8l3.5 3.5V20a1 1 0 01-1 1H7a1 1 0 01-1-1V4.5a1 1 0 011-1z"/><path d="M9 12h6M9 15.5h6M9 8.5h3"/></svg>Documents<span class="tab-count">1</span></button>
+      </div>
+
+      <!-- ===== TAB: APERÇU ===== -->
+      <div class="tab-panel active" id="tab-apercu">
+        <div class="overview-grid">
+          <div>
+            <div class="panel">
+              <div class="panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.4"/><path d="M4.5 20c1.6-3.6 4.6-5.4 7.5-5.4s5.9 1.8 7.5 5.4"/></svg>Informations du membre</div>
+              <div class="info-grid">
+                <div class="info-item">
+                  <div class="info-label">Nom complet</div>
+                  <div class="info-value">Storly Osier</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Fonction</div>
+                  <div class="info-value">Membre</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Téléphone</div>
+                  <div class="info-value empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h4l2 5-2.5 1.5a11 11 0 005 5L14 14l5 2v4a2 2 0 01-2 2C9.5 22 2 14.5 2 7a2 2 0 012-2z"/></svg>Non renseigné</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Courriel</div>
+                  <div class="info-value"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="5" width="19" height="14" rx="2.4"/><path d="M3 6.5l9 6.5 9-6.5"/></svg>storlyosier833@gmail.com</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Date de naissance</div>
+                  <div class="info-value empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/></svg>Non renseignée</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Membre depuis</div>
+                  <div class="info-value"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/></svg>15/08/2026</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h4l2 5-2.5 1.5a11 11 0 005 5L14 14l5 2v4a2 2 0 01-2 2C9.5 22 2 14.5 2 7a2 2 0 012-2z"/></svg>Contact</div>
+              <div class="contact-row">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="5" width="19" height="14" rx="2.4"/><path d="M3 6.5l9 6.5 9-6.5"/></svg>
+                storlyosier833@gmail.com
+                <button class="copy-btn" title="Copier"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2h2"/></svg></button>
+              </div>
+            </div>
+
+            <div class="panel" style="margin-bottom:0;">
+              <div class="panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 21V9l8-6 8 6v12"/><path d="M9 21v-6h6v6"/></svg>Fonctions</div>
+              <div class="empty-state">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8" r="3.4"/><path d="M4.5 20c1.6-3.6 4.6-5.4 7.5-5.4s5.9 1.8 7.5 5.4"/><path d="M19 4l-7 7"/></svg>
+                <span>Aucune fonction assignée</span>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="mini-card">
+              <div class="mini-card-label">Résumé du dossier</div>
+              <div class="mini-card-body">
+                <div class="mini-stat-row"><span class="lab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="3.2"/><path d="M5 19c1.1-3.4 3.6-5.2 7-5.2s5.9 1.8 7 5.2"/></svg>Statut</span><span class="val">Actif</span></div>
+                <div class="mini-stat-row"><span class="lab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17"/></svg>Adhésion</span><span class="val">15/08/2026</span></div>
+                <div class="mini-stat-row"><span class="lab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12l5 5L20 6"/></svg>Identifiant</span><span class="val">#3</span></div>
+                <div class="mini-stat-row"><span class="lab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 3.5h8l3.5 3.5V20a1 1 0 01-1 1H7a1 1 0 01-1-1V4.5a1 1 0 011-1z"/></svg>Documents</span><span class="val">1 lettre</span></div>
+              </div>
+            </div>
+
+            <div class="panel" style="margin-bottom:0;">
+              <div class="panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l7 3.2v5.3c0 4.6-3 8.7-7 9.5-4-.8-7-4.9-7-9.5V6.2L12 3z"/><path d="M9.5 12l1.8 1.8L15 10"/></svg>Vérification</div>
+              <div class="empty-state" style="padding:14px 6px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 12l5 5L20 6"/></svg>
+                <span>Identité confirmée par un administrateur</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== TAB: HISTORIQUE ===== -->
+      <div class="tab-panel" id="tab-historique">
+        <div class="overview-grid">
+          <div class="panel" style="margin-bottom:0;">
+            <div class="panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>Parcours du membre</div>
+            <div class="timeline">
+              <div class="timeline-item">
+                <div class="timeline-dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg></div>
+                <div class="timeline-title">Fiche enregistrée dans le système</div>
+                <div class="timeline-desc">Le membre a été ajouté au registre par Osier Storly, avec le statut initial « Actif ».</div>
+                <div class="timeline-date">15 août 2026, 09:04</div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg></div>
+                <div class="timeline-title">Lettre d'attestation générée</div>
+                <div class="timeline-desc">Référence EBEC-2026-0001 émise et téléchargée au format Word.</div>
+                <div class="timeline-date">21 août 2026, 09:32</div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="1.5"/></svg></div>
+                <div class="timeline-title">Aucun autre événement</div>
+                <div class="timeline-desc">Les prochains changements de statut ou mises à jour apparaîtront ici automatiquement.</div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="panel" style="margin-bottom:0;">
+              <div class="panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 12a8 8 0 0114-5.3M20 12a8 8 0 01-14 5.3"/><path d="M4 4v5h5M20 20v-5h-5"/></svg>Historique des statuts</div>
+              <div class="empty-state">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 20V11M10 20V6M16 20v-7M22 20H2"/></svg>
+                <span>Aucun changement de statut enregistré</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== TAB: DOCUMENTS ===== -->
+      <div class="tab-panel" id="tab-documents">
+        <div class="panel" style="margin-bottom:0;">
+          <div class="panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 3.5h8l3.5 3.5V20a1 1 0 01-1 1H7a1 1 0 01-1-1V4.5a1 1 0 011-1z"/><path d="M9 12h6M9 15.5h6M9 8.5h3"/></svg>Documents associés</div>
+          <div class="doc-row">
+            <div class="doc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 3.5h8l3.5 3.5V20a1 1 0 01-1 1H7a1 1 0 01-1-1V4.5a1 1 0 011-1z"/></svg></div>
+            <div>
+              <div class="doc-title">Lettre d'attestation — EBEC-2026-0001</div>
+              <div class="doc-sub">Générée le 21 août 2026 par Storly Osier</div>
+            </div>
+            <div class="doc-actions">
+              <span class="doc-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 3.5h8l3.5 3.5V20a1 1 0 01-1 1H7a1 1 0 01-1-1V4.5a1 1 0 011-1z"/></svg>Word</span>
+              <span class="doc-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 20h14"/></svg>PDF</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  // Flip card
+  document.getElementById('flipCard').addEventListener('click', function(){
+    this.classList.toggle('flipped');
+  });
+
+  // Tabs
+  const tabBtns = document.querySelectorAll('.tab-btn');
+  const tabPanels = document.querySelectorAll('.tab-panel');
+  tabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      tabBtns.forEach(b => b.classList.remove('active'));
+      tabPanels.forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  // Copy contact
+  document.querySelectorAll('.copy-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const text = btn.parentElement.textContent.trim();
+      navigator.clipboard?.writeText(text).catch(() => {});
+      const original = btn.innerHTML;
+      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M4 12l5 5L20 6"/></svg>';
+      setTimeout(() => { btn.innerHTML = original; }, 1400);
+    });
+  });
+
+  // Progress rings
+  const R = 24;
+  const C = 2 * Math.PI * R;
+  setTimeout(() => {
+    document.querySelectorAll('.ring-val').forEach(ring => {
+      const pct = parseFloat(ring.dataset.pct) || 0;
+      const len = (pct / 100) * C;
+      ring.style.strokeDasharray = `${len} ${C - len}`;
+    });
+  }, 500);
+</script>
+</body>
+</html>

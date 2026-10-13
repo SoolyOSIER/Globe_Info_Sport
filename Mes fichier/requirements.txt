@@ -1,0 +1,12 @@
+Django==4.2.7
+djangorestframework==3.14.0
+django-cors-headers==4.3.0
+django-filter==23.5
+drf-spectacular==0.26.5
+djangorestframework-simplejwt==5.3.0
+python-decouple==3.8
+celery==5.3.6
+reportlab==4.0.7
+# Required by djangorestframework-simplejwt on Python 3.14 (provides pkg_resources).
+setuptools<81
+# psycopg2-binary==2.9.9

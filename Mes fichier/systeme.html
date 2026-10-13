@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Paramètres — SYGMEBEC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0e1830; --navy-2:#131f3d; --navy-3:#1c2c54; --navy-line:rgba(255,255,255,0.07);
+    --cream:#f7f1e3; --cream-2:#f2ead8; --bg:#f7f5f0; --card:#ffffff; --border:#eae5d8;
+    --text:#211f1a; --text-dim:#78746a; --text-faint:#a39e91;
+    --gold:#b6903f; --gold-light:#d9b876; --gold-soft:rgba(182,144,63,0.12);
+    --green:#1fa060; --green-soft:#dcf4e6; --blue:#3768d6; --blue-soft:#dfe8fb;
+    --amber:#c17f18; --amber-soft:#faecd2; --purple:#7c50d1; --purple-soft:#ece2fb;
+    --red:#c94f43; --red-soft:#fbe4e1;
+    --radius-lg:22px; --radius-md:14px; --ease:cubic-bezier(.22,1,.36,1);
+    --shadow: 0 1px 0 rgba(255,255,255,0.6) inset, 0 18px 40px -26px rgba(30,25,10,0.18);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{ font-family:'Inter', sans-serif; background:var(--bg); color:var(--text); -webkit-font-smoothing:antialiased; min-height:100vh; }
+  ::selection{ background:var(--gold-soft); color:var(--gold); }
+
+  .app{ display:grid; grid-template-columns:264px 1fr; min-height:100vh; }
+
+  /* ============ SIDEBAR ============ */
+  .sidebar{ background: linear-gradient(190deg, var(--navy-2), var(--navy) 60%); color:#fff; padding:22px 16px; display:flex; flex-direction:column; position:sticky; top:0; height:100vh; border-right:1px solid rgba(0,0,0,0.2); }
+  .brand{ display:flex; align-items:center; gap:12px; padding:6px 8px 26px; }
+  .brand-mark{ width:42px; height:42px; border-radius:50%; flex-shrink:0; background: radial-gradient(circle at 32% 28%, var(--gold-light), var(--gold) 70%); display:flex; align-items:center; justify-content:center; font-family:'Fraunces', serif; font-weight:700; font-size:15.5px; color:#241a05; box-shadow: 0 6px 16px -4px rgba(182,144,63,0.55), inset 0 1px 1px rgba(255,255,255,0.4); position:relative; }
+  .brand-mark::after{ content:''; position:absolute; inset:-3px; border-radius:50%; border:1px solid rgba(217,184,118,0.35); }
+  .brand-name{ font-weight:800; font-size:15.5px; letter-spacing:0.4px; line-height:1.1; }
+  .brand-sub{ font-size:10px; color:#8891ab; letter-spacing:1.6px; margin-top:3px; font-weight:600; }
+  .navlist{ list-style:none; display:flex; flex-direction:column; gap:2px; }
+  .navitem{ display:flex; align-items:center; gap:12px; padding:11px 14px; border-radius:11px; font-size:13.6px; font-weight:500; color:#9aa3bd; cursor:pointer; position:relative; transition: color .25s var(--ease), background .25s var(--ease), transform .25s var(--ease); }
+  .navitem svg{ width:17px; height:17px; opacity:0.8; flex-shrink:0; }
+  .navitem:hover{ color:#fff; background:rgba(255,255,255,0.045); transform:translateX(2px); }
+  .navitem.active{ color:#fff; background: linear-gradient(90deg, rgba(182,144,63,0.22), rgba(182,144,63,0.02)); border:1px solid rgba(182,144,63,0.3); font-weight:600; }
+  .navitem.active svg{ opacity:1; color:var(--gold-light); }
+  .navitem.active::before{ content:''; position:absolute; left:-16px; top:8px; bottom:8px; width:3px; border-radius:4px; background:linear-gradient(180deg, var(--gold-light), var(--gold)); }
+  .sidebar-foot{ margin-top:auto; }
+  .foot-card{ background:rgba(255,255,255,0.04); border:1px solid var(--navy-line); border-radius:var(--radius-md); padding:14px; margin-bottom:10px; font-size:11.5px; color:#8891ab; }
+  .foot-card b{ color:#fff; display:block; font-size:12.5px; margin-bottom:2px; }
+  .logout-item{ color:#e7a89c; } .logout-item svg{ color:#e7a89c; opacity:1;} .logout-item:hover{ background:var(--red-soft); color:var(--red); } .logout-item:hover svg{ color:var(--red); }
+
+  /* ============ MAIN ============ */
+  .main{ min-width:0; display:flex; flex-direction:column; }
+  .topbar{ background: linear-gradient(120deg, var(--cream), var(--cream-2)); border-bottom:1px solid var(--border); padding:18px 34px; display:flex; align-items:center; gap:22px; position:sticky; top:0; z-index:30; }
+  .search-wrap{ position:relative; flex:1; max-width:420px; }
+  .search-wrap svg{ position:absolute; left:15px; top:50%; transform:translateY(-50%); width:16px; height:16px; color:var(--text-faint); }
+  .search-wrap input{ width:100%; font-family:inherit; font-size:13.5px; padding:11px 16px 11px 40px; border-radius:30px; border:1px solid transparent; background:rgba(255,255,255,0.65); color:var(--text); transition: all .25s var(--ease); }
+  .search-wrap input::placeholder{ color:var(--text-faint); }
+  .search-wrap input:focus{ outline:none; background:#fff; border-color:var(--gold-light); box-shadow:0 0 0 4px var(--gold-soft); }
+  .top-actions{ display:flex; align-items:center; gap:16px; margin-left:auto; }
+  .icon-circle{ width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.55); border:1px solid rgba(0,0,0,0.04); cursor:pointer; position:relative; transition: all .25s var(--ease); color:var(--text-dim); }
+  .icon-circle:hover{ background:#fff; transform:translateY(-1px); box-shadow:0 6px 14px -6px rgba(0,0,0,0.15); color:var(--gold); }
+  .icon-circle svg{ width:17px; height:17px; }
+  .notif-dot{ position:absolute; top:6px; right:6px; width:8px; height:8px; border-radius:50%; background:var(--red); border:2px solid var(--cream); animation: notifPulse 2s ease-in-out infinite; }
+  @keyframes notifPulse{ 0%,100%{ box-shadow:0 0 0 0 rgba(201,79,67,0.5);} 70%{ box-shadow:0 0 0 6px rgba(201,79,67,0); } }
+  .profile-chip{ display:flex; align-items:center; gap:10px; cursor:pointer; padding:4px 8px 4px 4px; border-radius:30px; transition:background .25s var(--ease); }
+  .profile-chip:hover{ background:rgba(255,255,255,0.6); }
+  .profile-avatar-top{ width:36px; height:36px; border-radius:50%; overflow:hidden; flex-shrink:0; background:linear-gradient(160deg,#dcd3bd,#c8bb98); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; color:#5a4d2c; border:2px solid #fff; box-shadow:0 2px 8px rgba(0,0,0,0.08); }
+  .profile-name{ font-size:13px; font-weight:700; line-height:1.2; }
+  .profile-role{ font-size:10.5px; color:var(--text-faint); font-weight:500; }
+
+  /* ============ CONTENT ============ */
+  .content{ padding:30px 34px 90px; flex:1; }
+  @keyframes rise{ to{ opacity:1; transform:translateY(0); } }
+
+  /* ---- HERO ---- */
+  .hero-banner{
+    position:relative; overflow:hidden; border-radius:var(--radius-lg);
+    background: linear-gradient(150deg, var(--navy-3) 0%, var(--navy) 55%, #060a17 130%);
+    padding:34px 32px; margin-bottom:20px; color:#fff;
+    display:grid; grid-template-columns: auto 1fr; gap:30px; align-items:center;
+    opacity:0; transform:translateY(18px); animation: rise .65s var(--ease) .05s forwards;
+  }
+  .hero-banner::before{ content:''; position:absolute; width:300px; height:300px; border-radius:50%; background:radial-gradient(circle, var(--gold) 0%, transparent 70%); opacity:0.16; top:-110px; right:-70px; animation: floatGlow1 10s ease-in-out infinite; }
+  .hero-banner::after{ content:''; position:absolute; width:230px; height:230px; border-radius:50%; background:radial-gradient(circle, var(--purple) 0%, transparent 70%); opacity:0.14; bottom:-100px; left:230px; animation: floatGlow2 12s ease-in-out infinite; }
+  @keyframes floatGlow1{ 0%,100%{ transform:translate(0,0) scale(1);} 50%{ transform:translate(-16px,14px) scale(1.06);} }
+  @keyframes floatGlow2{ 0%,100%{ transform:translate(0,0) scale(1);} 50%{ transform:translate(14px,-12px) scale(1.08);} }
+  .hero-dots{ position:absolute; inset:0; opacity:0.05; background-image: radial-gradient(rgba(255,255,255,0.9) 1px, transparent 1px); background-size:18px 18px; }
+
+  .hero-avatar-wrap{ position:relative; width:98px; height:98px; z-index:1; flex-shrink:0; }
+  .hero-avatar-wrap::before{ content:''; position:absolute; inset:-6px; border-radius:26px; border:1.5px solid rgba(217,184,118,0.4); animation: ringPulse 2.8s ease-in-out infinite; }
+  @keyframes ringPulse{ 0%,100%{ transform:scale(1); opacity:0.5;} 50%{ transform:scale(1.08); opacity:0.05;} }
+  .hero-avatar{ width:98px; height:98px; border-radius:20px; overflow:hidden; background:linear-gradient(160deg,#e7dfc9,#c8b98f); display:flex; align-items:center; justify-content:center; font-family:'Fraunces', serif; font-size:34px; font-weight:700; color:#5a4620; border:3px solid rgba(255,255,255,0.15); box-shadow:0 12px 28px -10px rgba(0,0,0,0.4); }
+  .hero-avatar img{ width:100%; height:100%; object-fit:cover; }
+
+  .hero-right{ position:relative; z-index:1; }
+  .hero-eyebrow{ font-size:10.5px; letter-spacing:1.8px; text-transform:uppercase; color:var(--gold-light); font-weight:700; }
+  .hero-title{ font-family:'Fraunces', serif; font-size:26px; font-weight:600; margin-top:6px; }
+  .hero-title span{ color:#9aa3bd; font-weight:500; font-size:15px; }
+  .hero-sub{ font-size:12.6px; color:#a8afc6; margin-top:4px; }
+  .hero-tags{ display:flex; gap:8px; margin-top:13px; flex-wrap:wrap; }
+  .hero-tag{ font-size:10.7px; font-weight:700; padding:5px 12px; border-radius:20px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.14); color:#dfe3f0; display:flex; align-items:center; gap:5px; }
+  .hero-tag svg{ width:11px; height:11px; color:var(--gold-light); }
+
+  .ring-stats{ display:flex; gap:22px; flex-wrap:wrap; margin-top:18px; }
+  .ring-stat{ display:flex; align-items:center; gap:12px; }
+  .ring-wrap{ position:relative; width:52px; height:52px; flex-shrink:0; }
+  .ring-wrap svg{ width:100%; height:100%; transform:rotate(-90deg); }
+  .ring-wrap circle{ fill:none; stroke-width:5.5; }
+  .ring-track{ stroke:rgba(255,255,255,0.12); }
+  .ring-val{ stroke-linecap:round; stroke-dasharray:0 1000; transition:stroke-dasharray 1.3s var(--ease) .4s; }
+  .ring-label{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#fff; }
+  .ring-text .num{ font-family:'Fraunces', serif; font-size:14.5px; font-weight:600; color:#fff; }
+  .ring-text .lab{ font-size:10.4px; color:#9aa3bd; margin-top:2px; }
+
+  /* ---- Layout ---- */
+  .settings-layout{ display:grid; grid-template-columns: 250px 1fr; gap:18px; align-items:start; }
+
+  .settings-nav{ background:var(--card); border:1px solid var(--border); border-radius:var(--radius-lg); box-shadow:var(--shadow); padding:16px 12px; opacity:0; transform:translateY(14px); animation: rise .6s var(--ease) .1s forwards; position:sticky; top:96px; }
+  .nav-eyebrow{ font-size:10.1px; letter-spacing:1.3px; text-transform:uppercase; color:var(--text-faint); font-weight:700; padding:0 10px; margin:16px 0 7px; }
+  .nav-eyebrow:first-of-type{ margin-top:0; }
+  .settings-navlist{ list-style:none; display:flex; flex-direction:column; gap:2px; }
+  .settings-navitem{ display:flex; align-items:center; gap:10px; padding:9px 11px; border-radius:9px; font-size:12.8px; font-weight:500; color:var(--text-dim); cursor:pointer; position:relative; transition: all .2s var(--ease); }
+  .settings-navitem svg{ width:15px; height:15px; opacity:0.75; flex-shrink:0; }
+  .settings-navitem:hover{ background:#fcfbf8; color:var(--text); }
+  .settings-navitem.active{ background:var(--gold-soft); color:var(--gold); font-weight:700; }
+  .settings-navitem.active svg{ opacity:1; }
+
+  .main-col{ display:flex; flex-direction:column; gap:16px; }
+  .row-2{ display:grid; grid-template-columns: 1fr 280px; gap:16px; align-items:start; }
+
+  .panel{ background:var(--card); border:1px solid var(--border); border-radius:var(--radius-lg); box-shadow:var(--shadow); padding:24px 26px; opacity:0; transform:translateY(14px); animation: rise .55s var(--ease) forwards; transition: box-shadow .3s var(--ease), transform .3s var(--ease); }
+  .panel:hover{ box-shadow:0 20px 40px -24px rgba(30,25,10,0.26); }
+  .panel-title{ display:flex; align-items:center; gap:9px; font-size:14.5px; font-weight:700; margin-bottom:5px; }
+  .panel-title svg{ width:16px; height:16px; color:var(--gold); }
+  .panel-sub{ font-size:12.2px; color:var(--text-faint); margin-bottom:18px; }
+
+  .field{ margin-bottom:20px; } .field:last-child{ margin-bottom:0; }
+  .field label{ font-size:12.6px; font-weight:700; color:var(--text); display:block; margin-bottom:8px; }
+  .field-hint{ font-size:11.2px; color:var(--text-faint); margin-top:7px; line-height:1.5; }
+  .field-hint a{ color:var(--gold); font-weight:600; text-decoration:none; }
+  .field-hint a:hover{ text-decoration:underline; }
+
+  .input-wrap{ position:relative; }
+  .input-wrap svg.lead{ position:absolute; left:13px; top:13px; width:15px; height:15px; color:var(--text-faint); pointer-events:none; }
+  .input-wrap input, .input-wrap select, .input-wrap textarea{ width:100%; font-family:inherit; font-size:13.2px; padding:11px 14px; border-radius:11px; border:1px solid var(--border); background:#fcfbf8; color:var(--text); transition: all .22s var(--ease); appearance:none; }
+  .input-wrap.has-icon input, .input-wrap.has-icon select{ padding-left:38px; }
+  .input-wrap textarea{ resize:vertical; min-height:86px; line-height:1.55; }
+  .input-wrap select{ cursor:pointer; }
+  .input-wrap.select-arrow::after{ content:''; position:absolute; right:15px; top:19px; width:6px; height:6px; border-right:1.6px solid var(--text-faint); border-bottom:1.6px solid var(--text-faint); transform:rotate(45deg); pointer-events:none; }
+  .input-wrap input::placeholder, .input-wrap textarea::placeholder{ color:var(--text-faint); }
+  .input-wrap input:focus, .input-wrap select:focus, .input-wrap textarea:focus{ outline:none; border-color:var(--gold-light); box-shadow:0 0 0 4px var(--gold-soft); background:#fff; }
+
+  .field-row{ display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+
+  .social-row{ display:flex; flex-direction:column; gap:10px; }
+  .social-item{ position:relative; }
+  .social-item svg.plat{ position:absolute; left:13px; top:50%; transform:translateY(-50%); width:15px; height:15px; }
+  .social-item.fb svg.plat{ color:#3768d6; } .social-item.ig svg.plat{ color:#c1387b; } .social-item.yt svg.plat{ color:#d1453c; } .social-item.wa svg.plat{ color:#1fa060; }
+  .social-item input{ padding-left:38px !important; }
+
+  .checkbox-row{ display:flex; align-items:flex-start; gap:11px; }
+  .checkbox-row input{ position:absolute; opacity:0; }
+  .checkbox-box{ width:19px; height:19px; border-radius:6px; border:1.6px solid var(--border); flex-shrink:0; display:flex; align-items:center; justify-content:center; margin-top:1px; background:#fff; transition: all .2s var(--ease); cursor:pointer; position:relative; }
+  .checkbox-box svg{ width:12px; height:12px; color:#fff; opacity:0; transform:scale(.5); transition: all .2s var(--ease); }
+  .checkbox-row label{ cursor:pointer; }
+  .checkbox-label{ font-size:13px; font-weight:600; color:var(--text); }
+  .checkbox-sub{ font-size:11.5px; color:var(--text-faint); margin-top:3px; }
+  .cb-input:checked ~ .checkbox-box{ background:linear-gradient(150deg, var(--gold-light), var(--gold)); border-color:var(--gold); }
+  .cb-input:checked ~ .checkbox-box svg{ opacity:1; transform:scale(1); }
+
+  /* Verify card */
+  .verify-card{ border:1px solid rgba(31,160,96,0.25); background:var(--green-soft); border-radius:14px; padding:18px 20px; display:flex; align-items:flex-start; gap:14px; flex-wrap:wrap; }
+  .verify-icon{ width:38px; height:38px; border-radius:10px; background:#fff; color:var(--green); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .verify-icon svg{ width:19px; height:19px; }
+  .verify-title{ font-size:13.5px; font-weight:700; color:#166b45; }
+  .verify-sub{ font-size:11.7px; color:#2c7a52; margin-top:3px; line-height:1.5; max-width:380px; }
+  .btn-verify{ margin-left:auto; font-family:inherit; font-size:12.5px; font-weight:700; padding:10px 18px; border-radius:10px; background:linear-gradient(150deg, #2bb87a, #1c8f5c); color:#fff; border:none; cursor:pointer; display:inline-flex; align-items:center; gap:8px; transition:all .22s var(--ease); white-space:nowrap; }
+  .btn-verify:hover{ filter:brightness(1.06); box-shadow:0 10px 22px -10px rgba(31,160,96,0.5); transform:translateY(-1px); }
+  .btn-verify svg{ width:14px; height:14px; }
+
+  /* ---- Sidebar column: photo + preview + activity ---- */
+  .side-col{ display:flex; flex-direction:column; gap:16px; }
+
+  .photo-panel{ display:flex; flex-direction:column; align-items:center; }
+  .photo-frame{ position:relative; width:150px; height:150px; margin:0 auto; }
+  .photo-frame::before{ content:''; position:absolute; inset:-6px; border-radius:24px; border:1.5px solid rgba(182,144,63,0.3); animation: ringPulse2 3s ease-in-out infinite; }
+  @keyframes ringPulse2{ 0%,100%{ transform:scale(1); opacity:0.5;} 50%{ transform:scale(1.03); opacity:0.1;} }
+  .photo-img{ width:150px; height:150px; border-radius:18px; overflow:hidden; position:relative; background: linear-gradient(135deg, var(--gold-soft), var(--purple-soft)); display:flex; align-items:center; justify-content:center; box-shadow: 0 16px 34px -16px rgba(30,25,10,0.3); }
+  .photo-img svg.big-user{ width:58px; height:58px; color:var(--gold); opacity:0.55; }
+  .photo-img img{ width:100%; height:100%; object-fit:cover; }
+  .photo-edit-btn{ position:absolute; bottom:10px; right:10px; font-family:inherit; font-size:11px; font-weight:700; padding:7px 12px; border-radius:9px; background:rgba(14,24,48,0.85); color:#fff; border:none; cursor:pointer; display:flex; align-items:center; gap:5px; backdrop-filter:blur(4px); transition:all .22s var(--ease); }
+  .photo-edit-btn:hover{ background:var(--navy); transform:translateY(-1px); }
+  .photo-edit-btn svg{ width:11px; height:11px; }
+  .photo-edit-btn input{ display:none; }
+  .photo-hint-text{ font-size:10.8px; color:var(--text-faint); margin-top:12px; text-align:center; line-height:1.5; }
+
+  /* Live preview card */
+  .preview-card{ border-radius:16px; overflow:hidden; border:1px solid var(--border); }
+  .preview-cover{ height:56px; background: linear-gradient(120deg, var(--navy-3), var(--purple)); position:relative; }
+  .preview-avatar{ width:58px; height:58px; border-radius:14px; overflow:hidden; border:3px solid #fff; position:absolute; left:16px; bottom:-29px; background:linear-gradient(160deg,#e7dfc9,#c8b98f); display:flex; align-items:center; justify-content:center; font-family:'Fraunces', serif; font-weight:700; font-size:20px; color:#5a4620; box-shadow:0 6px 14px -6px rgba(0,0,0,0.25); }
+  .preview-avatar img{ width:100%; height:100%; object-fit:cover; }
+  .preview-body{ padding:36px 16px 16px; }
+  .preview-name{ font-family:'Fraunces', serif; font-size:15.5px; font-weight:600; }
+  .preview-role{ font-size:11.3px; color:var(--gold); font-weight:700; margin-top:2px; }
+  .preview-bio{ font-size:11.8px; color:var(--text-dim); margin-top:10px; line-height:1.55; font-style:italic; }
+  .preview-bio.empty{ color:var(--text-faint); }
+  .preview-meta{ display:flex; flex-direction:column; gap:7px; margin-top:12px; padding-top:12px; border-top:1px dashed var(--border); }
+  .preview-meta-row{ display:flex; align-items:center; gap:7px; font-size:11.3px; color:var(--text-dim); }
+  .preview-meta-row svg{ width:12px; height:12px; color:var(--gold); flex-shrink:0; }
+
+  /* Activity feed mini */
+  .feed{ display:flex; flex-direction:column; }
+  .feed-item{ display:flex; gap:11px; padding:11px 0; border-bottom:1px dashed var(--border); }
+  .feed-item:last-child{ border-bottom:none; padding-bottom:0; }
+  .feed-icon{ width:28px; height:28px; border-radius:8px; flex-shrink:0; display:flex; align-items:center; justify-content:center; background:var(--tint); color:var(--tint-color); }
+  .feed-icon svg{ width:13px; height:13px; }
+  .feed-text{ font-size:11.8px; line-height:1.4; } .feed-text b{ font-weight:700; }
+  .feed-time{ font-size:10.3px; color:var(--text-faint); margin-top:2px; }
+  .feed-item.i-gold .feed-icon{ --tint:var(--gold-soft); --tint-color:var(--gold); }
+  .feed-item.i-green .feed-icon{ --tint:var(--green-soft); --tint-color:var(--green); }
+  .feed-item.i-blue .feed-icon{ --tint:var(--blue-soft); --tint-color:var(--blue); }
+
+  .action-bar{ display:flex; align-items:center; justify-content:flex-end; gap:12px; }
+  .btn{ font-family:inherit; font-size:13.2px; font-weight:600; padding:11px 22px; border-radius:11px; border:1px solid var(--border); background:#fff; color:var(--text-dim); cursor:pointer; display:flex; align-items:center; gap:8px; transition:all .22s var(--ease); }
+  .btn svg{ width:15px; height:15px; }
+  .btn:hover{ border-color:var(--red); color:var(--red); }
+  .btn-save{ background:linear-gradient(150deg, var(--gold-light), var(--gold)); border:none; color:#241a05; }
+  .btn-save:hover{ color:#241a05; filter:brightness(1.06); box-shadow:0 10px 24px -10px rgba(182,144,63,0.55); transform:translateY(-1px); border-color:transparent; }
+
+  @media (max-width: 1150px){ .row-2{ grid-template-columns:1fr; } .side-col{ flex-direction:row; flex-wrap:wrap; } .side-col > *{ flex:1; min-width:220px; } }
+  @media (max-width: 1000px){ .settings-layout{ grid-template-columns:1fr; } .settings-nav{ position:static; } }
+  @media (max-width: 900px){ .app{ grid-template-columns:1fr; } .sidebar{ display:none; } .content{ padding:22px 18px 80px; } .field-row{ grid-template-columns:1fr; } .hero-banner{ grid-template-columns:1fr; text-align:center; justify-items:center; } }
+  @media (prefers-reduced-motion:reduce){ *{ animation-duration:.001ms !important; transition-duration:.001ms !important; } }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ================= SIDEBAR ================= -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">EB</div>
+      <div><div class="brand-name">SYGMEBEC</div><div class="brand-sub">E.B.E.C.</div></div>
+    </div>
+    <ul class="navlist">
+      <li class="navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 11.5L12 4l8 7.5"/><path d="M6 10v9a1 1 0 001 1h10a1 1 0 001-1v-9"/></svg>Tableau de bord</li>
+      <li class="navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3"/><path d="M3.5 19c1-3.2 3-4.8 5.5-4.8s4.5 1.6 5.5 4.8"/><circle cx="17" cy="8.5" r="2.4"/><path d="M15 14.5c2 .1 3.4 1.4 4.2 3.8"/></svg>Membres</li>
+      <li class="navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10" cy="9" r="3"/><path d="M4.5 19c1-3 3-4.6 5.5-4.6" /><path d="M15 6l3 3-3 3"/></svg>Inscriptions en ligne</li>
+      <li class="navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/></svg>Événements</li>
+      <li class="navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="4.5" width="17" height="14" rx="2"/><circle cx="9" cy="10" r="1.8"/><path d="M20 15l-4.5-4-6 5.5"/></svg>Images vitrine</li>
+      <li class="navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 3.5h8l3.5 3.5V20a1 1 0 01-1 1H7a1 1 0 01-1-1V4.5a1 1 0 011-1z"/><path d="M9 12h6M9 15.5h6M9 8.5h3"/></svg>Rapports</li>
+      <li class="navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3.5 5.5l17 6-7 2.4-2.4 7z"/></svg>Lettres</li>
+      <li class="navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9.5" cy="8.5" r="3"/><path d="M4 19c1-3 3-4.6 5.5-4.6"/><path d="M16.5 6.5l3 3-3 3"/></svg>Comptes</li>
+      <li class="navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20V11M10 20V6M16 20v-7M22 20H2"/></svg>Statistiques</li>
+      <li class="navitem active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 3.5v2M12 18.5v2M3.5 12h2M18.5 12h2M6 6l1.4 1.4M16.6 16.6L18 18M18 6l-1.4 1.4M7.4 16.6L6 18"/></svg>Paramètres</li>
+    </ul>
+    <div class="sidebar-foot">
+      <div class="foot-card"><b>Paramètres système</b>Certaines options nécessitent un rôle administrateur</div>
+      <ul class="navlist">
+        <li class="navitem logout-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 4H6a1.5 1.5 0 00-1.5 1.5v13A1.5 1.5 0 006 20h3"/><path d="M15.5 16l4-4-4-4M19 12H9"/></svg>Déconnexion</li>
+      </ul>
+    </div>
+  </aside>
+
+  <!-- ================= MAIN ================= -->
+  <div class="main">
+    <div class="topbar">
+      <div class="search-wrap"><input type="text" placeholder="Rechercher un membre…"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></div>
+      <div class="top-actions">
+        <div class="icon-circle" title="Basculer le thème"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 14.5A8.5 8.5 0 119.5 4a7 7 0 0010.5 10.5z"/></svg></div>
+        <div class="icon-circle" title="Notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9.5a6 6 0 1112 0c0 4 1.4 5.6 2 6.4H4c.6-.8 2-2.4 2-6.4z"/><path d="M9.5 19.5a2.6 2.6 0 005 0"/></svg><span class="notif-dot"></span></div>
+        <div class="profile-chip"><div class="profile-avatar-top">SO</div><div><div class="profile-name">Sooly Osier</div><div class="profile-role">Administrateur</div></div></div>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- ===== HERO ===== -->
+      <div class="hero-banner">
+        <div class="hero-dots"></div>
+        <div class="hero-avatar-wrap"><div class="hero-avatar" id="heroAvatar">SO</div></div>
+        <div class="hero-right">
+          <div class="hero-eyebrow">Paramètres du compte</div>
+          <div class="hero-title" id="heroName">Sooly Osier <span>(SoolyOSIER)</span></div>
+          <div class="hero-sub">Votre compte personnel administrateur</div>
+          <div class="hero-tags">
+            <span class="hero-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="3.2"/><path d="M5 19c1.1-3.4 3.6-5.2 7-5.2s5.9 1.8 7 5.2"/></svg>Administrateur</span>
+            <span class="hero-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 21V9l8-6 8 6v12"/><path d="M9 21v-6h6v6"/></svg>EBEC Cap-Haïtien</span>
+            <span class="hero-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l7 3.2v5.3c0 4.6-3 8.7-7 9.5-4-.8-7-4.9-7-9.5V6.2L12 3z"/></svg>Non vérifié</span>
+          </div>
+
+          <div class="ring-stats">
+            <div class="ring-stat">
+              <div class="ring-wrap"><svg viewBox="0 0 52 52"><circle class="ring-track" cx="26" cy="26" r="21"></circle><circle class="ring-val" cx="26" cy="26" r="21" stroke="#d9b876" data-pct="65"></circle></svg><div class="ring-label">65%</div></div>
+              <div class="ring-text"><div class="num">65 %</div><div class="lab">Profil public complété</div></div>
+            </div>
+            <div class="ring-stat">
+              <div class="ring-wrap"><svg viewBox="0 0 52 52"><circle class="ring-track" cx="26" cy="26" r="21"></circle><circle class="ring-val" cx="26" cy="26" r="21" stroke="#7c50d1" data-pct="0"></circle></svg><div class="ring-label">0</div></div>
+              <div class="ring-text"><div class="num">0 réseau</div><div class="lab">Comptes liés</div></div>
+            </div>
+            <div class="ring-stat">
+              <div class="ring-wrap"><svg viewBox="0 0 52 52"><circle class="ring-track" cx="26" cy="26" r="21"></circle><circle class="ring-val" cx="26" cy="26" r="21" stroke="#1fa060" data-pct="40"></circle></svg><div class="ring-label">2</div></div>
+              <div class="ring-text"><div class="num">2 ans</div><div class="lab">Ancienneté du compte</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-layout">
+
+        <!-- ===== SETTINGS NAV ===== -->
+        <div class="settings-nav">
+          <div class="nav-eyebrow">Votre compte</div>
+          <ul class="settings-navlist">
+            <li class="settings-navitem active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.4"/><path d="M4.5 20c1.6-3.6 4.6-5.4 7.5-5.4s5.9 1.8 7.5 5.4"/></svg>Profil public</li>
+            <li class="settings-navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 3.5v2M12 18.5v2M3.5 12h2M18.5 12h2M6 6l1.4 1.4M16.6 16.6L18 18M18 6l-1.4 1.4M7.4 16.6L6 18"/></svg>Compte</li>
+            <li class="settings-navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5v17M3.5 12h17"/></svg>Apparence</li>
+            <li class="settings-navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v5l3 2"/></svg>Accessibilité</li>
+            <li class="settings-navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9.5a6 6 0 1112 0c0 4 1.4 5.6 2 6.4H4c.6-.8 2-2.4 2-6.4z"/><path d="M9.5 19.5a2.6 2.6 0 005 0"/></svg>Notifications</li>
+          </ul>
+          <div class="nav-eyebrow">Accès</div>
+          <ul class="settings-navlist">
+            <li class="settings-navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="5.5" width="17" height="13" rx="2.4"/><path d="M3.5 10h17"/></svg>Facturation</li>
+            <li class="settings-navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="5" width="19" height="14" rx="2.4"/><path d="M3 6.5l9 6.5 9-6.5"/></svg>E-mails</li>
+            <li class="settings-navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="10.5" width="14" height="9.5" rx="2"/><path d="M8 10.5V7.5a4 4 0 018 0v3"/></svg>Mot de passe et authentification</li>
+            <li class="settings-navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>Sessions</li>
+            <li class="settings-navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l7 3.2v5.3c0 4.6-3 8.7-7 9.5-4-.8-7-4.9-7-9.5V6.2L12 3z"/></svg>Clés API</li>
+          </ul>
+          <div class="nav-eyebrow">Espace de travail</div>
+          <ul class="settings-navlist">
+            <li class="settings-navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 21V9l8-6 8 6v12"/><path d="M9 21v-6h6v6"/></svg>Église</li>
+            <li class="settings-navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3"/><path d="M3.5 19c1-3.2 3-4.8 5.5-4.8s4.5 1.6 5.5 4.8"/><circle cx="17" cy="8.5" r="2.4"/></svg>Membres</li>
+            <li class="settings-navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l9 4.5v9L12 21l-9-4.5v-9z"/></svg>Modération</li>
+          </ul>
+          <div class="nav-eyebrow">Archives</div>
+          <ul class="settings-navlist">
+            <li class="settings-navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l7 3.2v5.3c0 4.6-3 8.7-7 9.5-4-.8-7-4.9-7-9.5V6.2L12 3z"/><path d="M9.5 12l1.8 1.8L15 10"/></svg>Journal de sécurité</li>
+          </ul>
+        </div>
+
+        <!-- ===== MAIN CONTENT ===== -->
+        <form class="main-col" id="settingsForm">
+
+          <div class="row-2">
+            <div class="panel" style="animation-delay:.14s;">
+              <div class="panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.4"/><path d="M4.5 20c1.6-3.6 4.6-5.4 7.5-5.4s5.9 1.8 7.5 5.4"/></svg>Identité</div>
+              <div class="panel-sub">Ces informations sont visibles par les membres de votre espace de travail.</div>
+
+              <div class="field">
+                <label>Nom</label>
+                <div class="input-wrap"><input type="text" value="Sooly Osier" id="fName"></div>
+                <div class="field-hint">Votre nom peut apparaître dans le système où vous contribuez ou êtes mentionné.</div>
+              </div>
+
+              <div class="field">
+                <label>Adresse courriel publique</label>
+                <div class="input-wrap select-arrow">
+                  <select>
+                    <option>Choisir un courriel vérifié à afficher</option>
+                    <option>storlyosier833@gmail.com</option>
+                  </select>
+                </div>
+                <div class="field-hint">Vous pouvez gérer vos adresses vérifiées dans les <a href="#">paramètres de courriel</a>.</div>
+              </div>
+
+              <div class="field">
+                <label>Bio</label>
+                <div class="input-wrap"><textarea placeholder="Parlez-nous un peu de vous…" id="fBio"></textarea></div>
+                <div class="field-hint">Vous pouvez mentionner un membre ou une organisation avec @ pour les relier ici.</div>
+              </div>
+
+              <div class="field-row">
+                <div class="field">
+                  <label>Fonction</label>
+                  <div class="input-wrap select-arrow">
+                    <select id="fRole">
+                      <option>Ne pas préciser</option>
+                      <option selected>Administrateur</option>
+                      <option>Membre</option>
+                      <option>Diacre</option>
+                      <option>Ancien</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="field">
+                  <label>Localisation</label>
+                  <div class="input-wrap has-icon">
+                    <svg class="lead" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s7-6.2 7-11.5A7 7 0 105 9.5C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.4"/></svg>
+                    <input type="text" value="Cap-Haïtien, Haïti" id="fLoc">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="side-col">
+              <div class="panel photo-panel" style="animation-delay:.2s;">
+                <div class="panel-title" style="align-self:flex-start;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="6.5" width="18" height="13" rx="2.4"/><circle cx="12" cy="13" r="3.4"/><path d="M8.5 6.5l1.3-2h4.4l1.3 2"/></svg>Photo de profil</div>
+                <div class="photo-frame">
+                  <div class="photo-img" id="photoImg"><svg class="big-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c1.6-3.8 4.6-5.6 7.5-5.6s5.9 1.8 7.5 5.6"/></svg></div>
+                  <label class="photo-edit-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 20l.8-4L17 3.8a1.7 1.7 0 012.4 0l.8.8a1.7 1.7 0 010 2.4L8 19 4 20z"/></svg>
+                    Modifier
+                    <input type="file" id="photoInput" accept="image/*">
+                  </label>
+                </div>
+                <div class="photo-hint-text">JPG, PNG ou GIF · 5 Mo maximum</div>
+              </div>
+
+              <div class="preview-card panel" style="padding:0; animation-delay:.26s;">
+                <div class="preview-cover"><div class="preview-avatar" id="previewAvatar">SO</div></div>
+                <div class="preview-body">
+                  <div class="preview-name" id="previewName">Sooly Osier</div>
+                  <div class="preview-role" id="previewRole">Administrateur</div>
+                  <div class="preview-bio empty" id="previewBio">Aucune biographie renseignée pour le moment.</div>
+                  <div class="preview-meta">
+                    <div class="preview-meta-row" id="previewLoc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-6.2 7-11.5A7 7 0 105 9.5C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.4"/></svg>Cap-Haïtien, Haïti</div>
+                    <div class="preview-meta-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 21V9l8-6 8 6v12"/><path d="M9 21v-6h6v6"/></svg>Église Baptiste de l'Espoir</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel" style="animation-delay:.32s;">
+            <div class="panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.5 3.5 6 3.5 9s-1 6.5-3.5 9c-2.5-2.5-3.5-6-3.5-9s1-6.5 3.5-9z"/></svg>Présence en ligne</div>
+            <div class="panel-sub">Ajoutez vos liens pour que les membres puissent vous retrouver ailleurs.</div>
+
+            <div class="field">
+              <label>Site web</label>
+              <div class="input-wrap has-icon">
+                <svg class="lead" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.5 3.5 6 3.5 9s-1 6.5-3.5 9c-2.5-2.5-3.5-6-3.5-9s1-6.5 3.5-9z"/></svg>
+                <input type="text" placeholder="https://votre-eglise.org">
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Réseaux sociaux</label>
+              <div class="social-row">
+                <div class="social-item fb">
+                  <svg class="plat" viewBox="0 0 24 24" fill="currentColor"><path d="M13.5 21v-7.5H16l.4-3H13.5V8.4c0-.87.24-1.46 1.49-1.46H16.5V4.34C16.2 4.3 15.2 4.2 14 4.2c-2.4 0-4 1.47-4 4.16v2.14H7.5v3H10V21h3.5z"/></svg>
+                  <input type="text" placeholder="Lien vers la page Facebook">
+                </div>
+                <div class="social-item ig">
+                  <svg class="plat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="3.5" width="17" height="17" rx="4.5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="0.9" fill="currentColor" stroke="none"/></svg>
+                  <input type="text" placeholder="Lien vers le profil Instagram">
+                </div>
+                <div class="social-item yt">
+                  <svg class="plat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="5.5" width="19" height="13" rx="3.5"/><path d="M10.5 9.5l5 2.5-5 2.5z" fill="currentColor" stroke="none"/></svg>
+                  <input type="text" placeholder="Lien vers la chaîne YouTube">
+                </div>
+                <div class="social-item wa">
+                  <svg class="plat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20l1.3-4A8 8 0 1112 20a8 8 0 01-6.7-3.6z"/><path d="M8.5 9.5c.3 2.6 2.4 4.7 5 5"/></svg>
+                  <input type="text" placeholder="Numéro WhatsApp de contact">
+                </div>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Organisation</label>
+              <div class="input-wrap has-icon">
+                <svg class="lead" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 21V9l8-6 8 6v12"/><path d="M9 21v-6h6v6"/></svg>
+                <input type="text" value="Église Baptiste de l'Espoir du Cap-Haïtien">
+              </div>
+              <div class="field-hint">Vous pouvez mentionner votre organisation avec @ pour la relier ici.</div>
+            </div>
+
+            <div class="field">
+              <div class="checkbox-row">
+                <input type="checkbox" id="cbTime" class="cb-input">
+                <label for="cbTime" class="checkbox-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg></label>
+                <label for="cbTime">
+                  <div class="checkbox-label">Afficher l'heure locale actuelle</div>
+                  <div class="checkbox-sub">Les autres membres verront le décalage horaire par rapport à leur propre heure.</div>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="row-2">
+            <div class="panel" style="margin-bottom:0; animation-delay:.38s;">
+              <div class="panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l7 3.2v5.3c0 4.6-3 8.7-7 9.5-4-.8-7-4.9-7-9.5V6.2L12 3z"/><path d="M9.5 12l1.8 1.8L15 10"/></svg>Vérification d'identité</div>
+              <div class="panel-sub">Obtenez un badge de confiance sur votre profil public.</div>
+              <div class="verify-card">
+                <div class="verify-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l7 3.2v5.3c0 4.6-3 8.7-7 9.5-4-.8-7-4.9-7-9.5V6.2L12 3z"/><path d="M9.5 12l1.8 1.8L15 10"/></svg></div>
+                <div>
+                  <div class="verify-title">Obtenez un badge vérifié</div>
+                  <div class="verify-sub">Confirmez votre identité auprès de l'administration pour afficher un badge de confiance.</div>
+                </div>
+                <button type="button" class="btn-verify"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 12l5 5L20 6"/></svg>Demander la vérification</button>
+              </div>
+            </div>
+
+            <div class="panel" style="margin-bottom:0; animation-delay:.44s;">
+              <div class="panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>Dernières modifications</div>
+              <div class="feed">
+                <div class="feed-item i-gold">
+                  <div class="feed-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M4 20l.8-4L17 3.8a1.7 1.7 0 012.4 0l.8.8a1.7 1.7 0 010 2.4L8 19 4 20z"/></svg></div>
+                  <div><div class="feed-text">Fonction changée en <b>Administrateur</b></div><div class="feed-time">12 mars 2024</div></div>
+                </div>
+                <div class="feed-item i-green">
+                  <div class="feed-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M4 12l5 5L20 6"/></svg></div>
+                  <div><div class="feed-text">Adresse courriel vérifiée</div><div class="feed-time">12 mars 2024</div></div>
+                </div>
+                <div class="feed-item i-blue">
+                  <div class="feed-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg></div>
+                  <div><div class="feed-text">Compte créé sur SYGMEBEC</div><div class="feed-time">10 mars 2024</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="action-bar">
+            <button type="button" class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>Annuler</button>
+            <button type="submit" class="btn btn-save" id="saveBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 12l5 5L20 6"/></svg>Enregistrer</button>
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Rings
+  const R = 21; const C = 2 * Math.PI * R;
+  setTimeout(() => {
+    document.querySelectorAll('.ring-val').forEach(ring => {
+      const pct = parseFloat(ring.dataset.pct) || 0;
+      const len = (pct / 100) * C;
+      ring.style.strokeDasharray = `${len} ${C - len}`;
+    });
+  }, 450);
+
+  // Settings nav active
+  document.querySelectorAll('.settings-navitem').forEach(item => {
+    item.addEventListener('click', () => {
+      document.querySelectorAll('.settings-navitem').forEach(i => i.classList.remove('active'));
+      item.classList.add('active');
+    });
+  });
+
+  // Photo upload preview (syncs hero, panel, mini-card)
+  const heroAvatar = document.getElementById('heroAvatar');
+  const photoImg = document.getElementById('photoImg');
+  const previewAvatar = document.getElementById('previewAvatar');
+  document.getElementById('photoInput').addEventListener('change', function(){
+    if(this.files && this.files[0]){
+      const reader = new FileReader();
+      reader.onload = e => {
+        const html = `<img src="${e.target.result}" alt="Photo de profil">`;
+        photoImg.innerHTML = html;
+        heroAvatar.innerHTML = html;
+        previewAvatar.innerHTML = html;
+      };
+      reader.readAsDataURL(this.files[0]);
+    }
+  });
+
+  // Live preview sync
+  const fName = document.getElementById('fName');
+  const fBio = document.getElementById('fBio');
+  const fRole = document.getElementById('fRole');
+  const fLoc = document.getElementById('fLoc');
+  const previewName = document.getElementById('previewName');
+  const previewRole = document.getElementById('previewRole');
+  const previewBio = document.getElementById('previewBio');
+  const previewLoc = document.getElementById('previewLoc');
+
+  function syncPreview(){
+    previewName.textContent = fName.value || 'Sooly Osier';
+    previewRole.textContent = fRole.value;
+    if(fBio.value.trim()){
+      previewBio.textContent = fBio.value.trim();
+      previewBio.classList.remove('empty');
+    } else {
+      previewBio.textContent = 'Aucune biographie renseignée pour le moment.';
+      previewBio.classList.add('empty');
+    }
+    previewLoc.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-6.2 7-11.5A7 7 0 105 9.5C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.4"/></svg>' + (fLoc.value || 'Localisation non renseignée');
+  }
+  [fName, fBio, fRole, fLoc].forEach(el => el.addEventListener('input', syncPreview));
+  fRole.addEventListener('change', syncPreview);
+
+  // Verify button
+  document.querySelector('.btn-verify').addEventListener('click', function(){
+    const original = this.innerHTML;
+    this.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M4 12l5 5L20 6"/></svg>Demande envoyée';
+    setTimeout(() => { this.innerHTML = original; }, 2200);
+  });
+
+  // Submit
+  document.getElementById('settingsForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const saveBtn = document.getElementById('saveBtn');
+    const original = saveBtn.innerHTML;
+    saveBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M4 12l5 5L20 6"/></svg>Enregistré';
+    setTimeout(() => { saveBtn.innerHTML = original; }, 2000);
+  });
+</script>
+</body>
+</html>

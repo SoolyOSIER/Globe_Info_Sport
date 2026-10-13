@@ -18,6 +18,14 @@ class Competition(models.Model):
         LIGUE_NATIONS = "LIGUE_NATIONS", "Ligue des Nations CONCACAF"
         AUTRE = "AUTRE", "Autre"
 
+    sport = models.ForeignKey("actualites.Sport", null=True, blank=True, on_delete=models.PROTECT)
+    pays = models.ForeignKey("actualites.Pays", null=True, blank=True, on_delete=models.PROTECT)
+    description = models.TextField(blank=True)
+    logo = models.ImageField(upload_to="competitions/", null=True, blank=True)
+    clubs = models.ManyToManyField("Club", blank=True, related_name="competitions")
+    source_donnees = models.CharField(max_length=50, blank=True)
+    identifiant_source = models.CharField(max_length=100, blank=True)
+    derniere_synchronisation = models.DateTimeField(null=True, blank=True)
     nom = models.CharField(max_length=150)
     type = models.CharField(max_length=30, choices=Type.choices)
     saison = models.CharField(max_length=20, help_text='Ex. « 2025-2026 ».')
@@ -41,6 +49,11 @@ class Club(TimeStampedModel):
 
     nom = models.CharField(max_length=150, unique=True)
     slug = models.SlugField(max_length=170, unique=True, blank=True, null=True)
+    sport = models.ForeignKey("actualites.Sport", null=True, blank=True, on_delete=models.PROTECT)
+    pays = models.ForeignKey("actualites.Pays", null=True, blank=True, on_delete=models.PROTECT)
+    entraineur = models.CharField(max_length=150, blank=True)
+    source_donnees = models.CharField(max_length=50, blank=True)
+    identifiant_source = models.CharField(max_length=100, blank=True)
     ville = models.CharField(max_length=100, blank=True)
     logo = models.ImageField(upload_to="clubs/", null=True, blank=True)
     stade = models.CharField(max_length=150, blank=True)
@@ -142,6 +155,8 @@ class Match(TimeStampedModel):
     competition = models.ForeignKey(
         Competition, on_delete=models.CASCADE, related_name="matchs"
     )
+    source_donnees = models.CharField(max_length=50, blank=True)
+    identifiant_source = models.CharField(max_length=100, blank=True)
     club_domicile = models.ForeignKey(
         Club, on_delete=models.PROTECT, related_name="matchs_domicile"
     )

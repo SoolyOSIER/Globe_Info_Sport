@@ -1,57 +1,65 @@
-import { useMemo, useState } from "react";
-import { Edit3, Plus, Search, Trash2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ChevronLeft, ChevronRight, Edit3, FileText, Plus, Search, Trash2 } from "lucide-react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { ErrorMessage, Loading, Modal } from "../components/ui/UI";
-import { useList, useResourceMutations } from "../hooks/useResources";
+import { usePage, useResourceMutations } from "../hooks/useResources";
+import { retrieve } from "../api/resources";
+import { useAuthStore } from "../store/authStore";
+import { can } from "../utils/roleHierarchy";
+import { initialValues, prepareValues } from "../utils/resourceForms";
 import { useUiStore } from "../store/uiStore";
 
-const emptyValue = (field) => field.type === "checkbox" ? false : "";
+const emptyValue = (field) => field.defaultValue ?? (field.type === "checkbox" ? false : field.multiple ? [] : "");
+const statusLabels = { BROUILLON: "Brouillon", A_VALIDER: "À valider", PROGRAMME: "Programmé", PUBLIE: "Publié", ARCHIVE: "Archivé" };
 
-export default function ResourcePage({ title, description, resource, fields, readOnly = false, format, rowActions }) {
-  const [search, setSearch] = useState("");
-  const [editing, setEditing] = useState(null);
-  const [formOpen, setFormOpen] = useState(false);
-  const [values, setValues] = useState({});
-  const query = useList(resource, search ? { search } : {});
-  const mutations = useResourceMutations(resource);
-  const pushToast = useUiStore((state) => state.pushToast);
-  const rows = useMemo(() => query.data ?? [], [query.data]);
+function Field({ field, values, setValues, isArticle, editing }) {
+  const value = values[field.name] ?? emptyValue(field);
+  const change = (next) => setValues({ ...values, [field.name]: next });
+  let control;
+  if (field.type === "textarea") control = <textarea readOnly={field.readOnly} required={field.required} value={value} onChange={(event) => change(event.target.value)} rows={isArticle ? 10 : 5} />;
+  else if (field.type === "checkbox") control = <input disabled={field.readOnly} type="checkbox" checked={Boolean(value)} onChange={(event) => change(event.target.checked)} />;
+  else if (field.options) control = <select disabled={field.readOnly} multiple={field.multiple} required={field.required} value={value} onChange={(event) => change(field.multiple ? Array.from(event.target.selectedOptions, (option) => option.value) : event.target.value)}>
+    {!field.multiple && <option value="">Sélectionner</option>}
+    {field.options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+  </select>;
+  else control = <input readOnly={field.readOnly} type={field.type || "text"} required={field.required && !(editing && ["file", "password"].includes(field.type))} value={field.type === "file" ? undefined : value} accept={field.type === "file" ? "image/*" : undefined} onChange={(event) => change(field.type === "file" ? event.target.files?.[0] : event.target.value)} />;
+  return <label className={field.full ? "resource-field-full" : ""}>
+    {field.label}{field.required && !(editing && ["file", "password"].includes(field.type)) ? " *" : ""}{control}
+    {field.multiple && <small>Maintenez Ctrl ou Cmd pour choisir plusieurs éléments.</small>}
+    {field.type === "file" && typeof value === "string" && value && <small>Image existante conservée si aucun fichier n’est choisi.</small>}
+  </label>;
+}
 
-  const open = (row = null) => {
-    setEditing(row);
-    setValues(Object.fromEntries(fields.map((field) => {
-      const raw = row?.[field.name];
-      const value = raw && typeof raw === "object" && "id" in raw ? raw.id : raw;
-      return [field.name, value ?? emptyValue(field)];
-    })));
-    setFormOpen(true);
-  };
-  const setValue = (name, value) => setValues((current) => ({ ...current, [name]: value }));
+export default function ResourcePage({ title, description, resource, fields, readOnly = false, allowCreate = !readOnly, allowDelete = !readOnly, format, rowActions }) {
+  const user = useAuthStore(state => state.user);
+  const minimumRole = ["sports", "pays", "selections", "utilisateurs", "pages-contenu", "partenaires"].includes(resource) ? "ADMINISTRATEUR" : ["competitions", "clubs", "parcours-clubs", "clubs-etrangers", "joueurs-expatries", "transferts", "legendes", "categories", "tags", "videos", "citations", "faq", "messages-contact", "flux-syndication"].includes(resource) ? "EDITEUR_EN_CHEF" : "REDACTEUR";
+  readOnly = readOnly || !can(user, minimumRole);
+  allowCreate = allowCreate && !readOnly;
+  allowDelete = allowDelete && !readOnly;
+  const [search, setSearch] = useState(""); const [term, setTerm] = useState(""); const [page, setPage] = useState(1); const [status, setStatus] = useState(""); const [editing, setEditing] = useState(null); const [formOpen, setFormOpen] = useState(false); const [values, setValues] = useState({}); const [opening, setOpening] = useState(false); const [openError, setOpenError] = useState(null);
+  const request = useRef(0); const { id } = useParams(); const { pathname } = useLocation(); const navigate = useNavigate();
+  const query = usePage(resource, { page, page_size: 10, ...(term ? { search: term } : {}), ...(status ? { statut: status } : {}) }); const mutations = useResourceMutations(resource); const pushToast = useUiStore((state) => state.pushToast); const rows = query.data?.results ?? []; const columns = fields.filter((field) => field.type !== "textarea" && field.type !== "password" && field.type !== "file").slice(0, 5); const isArticle = resource === "articles";
+  useEffect(() => { const timer = setTimeout(() => { setTerm(search.trim()); setPage(1); }, 300); return () => clearTimeout(timer); }, [search]);
+  const open = async (row = null) => { const current = ++request.current; setOpenError(null); mutations.save.reset(); setOpening(true); try { const full = row?.id ? await retrieve(resource, row.id) : null; if (current !== request.current) return; setEditing(full); setValues(initialValues(fields, full)); setFormOpen(true); } catch (error) { if (current === request.current) setOpenError(error); } finally { if (current === request.current) setOpening(false); } };
+  useEffect(() => { if (isArticle && (id || pathname.endsWith("/nouveau"))) open(id ? { id } : null); return () => { request.current += 1; }; }, [resource, id, pathname]);
+  const close = () => { if (mutations.save.isPending) return; setFormOpen(false); if (isArticle && (id || pathname.endsWith("/nouveau"))) navigate("/articles", { replace: true }); };
   const submit = (event) => {
     event.preventDefault();
-    const fileMode = fields.some((field) => field.type === "file" && values[field.name] instanceof File);
-    const form = new FormData();
-    const plain = {};
-    fields.forEach((field) => {
-      let value = values[field.name];
-      if (field.type === "checkbox") value = Boolean(value);
-      if (field.type === "file") { if (value instanceof File) form.append(field.name, value); return; }
-      if (value !== "" && value !== null && value !== undefined) { form.append(field.name, value); plain[field.name] = value; }
-    });
-    mutations.save.mutate({ values: fileMode ? form : plain, id: editing?.id }, {
-      onSuccess: () => { setFormOpen(false); pushToast(`${editing ? "Modification" : "Création"} enregistrée.`); },
+    if (readOnly) return;
+    mutations.save.mutate({ values: prepareValues(fields, values, Boolean(editing)), id: editing?.id }, {
+      onSuccess: () => {
+        setFormOpen(false);
+        pushToast("Enregistrement effectu\u00e9.");
+      },
     });
   };
-  const cell = (row, field) => {
-    const custom = format?.(row, field); if (custom !== undefined) return custom;
-    const value = row[field.name];
-    if (field.type === "checkbox") return value ? "Oui" : "Non";
-    if (typeof value === "object") return value?.nom ?? value?.email ?? "—";
-    return String(value ?? "—");
-  };
-  return <>
-    <div className="mb-7 flex flex-wrap items-end justify-between gap-4"><div><p className="text-sm font-bold uppercase tracking-wider text-haiti-red">Gestion</p><h1 className="font-display text-3xl font-black text-haiti-ink">{title}</h1>{description && <p className="mt-2 text-sm text-slate-500">{description}</p>}</div>{!readOnly && <button type="button" onClick={() => open()} className="inline-flex items-center gap-2 rounded-lg bg-haiti-blue px-4 py-3 text-sm font-bold text-white"><Plus className="h-4" />Ajouter</button>}</div>
-    <div className="mb-4 flex max-w-md items-center rounded-lg border bg-white px-3"><Search className="h-4 text-slate-400" /><input value={search} onChange={(event) => setSearch(event.target.value)} className="w-full bg-transparent px-2 py-3 outline-none" placeholder="Rechercher…" /></div>
-    {query.isLoading ? <Loading /> : query.isError ? <ErrorMessage error={query.error} /> : <div className="overflow-x-auto rounded-2xl bg-white shadow-panel"><table className="w-full min-w-[600px] text-left text-sm"><thead className="border-b bg-slate-50"><tr>{fields.slice(0, 5).map((field) => <th key={field.name} className="px-4 py-3 font-bold text-slate-600">{field.label}</th>)}{!readOnly && <th className="px-4 py-3">Actions</th>}</tr></thead><tbody>{rows.length ? rows.map((row) => <tr key={row.id} className="border-b last:border-0">{fields.slice(0, 5).map((field) => <td key={field.name} className="max-w-[220px] truncate px-4 py-3">{cell(row, field)}</td>)}{!readOnly && <td className="px-4 py-3"><button type="button" onClick={() => open(row)} className="mr-2 rounded p-2 text-haiti-blue" aria-label="Modifier"><Edit3 className="h-4" /></button>{rowActions?.(row)}<button type="button" onClick={() => { if (window.confirm("Supprimer cet élément ?")) mutations.remove.mutate(row.id, { onSuccess: () => pushToast("Élément supprimé.") }); }} className="rounded p-2 text-haiti-red" aria-label="Supprimer"><Trash2 className="h-4" /></button></td>}</tr>) : <tr><td colSpan={fields.length + 1} className="p-8 text-center text-slate-500">Aucune donnée.</td></tr>}</tbody></table></div>}
-    {formOpen && <Modal title={editing?.id ? `Modifier ${title.toLowerCase()}` : `Ajouter ${title.toLowerCase()}`} onClose={() => setFormOpen(false)}><form onSubmit={submit} className="grid gap-4 sm:grid-cols-2">{fields.map((field) => <label key={field.name} className={`text-sm font-bold text-slate-700 ${field.full ? "sm:col-span-2" : ""}`}>{field.label}{field.type === "textarea" ? <textarea required={field.required} value={values[field.name] ?? ""} onChange={(event) => setValue(field.name, event.target.value)} rows="5" className="mt-1 w-full rounded-lg border p-3 font-normal" /> : field.type === "checkbox" ? <input type="checkbox" checked={Boolean(values[field.name])} onChange={(event) => setValue(field.name, event.target.checked)} className="ml-3" /> : field.options ? <select required={field.required} value={values[field.name] ?? ""} onChange={(event) => setValue(field.name, event.target.value)} className="mt-1 w-full rounded-lg border p-3 font-normal"><option value="">Sélectionner</option>{field.options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select> : <input type={field.type || "text"} required={field.required} value={field.type === "file" ? undefined : values[field.name] ?? ""} onChange={(event) => setValue(field.name, field.type === "file" ? event.target.files?.[0] : event.target.value)} className="mt-1 w-full rounded-lg border p-3 font-normal" />}</label>)}{mutations.save.isError && <div className="sm:col-span-2"><ErrorMessage error={mutations.save.error} /></div>}<button disabled={mutations.save.isPending} className="sm:col-span-2 rounded-lg bg-haiti-red py-3 font-bold text-white disabled:opacity-50">{mutations.save.isPending ? "Enregistrement…" : "Enregistrer"}</button></form></Modal>}
-  </>;
+  const cell = (row, field) => { const custom = format?.(row, field); if (custom !== undefined) return custom; const value = row[field.name]; if (field.type === "checkbox") return <span className={`desk-badge ${value ? "desk-badge-blue" : ""}`}>{value ? "Oui" : "Non"}</span>; if (Array.isArray(value)) return value.length ? value.join(", ") : "—"; if (typeof value === "object") return value?.nom ?? value?.email ?? "—"; return field.options?.find((option) => String(option.value) === String(value))?.label ?? String(value ?? "—"); };
+  return <section className="resource-workspace">
+    {readOnly && resource !== "newsletter" && <p className="rounded-lg bg-blue-50 p-3 text-sm">Consultation uniquement avec votre compte actuel.</p>}
+    <div className="resource-heading"><div><p className="desk-eyebrow">L’atelier / Gestion</p><h1>{title}</h1><p>{description || `Retrouvez, organisez et mettez à jour les informations de la rubrique ${title.toLowerCase()}.`}</p></div>{allowCreate && <button type="button" onClick={() => open()} className="desk-primary"><Plus size={17} />Ajouter</button>}</div>
+    <div className="resource-toolbar"><label className="resource-search"><Search size={18} /><input aria-label={`Rechercher dans ${title}`} value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Rechercher…" /></label>{isArticle && <select aria-label="Filtrer par statut" value={status} onChange={(event) => { setStatus(event.target.value); setPage(1); }}><option value="">Tous les statuts</option>{Object.entries(statusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select>}<span role="status">{query.isLoading ? "Chargement…" : query.isError ? "Indisponible" : `${query.data?.count ?? 0} résultat(s)`}</span></div>
+    {opening && <Loading />}{openError && <ErrorMessage error={openError} />}{mutations.remove.isError && <ErrorMessage error={mutations.remove.error} />}
+    {query.isLoading ? <Loading /> : query.isError ? <ErrorMessage error={query.error} /> : <div className="resource-table-wrap"><table className="resource-table"><caption className="sr-only">{title} — page {page}</caption><thead><tr>{columns.map((field) => <th scope="col" key={field.name}>{field.label}</th>)}{isArticle && <th scope="col">Statut</th>}{!readOnly && <th scope="col">Actions</th>}</tr></thead><tbody>{rows.length ? rows.map((row) => <tr key={row.id}>{columns.map((field) => <td key={field.name}>{cell(row, field)}</td>)}{isArticle && <td><span className={`desk-badge ${row.statut === "PUBLIE" ? "desk-badge-blue" : ""}`}>{statusLabels[row.statut] || row.statut}</span></td>}{!readOnly && <td><div className="resource-row-actions"><button disabled={opening} type="button" onClick={() => open(row)} aria-label={`Modifier ${row.titre || row.nom || title}`}><Edit3 size={16} /></button>{rowActions?.(row)}{allowDelete && <button disabled={mutations.remove.isPending} type="button" onClick={() => { if (window.confirm("Supprimer cet élément ?")) mutations.remove.mutate(row.id, { onSuccess: () => { if (rows.length === 1 && page > 1) setPage(page - 1); pushToast("Élément supprimé."); } }); }} className="text-haiti-red" aria-label={`Supprimer ${row.titre || row.nom || title}`}><Trash2 size={16} /></button>}</div></td>}</tr>) : <tr><td colSpan={columns.length + Number(isArticle) + Number(!readOnly)}><div className="resource-empty"><FileText size={32} /><h2>{term || status ? "Aucun résultat pour ces filtres" : "Cette rubrique attend son premier contenu"}</h2><p>{term || status ? "Essayez un autre mot-clé ou réinitialisez les filtres." : "Les informations enregistrées apparaîtront ici."}</p>{(term || status) && <button onClick={() => { setSearch(""); setTerm(""); setStatus(""); setPage(1); }}>Réinitialiser</button>}</div></td></tr>}</tbody></table><div className="resource-pagination"><span>Page {page} sur {Math.max(1, Math.ceil((query.data?.count ?? 0) / 10))}</span><div><button disabled={!query.data?.previous} onClick={() => setPage(page - 1)} aria-label="Page précédente"><ChevronLeft size={17} />Précédent</button><button disabled={!query.data?.next} onClick={() => setPage(page + 1)} aria-label="Page suivante">Suivant<ChevronRight size={17} /></button></div></div></div>}
+    {formOpen && <Modal title={editing?.id ? `Modifier · ${title}` : `Ajouter · ${title}`} onClose={close}><form onSubmit={submit} className="resource-form"><p className="resource-form-note">{editing ? "Complétez les informations puis enregistrez vos modifications." : "Préparez une fiche complète pour enrichir Globe Info Sport."} Les champs marqués * sont obligatoires.</p>{fields.map((field) => <Field key={field.name} field={field} values={values} setValues={setValues} isArticle={isArticle} editing={editing} />)}{mutations.save.isError && <div className="resource-field-full"><ErrorMessage error={mutations.save.error} /></div>}<div className="resource-form-actions"><button type="button" disabled={mutations.save.isPending} onClick={close}>Annuler</button><button disabled={mutations.save.isPending} className="desk-primary">{mutations.save.isPending ? "Enregistrement…" : "Enregistrer"}</button></div></form></Modal>}
+  </section>;
 }

@@ -17,3 +17,4 @@ reportlab==4.1.0
 django-environ==0.11.2
 Pillow==10.3.0
 requests==2.31.0
+chardet<6

@@ -1,23 +1,30 @@
 """Filtres déclaratifs des ressources de compétitions."""
 
 import django_filters
+from apps.core.filters import GeographicFilter
 
 from apps.competitions.models import Club, Competition, Match, StatistiqueJoueur
 
 
-class CompetitionFilter(django_filters.FilterSet):
+class CompetitionFilter(GeographicFilter):
     class Meta:
         model = Competition
-        fields = {"type": ["exact"], "saison": ["exact"], "actif": ["exact"]}
+        fields = {
+            "type": ["exact"],
+            "saison": ["exact"],
+            "actif": ["exact"],
+            "sport": ["exact"],
+            "pays": ["exact"],
+        }
 
 
-class ClubFilter(django_filters.FilterSet):
+class ClubFilter(GeographicFilter):
     nom = django_filters.CharFilter(field_name="nom", lookup_expr="icontains")
     ville = django_filters.CharFilter(field_name="ville", lookup_expr="icontains")
 
     class Meta:
         model = Club
-        fields = ["nom", "ville"]
+        fields = ["nom", "ville", "sport", "pays"]
 
 
 class MatchFilter(django_filters.FilterSet):

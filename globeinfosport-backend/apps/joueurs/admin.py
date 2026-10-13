@@ -14,15 +14,17 @@ class JoueurAdmin(admin.ModelAdmin):
     list_display = (
         "nom_complet",
         "poste",
+        "sport",
+        "pays",
         "club_actuel",
         "selection_nationale",
         "emblematique",
         "nb_selections",
         "nb_buts_selection",
     )
-    list_filter = ("poste", "selection_nationale", "emblematique", "pied_fort")
+    list_filter = ("sport", "pays", "poste", "selection_nationale", "emblematique", "pied_fort")
     search_fields = ("nom", "prenom", "club_actuel")
-    list_select_related = ("poste",)
+    list_select_related = ("poste", "sport", "pays")
     ordering = ("nom", "prenom")
 
 

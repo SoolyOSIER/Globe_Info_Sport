@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mon compte — SYGMEBEC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0e1830; --navy-2:#131f3d; --navy-3:#1c2c54; --navy-line:rgba(255,255,255,0.07);
+    --cream:#f7f1e3; --cream-2:#f2ead8; --bg:#f7f5f0; --card:#ffffff; --border:#eae5d8;
+    --text:#211f1a; --text-dim:#78746a; --text-faint:#a39e91;
+    --gold:#b6903f; --gold-light:#d9b876; --gold-soft:rgba(182,144,63,0.12);
+    --green:#1fa060; --green-soft:#dcf4e6; --blue:#3768d6; --blue-soft:#dfe8fb;
+    --amber:#c17f18; --amber-soft:#faecd2; --purple:#7c50d1; --purple-soft:#ece2fb;
+    --red:#c94f43; --red-soft:#fbe4e1;
+    --radius-lg:22px; --radius-md:14px; --ease:cubic-bezier(.22,1,.36,1);
+    --shadow: 0 1px 0 rgba(255,255,255,0.6) inset, 0 18px 40px -26px rgba(30,25,10,0.18);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{ font-family:'Inter', sans-serif; background:var(--bg); color:var(--text); -webkit-font-smoothing:antialiased; min-height:100vh; }
+  ::selection{ background:var(--gold-soft); color:var(--gold); }
+
+  .app{ display:grid; grid-template-columns:264px 1fr; min-height:100vh; }
+
+  /* ============ SIDEBAR ============ */
+  .sidebar{ background: linear-gradient(190deg, var(--navy-2), var(--navy) 60%); color:#fff; padding:22px 16px; display:flex; flex-direction:column; position:sticky; top:0; height:100vh; border-right:1px solid rgba(0,0,0,0.2); }
+  .brand{ display:flex; align-items:center; gap:12px; padding:6px 8px 26px; }
+  .brand-mark{ width:42px; height:42px; border-radius:50%; flex-shrink:0; background: radial-gradient(circle at 32% 28%, var(--gold-light), var(--gold) 70%); display:flex; align-items:center; justify-content:center; font-family:'Fraunces', serif; font-weight:700; font-size:15.5px; color:#241a05; box-shadow: 0 6px 16px -4px rgba(182,144,63,0.55), inset 0 1px 1px rgba(255,255,255,0.4); position:relative; }
+  .brand-mark::after{ content:''; position:absolute; inset:-3px; border-radius:50%; border:1px solid rgba(217,184,118,0.35); }
+  .brand-name{ font-weight:800; font-size:15.5px; letter-spacing:0.4px; line-height:1.1; }
+  .brand-sub{ font-size:10px; color:#8891ab; letter-spacing:1.6px; margin-top:3px; font-weight:600; }
+  .navlist{ list-style:none; display:flex; flex-direction:column; gap:2px; }
+  .navitem{ display:flex; align-items:center; gap:12px; padding:11px 14px; border-radius:11px; font-size:13.6px; font-weight:500; color:#9aa3bd; cursor:pointer; position:relative; transition: color .25s var(--ease), background .25s var(--ease), transform .25s var(--ease); }
+  .navitem svg{ width:17px; height:17px; opacity:0.8; flex-shrink:0; }
+  .navitem:hover{ color:#fff; background:rgba(255,255,255,0.045); transform:translateX(2px); }
+  .navitem.active{ color:#fff; background: linear-gradient(90deg, rgba(182,144,63,0.22), rgba(182,144,63,0.02)); border:1px solid rgba(182,144,63,0.3); font-weight:600; }
+  .navitem.active svg{ opacity:1; color:var(--gold-light); }
+  .navitem.active::before{ content:''; position:absolute; left:-16px; top:8px; bottom:8px; width:3px; border-radius:4px; background:linear-gradient(180deg, var(--gold-light), var(--gold)); }
+  .sidebar-foot{ margin-top:auto; }
+  .foot-card{ background:rgba(255,255,255,0.04); border:1px solid var(--navy-line); border-radius:var(--radius-md); padding:14px; margin-bottom:10px; font-size:11.5px; color:#8891ab; }
+  .foot-card b{ color:#fff; display:block; font-size:12.5px; margin-bottom:2px; }
+  .logout-item{ color:#e7a89c; } .logout-item svg{ color:#e7a89c; opacity:1;} .logout-item:hover{ background:var(--red-soft); color:var(--red); } .logout-item:hover svg{ color:var(--red); }
+
+  /* ============ MAIN ============ */
+  .main{ min-width:0; display:flex; flex-direction:column; }
+  .topbar{ background: linear-gradient(120deg, var(--cream), var(--cream-2)); border-bottom:1px solid var(--border); padding:18px 34px; display:flex; align-items:center; gap:22px; position:sticky; top:0; z-index:20; }
+  .search-wrap{ position:relative; flex:1; max-width:420px; }
+  .search-wrap svg{ position:absolute; left:15px; top:50%; transform:translateY(-50%); width:16px; height:16px; color:var(--text-faint); }
+  .search-wrap input{ width:100%; font-family:inherit; font-size:13.5px; padding:11px 16px 11px 40px; border-radius:30px; border:1px solid transparent; background:rgba(255,255,255,0.65); color:var(--text); transition: all .25s var(--ease); }
+  .search-wrap input::placeholder{ color:var(--text-faint); }
+  .search-wrap input:focus{ outline:none; background:#fff; border-color:var(--gold-light); box-shadow:0 0 0 4px var(--gold-soft); }
+  .top-actions{ display:flex; align-items:center; gap:16px; margin-left:auto; }
+  .icon-circle{ width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.55); border:1px solid rgba(0,0,0,0.04); cursor:pointer; position:relative; transition: all .25s var(--ease); color:var(--text-dim); }
+  .icon-circle:hover{ background:#fff; transform:translateY(-1px); box-shadow:0 6px 14px -6px rgba(0,0,0,0.15); color:var(--gold); }
+  .icon-circle svg{ width:17px; height:17px; }
+  .notif-dot{ position:absolute; top:6px; right:6px; width:8px; height:8px; border-radius:50%; background:var(--red); border:2px solid var(--cream); animation: notifPulse 2s ease-in-out infinite; }
+  @keyframes notifPulse{ 0%,100%{ box-shadow:0 0 0 0 rgba(201,79,67,0.5);} 70%{ box-shadow:0 0 0 6px rgba(201,79,67,0); } }
+  .profile-chip{ display:flex; align-items:center; gap:10px; cursor:pointer; padding:4px 8px 4px 4px; border-radius:30px; transition:background .25s var(--ease); }
+  .profile-chip:hover{ background:rgba(255,255,255,0.6); }
+  .profile-avatar-top{ width:36px; height:36px; border-radius:50%; overflow:hidden; flex-shrink:0; background:linear-gradient(160deg,#dcd3bd,#c8bb98); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; color:#5a4d2c; border:2px solid #fff; box-shadow:0 2px 8px rgba(0,0,0,0.08); }
+  .profile-name{ font-size:13px; font-weight:700; line-height:1.2; }
+  .profile-role{ font-size:10.5px; color:var(--text-faint); font-weight:500; }
+
+  /* ============ CONTENT ============ */
+  .content{ padding:30px 34px 90px; flex:1; }
+  @keyframes rise{ to{ opacity:1; transform:translateY(0); } }
+
+  /* ---- HERO ---- */
+  .hero-banner{
+    position:relative; overflow:hidden; border-radius:var(--radius-lg);
+    background: linear-gradient(150deg, var(--navy-3) 0%, var(--navy) 55%, #060a17 130%);
+    padding:36px 34px; margin-bottom:20px; color:#fff;
+    display:grid; grid-template-columns: auto 1fr; gap:32px; align-items:center;
+    opacity:0; transform:translateY(18px); animation: rise .65s var(--ease) .05s forwards;
+  }
+  .hero-banner::before{ content:''; position:absolute; width:320px; height:320px; border-radius:50%; background:radial-gradient(circle, var(--gold) 0%, transparent 70%); opacity:0.16; top:-120px; right:-70px; animation: floatGlow1 10s ease-in-out infinite; }
+  .hero-banner::after{ content:''; position:absolute; width:240px; height:240px; border-radius:50%; background:radial-gradient(circle, var(--purple) 0%, transparent 70%); opacity:0.14; bottom:-100px; left:220px; animation: floatGlow2 12s ease-in-out infinite; }
+  @keyframes floatGlow1{ 0%,100%{ transform:translate(0,0) scale(1);} 50%{ transform:translate(-16px,14px) scale(1.06);} }
+  @keyframes floatGlow2{ 0%,100%{ transform:translate(0,0) scale(1);} 50%{ transform:translate(14px,-12px) scale(1.08);} }
+  .hero-dots{ position:absolute; inset:0; opacity:0.05; background-image: radial-gradient(rgba(255,255,255,0.9) 1px, transparent 1px); background-size:18px 18px; }
+
+  .hero-avatar-wrap{ position:relative; width:104px; height:104px; z-index:1; flex-shrink:0; }
+  .hero-avatar-wrap::before{ content:''; position:absolute; inset:-6px; border-radius:50%; border:1.5px solid rgba(217,184,118,0.4); animation: ringPulse 2.8s ease-in-out infinite; }
+  @keyframes ringPulse{ 0%,100%{ transform:scale(1); opacity:0.5;} 50%{ transform:scale(1.12); opacity:0.05;} }
+  .hero-avatar{ width:104px; height:104px; border-radius:50%; overflow:hidden; background:linear-gradient(160deg,#e7dfc9,#c8b98f); display:flex; align-items:center; justify-content:center; font-family:'Fraunces', serif; font-size:36px; font-weight:700; color:#5a4620; border:3px solid rgba(255,255,255,0.15); box-shadow:0 12px 28px -10px rgba(0,0,0,0.4); }
+  .hero-avatar img{ width:100%; height:100%; object-fit:cover; }
+  .hero-cam-btn{
+    position:absolute; bottom:0; right:0; width:32px; height:32px; border-radius:50%;
+    background:linear-gradient(150deg, var(--gold-light), var(--gold)); border:3px solid var(--navy);
+    display:flex; align-items:center; justify-content:center; cursor:pointer; color:#241a05; transition: all .22s var(--ease);
+  }
+  .hero-cam-btn:hover{ transform:scale(1.08); }
+  .hero-cam-btn svg{ width:14px; height:14px; }
+  .hero-cam-btn input{ display:none; }
+
+  .hero-right{ position:relative; z-index:1; }
+  .hero-eyebrow{ font-size:10.5px; letter-spacing:1.8px; text-transform:uppercase; color:var(--gold-light); font-weight:700; }
+  .hero-title{ font-family:'Fraunces', serif; font-size:27px; font-weight:600; margin-top:6px; }
+  .hero-sub{ font-size:12.8px; color:#a8afc6; margin-top:5px; }
+  .hero-tags{ display:flex; gap:8px; margin-top:14px; flex-wrap:wrap; }
+  .hero-tag{ font-size:10.8px; font-weight:700; padding:5px 12px; border-radius:20px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.14); color:#dfe3f0; display:flex; align-items:center; gap:5px; }
+  .hero-tag svg{ width:11px; height:11px; color:var(--gold-light); }
+
+  .ring-stats{ display:flex; gap:22px; flex-wrap:wrap; margin-top:20px; }
+  .ring-stat{ display:flex; align-items:center; gap:12px; }
+  .ring-wrap{ position:relative; width:54px; height:54px; flex-shrink:0; }
+  .ring-wrap svg{ width:100%; height:100%; transform:rotate(-90deg); }
+  .ring-wrap circle{ fill:none; stroke-width:5.5; }
+  .ring-track{ stroke:rgba(255,255,255,0.12); }
+  .ring-val{ stroke-linecap:round; stroke-dasharray:0 1000; transition:stroke-dasharray 1.3s var(--ease) .4s; }
+  .ring-label{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:11.5px; font-weight:700; color:#fff; }
+  .ring-text .num{ font-family:'Fraunces', serif; font-size:15px; font-weight:600; color:#fff; }
+  .ring-text .lab{ font-size:10.6px; color:#9aa3bd; margin-top:2px; }
+
+  /* ---- TABS ---- */
+  .tabs-row{ display:flex; gap:4px; margin-bottom:20px; border-bottom:1px solid var(--border); opacity:0; animation: rise .6s var(--ease) .15s forwards; }
+  .tab-btn{ font-family:inherit; font-size:13.3px; font-weight:600; color:var(--text-faint); background:none; border:none; padding:12px 18px; cursor:pointer; position:relative; display:flex; align-items:center; gap:8px; transition:color .22s var(--ease); }
+  .tab-btn svg{ width:15px; height:15px; }
+  .tab-btn:hover{ color:var(--text); }
+  .tab-btn.active{ color:var(--gold); }
+  .tab-btn.active::after{ content:''; position:absolute; left:12px; right:12px; bottom:-1px; height:2.5px; border-radius:3px; background:linear-gradient(90deg, var(--gold-light), var(--gold)); }
+  .tab-panel{ display:none; } .tab-panel.active{ display:block; animation: fadeTab .4s var(--ease); }
+  @keyframes fadeTab{ from{ opacity:0; transform:translateY(6px);} to{ opacity:1; transform:translateY(0);} }
+
+  /* ---- Grid & panels ---- */
+  .grid-2{ display:grid; grid-template-columns: 1.4fr 0.85fr; gap:18px; align-items:start; }
+  .panel{ background:var(--card); border:1px solid var(--border); border-radius:var(--radius-lg); box-shadow:var(--shadow); padding:24px 26px; margin-bottom:16px; transition: box-shadow .3s var(--ease), transform .3s var(--ease); }
+  .panel:hover{ box-shadow:0 20px 40px -24px rgba(30,25,10,0.26); transform:translateY(-2px); }
+  .panel-title{ display:flex; align-items:center; gap:9px; font-size:15px; font-weight:700; margin-bottom:6px; }
+  .panel-title svg{ width:16px; height:16px; color:var(--gold); }
+  .panel-sub{ font-size:12.3px; color:var(--text-faint); margin-bottom:18px; }
+
+  /* Photo upload */
+  .photo-row{ display:flex; align-items:center; gap:20px; }
+  .photo-avatar-wrap{ position:relative; width:74px; height:74px; flex-shrink:0; }
+  .photo-avatar-wrap::before{ content:''; position:absolute; inset:-4px; border-radius:50%; border:1.5px solid rgba(182,144,63,0.3); animation: ringPulse2 2.8s ease-in-out infinite; }
+  @keyframes ringPulse2{ 0%,100%{ transform:scale(1); opacity:0.5;} 50%{ transform:scale(1.12); opacity:0.05;} }
+  .photo-avatar{ width:74px; height:74px; border-radius:50%; overflow:hidden; background:linear-gradient(160deg,#e7dfc9,#c8b98f); display:flex; align-items:center; justify-content:center; font-family:'Fraunces', serif; font-size:26px; font-weight:700; color:#5a4620; border:3px solid #fff; box-shadow:0 8px 20px -8px rgba(0,0,0,0.25); }
+  .photo-avatar img{ width:100%; height:100%; object-fit:cover; }
+  .photo-upload-btn{ font-family:inherit; font-size:12.8px; font-weight:700; padding:10px 18px; border-radius:30px; background:linear-gradient(150deg, var(--gold-light), var(--gold)); color:#241a05; border:none; cursor:pointer; display:inline-flex; align-items:center; gap:8px; transition:all .22s var(--ease); }
+  .photo-upload-btn:hover{ filter:brightness(1.06); box-shadow:0 10px 22px -10px rgba(182,144,63,0.55); transform:translateY(-1px); }
+  .photo-upload-btn svg{ width:15px; height:15px; }
+  .photo-upload-btn input{ display:none; }
+  .photo-hint{ font-size:11.3px; color:var(--text-faint); margin-top:8px; }
+
+  /* Fields */
+  .field-row{ display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+  .field{ display:flex; flex-direction:column; gap:7px; margin-top:20px; }
+  .field:first-child{ margin-top:0; }
+  .field label{ font-size:12.6px; font-weight:600; color:var(--text); }
+  .input-wrap{ position:relative; }
+  .input-wrap svg.lead{ position:absolute; left:13px; top:50%; transform:translateY(-50%); width:15px; height:15px; color:var(--text-faint); pointer-events:none; }
+  .input-wrap input{ width:100%; font-family:inherit; font-size:13.3px; padding:12px 14px; border-radius:11px; border:1px solid var(--border); background:#fcfbf8; color:var(--text); transition: all .22s var(--ease); }
+  .input-wrap.has-icon input{ padding-left:38px; }
+  .input-wrap input::placeholder{ color:var(--text-faint); }
+  .input-wrap input:focus{ outline:none; border-color:var(--gold-light); box-shadow:0 0 0 4px var(--gold-soft); background:#fff; }
+  .input-wrap.pw input{ padding-right:44px; }
+  .eye-btn{ position:absolute; right:12px; top:50%; transform:translateY(-50%); width:28px; height:28px; border-radius:8px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--text-faint); transition:all .2s var(--ease); background:none; border:none; }
+  .eye-btn:hover{ color:var(--gold); background:var(--gold-soft); }
+  .eye-btn svg{ width:15px; height:15px; }
+  .field-hint{ font-size:11.3px; color:var(--text-faint); }
+
+  /* Password strength */
+  .strength-row{ display:flex; gap:5px; margin-top:9px; }
+  .strength-bar{ flex:1; height:4px; border-radius:4px; background:#eee9db; overflow:hidden; }
+  .strength-bar span{ display:block; height:100%; width:0%; border-radius:4px; transition: width .35s var(--ease), background .35s var(--ease); }
+  .strength-label{ font-size:11px; font-weight:700; margin-top:6px; color:var(--text-faint); }
+
+  .pw-fields{ display:grid; grid-template-columns:repeat(3,1fr); gap:18px; }
+  .btn-outline-sm{ font-family:inherit; font-size:12.6px; font-weight:700; padding:10px 18px; border-radius:10px; border:1px solid var(--border); background:#fff; color:var(--text-faint); cursor:not-allowed; display:inline-flex; align-items:center; gap:7px; transition:all .22s var(--ease); margin-top:18px; }
+  .btn-outline-sm.enabled{ color:var(--gold); border-color:var(--gold-light); cursor:pointer; }
+  .btn-outline-sm.enabled:hover{ background:var(--gold-soft); transform:translateY(-1px); }
+  .btn-outline-sm svg{ width:14px; height:14px; }
+
+  /* Toggle */
+  .switch-row{ display:flex; align-items:center; justify-content:space-between; padding:15px 17px; border:1px solid var(--border); border-radius:12px; background:#fcfbf8; margin-bottom:12px; transition:all .2s var(--ease); }
+  .switch-row:hover{ border-color:var(--gold-light); }
+  .switch-row:last-child{ margin-bottom:0; }
+  .switch-row-label{ font-size:13px; font-weight:700; display:flex; align-items:center; gap:9px; }
+  .switch-row-label svg{ width:15px; height:15px; color:var(--gold); }
+  .switch-row-sub{ font-size:11.5px; color:var(--text-faint); margin-top:3px; margin-left:24px; }
+  .switch{ position:relative; width:42px; height:24px; flex-shrink:0; cursor:pointer; }
+  .switch input{ opacity:0; width:0; height:0; position:absolute; }
+  .switch-track{ position:absolute; inset:0; background:#e9e4d5; border:1px solid var(--border); border-radius:20px; transition: background .3s var(--ease); }
+  .switch-thumb{ position:absolute; top:2.5px; left:3px; width:17px; height:17px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,0.2); transition: transform .32s var(--ease); }
+  .switch input:checked + .switch-track{ background:var(--green); border-color:var(--green); }
+  .switch input:checked + .switch-track .switch-thumb{ transform:translateX(17px); }
+
+  /* Session rows */
+  .session-row{ display:flex; align-items:center; gap:14px; padding:14px 16px; background:#fcfbf8; border:1px solid var(--border); border-radius:12px; margin-bottom:10px; transition:all .2s var(--ease); }
+  .session-row:hover{ border-color:var(--gold-light); }
+  .session-row:last-child{ margin-bottom:0; }
+  .session-icon{ width:38px; height:38px; border-radius:10px; background:var(--blue-soft); color:var(--blue); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .session-icon svg{ width:17px; height:17px; }
+  .session-title{ font-size:13px; font-weight:700; display:flex; align-items:center; gap:8px; }
+  .badge-current{ font-size:9.5px; font-weight:700; letter-spacing:.3px; text-transform:uppercase; color:var(--green); background:var(--green-soft); padding:2px 8px; border-radius:20px; }
+  .session-sub{ font-size:11.3px; color:var(--text-faint); margin-top:2px; }
+  .session-action{ margin-left:auto; font-size:11.5px; font-weight:700; color:var(--text-faint); cursor:pointer; transition:color .2s var(--ease); }
+  .session-action:hover{ color:var(--red); }
+
+  /* mini info cards */
+  .info-mini-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:14px; }
+  .info-mini{ background:#fcfbf8; border:1px solid var(--border); border-radius:12px; padding:15px 16px; }
+  .info-mini-label{ font-size:10.3px; letter-spacing:.7px; text-transform:uppercase; color:var(--text-faint); font-weight:700; margin-bottom:8px; }
+  .info-mini-val{ font-size:14px; font-weight:700; display:flex; align-items:center; gap:6px; }
+  .info-mini-val svg{ width:14px; height:14px; color:var(--gold); }
+
+  /* Segmented + swatches (préférences) */
+  .segmented{ display:flex; gap:4px; background:#fcfbf8; border:1px solid var(--border); border-radius:11px; padding:4px; width:fit-content; }
+  .seg-opt{ padding:8px 16px; border-radius:8px; font-size:12.5px; font-weight:600; color:var(--text-dim); cursor:pointer; transition: all .25s var(--ease); }
+  .seg-opt.active{ background:#fff; color:var(--gold); box-shadow:0 1px 0 rgba(255,255,255,0.04) inset, 0 4px 10px -6px rgba(0,0,0,0.15); }
+  .swatches{ display:flex; gap:10px; }
+  .swatch{ width:26px; height:26px; border-radius:50%; cursor:pointer; border:2px solid transparent; transition: transform .2s var(--ease), border-color .2s var(--ease); position:relative; }
+  .swatch:hover{ transform:scale(1.12); }
+  .swatch.active{ border-color:var(--text); }
+  .swatch.active::after{ content:'✓'; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:11px; color:#fff; text-shadow:0 1px 2px rgba(0,0,0,0.4); }
+  .pref-row{ display:flex; align-items:center; justify-content:space-between; padding:16px 0; border-bottom:1px solid var(--border); }
+  .pref-row:last-child{ border-bottom:none; }
+  .pref-row-label{ font-size:13px; font-weight:700; }
+  .pref-row-sub{ font-size:11.5px; color:var(--text-faint); margin-top:3px; }
+
+  /* Danger zone */
+  .danger-zone{ border:1px solid rgba(201,79,67,0.25); background:var(--red-soft); border-radius:var(--radius-lg); padding:22px 24px; }
+  .danger-zone .panel-title{ color:var(--red); }
+  .danger-zone .panel-title svg{ color:var(--red); }
+  .danger-zone .panel-sub{ color:#a8564c; }
+  .btn-danger{ font-family:inherit; font-size:12.8px; font-weight:700; padding:10px 18px; border-radius:10px; background:linear-gradient(150deg, #e07468, var(--red)); color:#fff; border:none; cursor:pointer; display:inline-flex; align-items:center; gap:8px; transition:all .22s var(--ease); }
+  .btn-danger:hover{ filter:brightness(1.06); box-shadow:0 10px 22px -10px rgba(201,79,67,0.5); transform:translateY(-1px); }
+  .btn-danger svg{ width:14px; height:14px; }
+
+  /* Action bar */
+  .action-bar{ display:flex; align-items:center; justify-content:flex-end; gap:12px; margin-top:4px; }
+  .btn{ font-family:inherit; font-size:13.3px; font-weight:600; padding:11px 22px; border-radius:11px; border:1px solid var(--border); background:#fff; color:var(--text-dim); cursor:pointer; display:flex; align-items:center; gap:8px; transition:all .22s var(--ease); }
+  .btn svg{ width:15px; height:15px; }
+  .btn:hover{ border-color:var(--red); color:var(--red); }
+  .btn-save{ background:linear-gradient(150deg, var(--gold-light), var(--gold)); border:none; color:#241a05; }
+  .btn-save:hover{ color:#241a05; filter:brightness(1.06); box-shadow:0 10px 24px -10px rgba(182,144,63,0.55); transform:translateY(-1px); border-color:transparent; }
+
+  @media (max-width: 1050px){ .grid-2{ grid-template-columns:1fr; } }
+  @media (max-width: 900px){
+    .app{ grid-template-columns:1fr; } .sidebar{ display:none; } .content{ padding:22px 18px 80px; }
+    .field-row, .pw-fields, .info-mini-grid{ grid-template-columns:1fr; }
+    .hero-banner{ grid-template-columns:1fr; text-align:center; justify-items:center; }
+  }
+  @media (prefers-reduced-motion:reduce){ *{ animation-duration:.001ms !important; transition-duration:.001ms !important; } }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ================= SIDEBAR ================= -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">EB</div>
+      <div><div class="brand-name">SYGMEBEC</div><div class="brand-sub">E.B.E.C.</div></div>
+    </div>
+    <ul class="navlist">
+      <li class="navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 11.5L12 4l8 7.5"/><path d="M6 10v9a1 1 0 001 1h10a1 1 0 001-1v-9"/></svg>Tableau de bord</li>
+      <li class="navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3"/><path d="M3.5 19c1-3.2 3-4.8 5.5-4.8s4.5 1.6 5.5 4.8"/><circle cx="17" cy="8.5" r="2.4"/><path d="M15 14.5c2 .1 3.4 1.4 4.2 3.8"/></svg>Membres</li>
+      <li class="navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10" cy="9" r="3"/><path d="M4.5 19c1-3 3-4.6 5.5-4.6" /><path d="M15 6l3 3-3 3"/></svg>Inscriptions en ligne</li>
+      <li class="navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/></svg>Événements</li>
+      <li class="navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="4.5" width="17" height="14" rx="2"/><circle cx="9" cy="10" r="1.8"/><path d="M20 15l-4.5-4-6 5.5"/></svg>Images vitrine</li>
+      <li class="navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 3.5h8l3.5 3.5V20a1 1 0 01-1 1H7a1 1 0 01-1-1V4.5a1 1 0 011-1z"/><path d="M9 12h6M9 15.5h6M9 8.5h3"/></svg>Rapports</li>
+      <li class="navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3.5 5.5l17 6-7 2.4-2.4 7z"/></svg>Lettres</li>
+      <li class="navitem active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9.5" cy="8.5" r="3"/><path d="M4 19c1-3 3-4.6 5.5-4.6"/><path d="M16.5 6.5l3 3-3 3"/></svg>Comptes</li>
+      <li class="navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20V11M10 20V6M16 20v-7M22 20H2"/></svg>Statistiques</li>
+    </ul>
+    <div class="sidebar-foot">
+      <div class="foot-card"><b>Sécurité du compte</b>Changez votre mot de passe régulièrement</div>
+      <ul class="navlist">
+        <li class="navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 3.5v2M12 18.5v2M3.5 12h2M18.5 12h2M6 6l1.4 1.4M16.6 16.6L18 18M18 6l-1.4 1.4M7.4 16.6L6 18"/></svg>Paramètres</li>
+        <li class="navitem logout-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 4H6a1.5 1.5 0 00-1.5 1.5v13A1.5 1.5 0 006 20h3"/><path d="M15.5 16l4-4-4-4M19 12H9"/></svg>Déconnexion</li>
+      </ul>
+    </div>
+  </aside>
+
+  <!-- ================= MAIN ================= -->
+  <div class="main">
+    <div class="topbar">
+      <div class="search-wrap"><input type="text" placeholder="Rechercher un membre…"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></div>
+      <div class="top-actions">
+        <div class="icon-circle" title="Basculer le thème"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 14.5A8.5 8.5 0 119.5 4a7 7 0 0010.5 10.5z"/></svg></div>
+        <div class="icon-circle" title="Notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9.5a6 6 0 1112 0c0 4 1.4 5.6 2 6.4H4c.6-.8 2-2.4 2-6.4z"/><path d="M9.5 19.5a2.6 2.6 0 005 0"/></svg><span class="notif-dot"></span></div>
+        <div class="profile-chip"><div class="profile-avatar-top">OS</div><div><div class="profile-name">Storly Osier</div><div class="profile-role">Administrateur</div></div></div>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- ===== HERO ===== -->
+      <div class="hero-banner">
+        <div class="hero-dots"></div>
+        <div class="hero-avatar-wrap">
+          <div class="hero-avatar" id="heroAvatar">SO</div>
+          <label class="hero-cam-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6.5" width="18" height="13" rx="2.4"/><circle cx="12" cy="13" r="3.4"/><path d="M8.5 6.5l1.3-2h4.4l1.3 2"/></svg>
+            <input type="file" id="heroPhotoInput" accept="image/*">
+          </label>
+        </div>
+        <div class="hero-right">
+          <div class="hero-eyebrow">Paramètres du compte</div>
+          <div class="hero-title" id="heroName">Storly Osier</div>
+          <div class="hero-sub" id="heroEmail">storlyosier833@gmail.com</div>
+          <div class="hero-tags">
+            <span class="hero-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="3.2"/><path d="M5 19c1.1-3.4 3.6-5.2 7-5.2s5.9 1.8 7 5.2"/></svg>Administrateur</span>
+            <span class="hero-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17"/></svg>Membre depuis 2024</span>
+            <span class="hero-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12a8 8 0 0114-5.3M20 12a8 8 0 01-14 5.3"/><path d="M4 4v5h5M20 20v-5h-5"/></svg>2FA désactivée</span>
+          </div>
+
+          <div class="ring-stats">
+            <div class="ring-stat">
+              <div class="ring-wrap"><svg viewBox="0 0 54 54"><circle class="ring-track" cx="27" cy="27" r="22"></circle><circle class="ring-val" cx="27" cy="27" r="22" stroke="#d9b876" data-pct="75"></circle></svg><div class="ring-label">75%</div></div>
+              <div class="ring-text"><div class="num">75 %</div><div class="lab">Profil complété</div></div>
+            </div>
+            <div class="ring-stat">
+              <div class="ring-wrap"><svg viewBox="0 0 54 54"><circle class="ring-track" cx="27" cy="27" r="22"></circle><circle class="ring-val" cx="27" cy="27" r="22" stroke="#1fa060" data-pct="50"></circle></svg><div class="ring-label">2</div></div>
+              <div class="ring-text"><div class="num">2 appareils</div><div class="lab">Sessions actives</div></div>
+            </div>
+            <div class="ring-stat">
+              <div class="ring-wrap"><svg viewBox="0 0 54 54"><circle class="ring-track" cx="27" cy="27" r="22"></circle><circle class="ring-val" cx="27" cy="27" r="22" stroke="#7c50d1" data-pct="30"></circle></svg><div class="ring-label">4</div></div>
+              <div class="ring-text"><div class="num">4 mois</div><div class="lab">Depuis le dernier changement</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== TABS ===== -->
+      <div class="tabs-row">
+        <button class="tab-btn active" data-tab="profil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.4"/><path d="M4.5 20c1.6-3.6 4.6-5.4 7.5-5.4s5.9 1.8 7.5 5.4"/></svg>Profil</button>
+        <button class="tab-btn" data-tab="securite"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l7 3.2v5.3c0 4.6-3 8.7-7 9.5-4-.8-7-4.9-7-9.5V6.2L12 3z"/><path d="M9.5 12l1.8 1.8L15 10"/></svg>Sécurité</button>
+        <button class="tab-btn" data-tab="preferences"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="7" height="7" rx="1.6"/><rect x="13" y="4" width="7" height="7" rx="1.6"/><rect x="4" y="13" width="7" height="7" rx="1.6"/><rect x="13" y="13" width="7" height="7" rx="1.6"/></svg>Préférences</button>
+      </div>
+
+      <!-- ===== TAB: PROFIL ===== -->
+      <div class="tab-panel active" id="tab-profil">
+        <div class="grid-2">
+          <div>
+            <div class="panel">
+              <div class="panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="6.5" width="18" height="13" rx="2.4"/><circle cx="12" cy="13" r="3.4"/><path d="M8.5 6.5l1.3-2h4.4l1.3 2"/></svg>Photo de profil</div>
+              <div class="panel-sub">Visible par les membres de l'espace de travail.</div>
+              <div class="photo-row">
+                <div class="photo-avatar-wrap"><div class="photo-avatar" id="photoAvatar">SO</div></div>
+                <div>
+                  <label class="photo-upload-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6.5" width="18" height="13" rx="2.4"/><circle cx="12" cy="13" r="3.4"/><path d="M8.5 6.5l1.3-2h4.4l1.3 2"/></svg>
+                    Ajouter une image
+                    <input type="file" id="photoInput" accept="image/*">
+                  </label>
+                  <div class="photo-hint">PNG, JPG, WEBP ou GIF · 20 Mo maximum</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.4"/><path d="M4.5 20c1.6-3.6 4.6-5.4 7.5-5.4s5.9 1.8 7.5 5.4"/></svg>Informations personnelles</div>
+              <div class="panel-sub">Utilisées pour vous identifier dans l'espace de travail.</div>
+              <div class="field-row">
+                <div class="field" style="margin-top:0;">
+                  <label>Prénom</label>
+                  <div class="input-wrap"><input type="text" value="Osier" id="fPrenom"></div>
+                </div>
+                <div class="field" style="margin-top:0;">
+                  <label>Nom</label>
+                  <div class="input-wrap"><input type="text" value="Storly" id="fNom"></div>
+                </div>
+              </div>
+              <div class="field">
+                <label>Adresse courriel</label>
+                <div class="input-wrap has-icon">
+                  <svg class="lead" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="5" width="19" height="14" rx="2.4"/><path d="M3 6.5l9 6.5 9-6.5"/></svg>
+                  <input type="email" value="storlyosier833@gmail.com" id="fEmail">
+                </div>
+                <div class="field-hint">Utilisée pour vous contacter et identifier votre compte.</div>
+              </div>
+              <div class="field">
+                <label>Téléphone <span style="color:var(--text-faint); font-weight:500;">(optionnel)</span></label>
+                <div class="input-wrap has-icon">
+                  <svg class="lead" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h4l2 5-2.5 1.5a11 11 0 005 5L14 14l5 2v4a2 2 0 01-2 2C9.5 22 2 14.5 2 7a2 2 0 012-2z"/></svg>
+                  <input type="tel" placeholder="+509 __ __ __ __">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="panel">
+              <div class="panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>Aperçu du compte</div>
+              <div class="info-mini-grid">
+                <div class="info-mini"><div class="info-mini-label">Rôle</div><div class="info-mini-val"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.2"/><path d="M5 19c1.1-3.4 3.6-5.2 7-5.2s5.9 1.8 7 5.2"/></svg>Administrateur</div></div>
+                <div class="info-mini"><div class="info-mini-label">Statut</div><div class="info-mini-val" style="color:var(--green);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 12l5 5L20 6"/></svg>Actif</div></div>
+                <div class="info-mini"><div class="info-mini-label">Créé le</div><div class="info-mini-val"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17"/></svg>03/2024</div></div>
+                <div class="info-mini"><div class="info-mini-label">Fuseau horaire</div><div class="info-mini-val"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>Haïti (UTC-5)</div></div>
+              </div>
+            </div>
+
+            <div class="panel" style="margin-bottom:0;">
+              <div class="panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l7 3.2v5.3c0 4.6-3 8.7-7 9.5-4-.8-7-4.9-7-9.5V6.2L12 3z"/><path d="M9.5 12l1.8 1.8L15 10"/></svg>Vérification</div>
+              <div class="panel-sub" style="margin-bottom:0;">Adresse e-mail vérifiée le 12 mars 2024. Aucune action requise.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="action-bar">
+          <button type="button" class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>Annuler</button>
+          <button type="button" class="btn btn-save" id="saveProfileBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 12l5 5L20 6"/></svg>Enregistrer</button>
+        </div>
+      </div>
+
+      <!-- ===== TAB: SÉCURITÉ ===== -->
+      <div class="tab-panel" id="tab-securite">
+        <div class="grid-2">
+          <div>
+            <div class="panel">
+              <div class="panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="10.5" width="14" height="9.5" rx="2"/><path d="M8 10.5V7.5a4 4 0 018 0v3"/></svg>Changer le mot de passe</div>
+              <div class="panel-sub">Utilisez un mot de passe unique d'au moins 8 caractères.</div>
+              <div class="pw-fields">
+                <div class="field" style="margin-top:0;">
+                  <label>Mot de passe actuel</label>
+                  <div class="input-wrap pw"><input type="password" class="pw-field" data-pw="cur"><button type="button" class="eye-btn" data-target="cur"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
+                </div>
+                <div class="field" style="margin-top:0;">
+                  <label>Nouveau mot de passe</label>
+                  <div class="input-wrap pw"><input type="password" class="pw-field" data-pw="new" id="newPwField"><button type="button" class="eye-btn" data-target="new"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
+                  <div class="strength-row"><div class="strength-bar"><span id="sBar1"></span></div><div class="strength-bar"><span id="sBar2"></span></div><div class="strength-bar"><span id="sBar3"></span></div><div class="strength-bar"><span id="sBar4"></span></div></div>
+                  <div class="strength-label" id="strengthLabel">Force du mot de passe</div>
+                </div>
+                <div class="field" style="margin-top:0;">
+                  <label>Confirmer</label>
+                  <div class="input-wrap pw"><input type="password" class="pw-field" data-pw="confirm"><button type="button" class="eye-btn" data-target="confirm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
+                </div>
+              </div>
+              <button type="button" class="btn-outline-sm" id="pwSubmit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="10.5" width="14" height="9.5" rx="2"/><path d="M8 10.5V7.5a4 4 0 018 0v3"/></svg>Modifier le mot de passe</button>
+            </div>
+
+            <div class="panel" style="margin-bottom:0;">
+              <div class="panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 12a8 8 0 0114-5.3M20 12a8 8 0 01-14 5.3"/><path d="M4 4v5h5M20 20v-5h-5"/></svg>Protection du compte</div>
+              <div class="switch-row">
+                <div>
+                  <div class="switch-row-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l7 3.2v5.3c0 4.6-3 8.7-7 9.5-4-.8-7-4.9-7-9.5V6.2L12 3z"/></svg>Authentification à deux facteurs</div>
+                  <div class="switch-row-sub">Ajoute une étape de vérification à la connexion</div>
+                </div>
+                <label class="switch"><input type="checkbox"><span class="switch-track"><span class="switch-thumb"></span></span></label>
+              </div>
+              <div class="switch-row">
+                <div>
+                  <div class="switch-row-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9.5a6 6 0 1112 0c0 4 1.4 5.6 2 6.4H4c.6-.8 2-2.4 2-6.4z"/></svg>Alertes de connexion</div>
+                  <div class="switch-row-sub">Recevoir un e-mail lors d'une connexion inhabituelle</div>
+                </div>
+                <label class="switch"><input type="checkbox" checked><span class="switch-track"><span class="switch-thumb"></span></span></label>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="panel">
+              <div class="panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>Sessions actives</div>
+              <div class="panel-sub">Appareils actuellement connectés à votre compte.</div>
+              <div class="session-row">
+                <div class="session-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
+                <div>
+                  <div class="session-title">MacBook Pro — Cap-Haïtien <span class="badge-current">Actuelle</span></div>
+                  <div class="session-sub">Chrome 128 · dernière activité à l'instant</div>
+                </div>
+              </div>
+              <div class="session-row">
+                <div class="session-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="6" y="2.5" width="12" height="19" rx="2.4"/><path d="M11 18.5h2"/></svg></div>
+                <div>
+                  <div class="session-title">iPhone 14 — Port-au-Prince</div>
+                  <div class="session-sub">Application mobile · connecté le 20 août</div>
+                </div>
+                <div class="session-action">Déconnecter</div>
+              </div>
+            </div>
+
+            <div class="danger-zone">
+              <div class="panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10.3 4.5L3.8 17a1.7 1.7 0 001.5 2.5h13.4a1.7 1.7 0 001.5-2.5l-6.5-12.5a1.7 1.7 0 00-3 0z"/><path d="M12 9v4M12 16.5h.01"/></svg>Zone sensible</div>
+              <div class="panel-sub">La suppression de votre compte est définitive et irréversible.</div>
+              <button type="button" class="btn-danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9.5 7V4.5h5V7M6 7l1 13h10l1-13"/></svg>Supprimer mon compte</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== TAB: PRÉFÉRENCES ===== -->
+      <div class="tab-panel" id="tab-preferences">
+        <div class="grid-2">
+          <div>
+            <div class="panel" style="margin-bottom:0;">
+              <div class="panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5v17M3.5 12h17"/></svg>Apparence</div>
+              <div class="pref-row">
+                <div><div class="pref-row-label">Thème</div><div class="pref-row-sub">S'applique à l'ensemble de l'interface</div></div>
+                <div class="segmented"><div class="seg-opt">Clair</div><div class="seg-opt active">Système</div><div class="seg-opt">Sombre</div></div>
+              </div>
+              <div class="pref-row">
+                <div><div class="pref-row-label">Couleur d'accent</div><div class="pref-row-sub">Boutons, liens et éléments actifs</div></div>
+                <div class="swatches">
+                  <div class="swatch active" style="background:#b6903f;"></div>
+                  <div class="swatch" style="background:#1fa060;"></div>
+                  <div class="swatch" style="background:#3768d6;"></div>
+                  <div class="swatch" style="background:#7c50d1;"></div>
+                </div>
+              </div>
+              <div class="pref-row">
+                <div><div class="pref-row-label">Langue</div><div class="pref-row-sub">Langue de l'interface</div></div>
+                <div class="segmented"><div class="seg-opt active">Français</div><div class="seg-opt">Kreyòl</div><div class="seg-opt">English</div></div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="panel" style="margin-bottom:0;">
+              <div class="panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9.5a6 6 0 1112 0c0 4 1.4 5.6 2 6.4H4c.6-.8 2-2.4 2-6.4z"/><path d="M9.5 19.5a2.6 2.6 0 005 0"/></svg>Notifications rapides</div>
+              <div class="switch-row">
+                <div><div class="switch-row-label">Résumé quotidien</div></div>
+                <label class="switch"><input type="checkbox" checked><span class="switch-track"><span class="switch-thumb"></span></span></label>
+              </div>
+              <div class="switch-row">
+                <div><div class="switch-row-label">Notifications push</div></div>
+                <label class="switch"><input type="checkbox" checked><span class="switch-track"><span class="switch-thumb"></span></span></label>
+              </div>
+              <div class="switch-row">
+                <div><div class="switch-row-label">Actualités produit</div></div>
+                <label class="switch"><input type="checkbox"><span class="switch-track"><span class="switch-thumb"></span></span></label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="action-bar">
+          <button type="button" class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>Annuler</button>
+          <button type="button" class="btn btn-save"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 12l5 5L20 6"/></svg>Enregistrer</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  // Tabs
+  const tabBtns = document.querySelectorAll('.tab-btn');
+  const tabPanels = document.querySelectorAll('.tab-panel');
+  tabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      tabBtns.forEach(b => b.classList.remove('active'));
+      tabPanels.forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  // Progress rings
+  const R = 22; const C = 2 * Math.PI * R;
+  setTimeout(() => {
+    document.querySelectorAll('.ring-val').forEach(ring => {
+      const pct = parseFloat(ring.dataset.pct) || 0;
+      const len = (pct / 100) * C;
+      ring.style.strokeDasharray = `${len} ${C - len}`;
+    });
+  }, 500);
+
+  // Password visibility
+  document.querySelectorAll('.eye-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const input = document.querySelector(`[data-pw="${btn.dataset.target}"]`);
+      const isText = input.type === 'text';
+      input.type = isText ? 'password' : 'text';
+      btn.innerHTML = isText
+        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>'
+        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3l18 18"/><path d="M10.6 5.2A9.9 9.9 0 0112 5c6.5 0 10 7 10 7a17.7 17.7 0 01-3.4 4.4M6.6 6.6C4 8.3 2 12 2 12s3.5 7 10 7a9.7 9.7 0 004-.8"/><path d="M9.9 9.9a3 3 0 004.2 4.2"/></svg>';
+    });
+  });
+
+  // Password strength meter
+  const newPwField = document.getElementById('newPwField');
+  const bars = [document.getElementById('sBar1'), document.getElementById('sBar2'), document.getElementById('sBar3'), document.getElementById('sBar4')];
+  const strengthLabel = document.getElementById('strengthLabel');
+  const levels = [
+    { color:'#c94f43', label:'Très faible' },
+    { color:'#c17f18', label:'Faible' },
+    { color:'#d9b876', label:'Moyen' },
+    { color:'#1fa060', label:'Fort' }
+  ];
+  newPwField.addEventListener('input', () => {
+    const v = newPwField.value;
+    let score = 0;
+    if(v.length >= 8) score++;
+    if(/[A-Z]/.test(v)) score++;
+    if(/[0-9]/.test(v)) score++;
+    if(/[^A-Za-z0-9]/.test(v)) score++;
+    if(v.length === 0) score = 0;
+    bars.forEach((b, i) => {
+      b.style.width = i < score ? '100%' : '0%';
+      b.style.background = score > 0 ? levels[Math.min(score,4)-1].color : '#eee9db';
+    });
+    strengthLabel.textContent = score > 0 ? levels[Math.min(score,4)-1].label : 'Force du mot de passe';
+    strengthLabel.style.color = score > 0 ? levels[Math.min(score,4)-1].color : 'var(--text-faint)';
+  });
+
+  // Enable pw submit when all filled
+  const pwFields = document.querySelectorAll('.pw-field');
+  const pwSubmit = document.getElementById('pwSubmit');
+  function checkPwFields(){
+    const filled = Array.from(pwFields).every(f => f.value.trim() !== '');
+    pwSubmit.classList.toggle('enabled', filled);
+  }
+  pwFields.forEach(f => f.addEventListener('input', checkPwFields));
+  pwSubmit.addEventListener('click', () => {
+    if(!pwSubmit.classList.contains('enabled')) return;
+    const original = pwSubmit.innerHTML;
+    pwSubmit.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M4 12l5 5L20 6"/></svg>Mot de passe modifié';
+    setTimeout(() => {
+      pwSubmit.innerHTML = original; pwFields.forEach(f => f.value=''); checkPwFields();
+      bars.forEach(b => b.style.width = '0%'); strengthLabel.textContent = 'Force du mot de passe'; strengthLabel.style.color='var(--text-faint)';
+    }, 2000);
+  });
+
+  // Live avatar initials + hero sync
+  const fPrenom = document.getElementById('fPrenom');
+  const fNom = document.getElementById('fNom');
+  const fEmail = document.getElementById('fEmail');
+  const navAvatarTop = document.querySelector('.profile-avatar-top');
+  const heroAvatar = document.getElementById('heroAvatar');
+  const photoAvatar = document.getElementById('photoAvatar');
+  const heroName = document.getElementById('heroName');
+  const heroEmail = document.getElementById('heroEmail');
+
+  function updateInitials(){
+    const initials = ((fPrenom.value[0] || '') + (fNom.value[0] || '')).toUpperCase() || 'SO';
+    [heroAvatar, photoAvatar].forEach(el => { if(!el.querySelector('img')) el.textContent = initials; });
+    heroName.textContent = `${fPrenom.value} ${fNom.value}`.trim() || 'Storly Osier';
+    heroEmail.textContent = fEmail.value || 'storlyosier833@gmail.com';
+  }
+  fPrenom.addEventListener('input', updateInitials);
+  fNom.addEventListener('input', updateInitials);
+  fEmail.addEventListener('input', updateInitials);
+
+  // Photo upload preview (both panel + hero)
+  function bindPhotoInput(inputEl){
+    inputEl.addEventListener('change', function(){
+      if(this.files && this.files[0]){
+        const reader = new FileReader();
+        reader.onload = e => {
+          const html = `<img src="${e.target.result}" alt="Photo de profil">`;
+          heroAvatar.innerHTML = html;
+          photoAvatar.innerHTML = html;
+        };
+        reader.readAsDataURL(this.files[0]);
+      }
+    });
+  }
+  bindPhotoInput(document.getElementById('photoInput'));
+  bindPhotoInput(document.getElementById('heroPhotoInput'));
+
+  // Segmented + swatches
+  document.querySelectorAll('.segmented').forEach(group => {
+    group.querySelectorAll('.seg-opt').forEach(opt => {
+      opt.addEventListener('click', () => {
+        group.querySelectorAll('.seg-opt').forEach(o => o.classList.remove('active'));
+        opt.classList.add('active');
+      });
+    });
+  });
+  document.querySelectorAll('.swatches').forEach(group => {
+    group.querySelectorAll('.swatch').forEach(sw => {
+      sw.addEventListener('click', () => {
+        group.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
+        sw.classList.add('active');
+      });
+    });
+  });
+
+  // Save profile
+  document.getElementById('saveProfileBtn').addEventListener('click', function(){
+    const original = this.innerHTML;
+    this.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M4 12l5 5L20 6"/></svg>Enregistré';
+    setTimeout(() => { this.innerHTML = original; }, 2000);
+  });
+</script>
+</body>
+</html>

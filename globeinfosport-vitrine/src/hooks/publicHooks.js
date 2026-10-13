@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { publicGet } from "../services/api";
 
 export const usePublicQuery = (key, path, params, options = {}) => useQuery({
-  queryKey: [key, params],
+  queryKey: [key, path, params],
   queryFn: () => publicGet(path, params),
   staleTime: 60_000,
   ...options,

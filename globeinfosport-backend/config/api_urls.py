@@ -26,6 +26,7 @@ from apps.comptes.views import (
     LoginView,
     LogoutView,
     UtilisateurViewSet,
+    RoleRedactionViewSet,
 )
 from apps.expatries.views import ClubEtrangerViewSet, JoueurExpatrieViewSet, TransfertViewSet
 from apps.galerie.views import AlbumGalerieViewSet, ImageGalerieViewSet
@@ -38,7 +39,13 @@ from apps.vitrine.views import (
     PartenaireViewSet,
 )
 
+from apps.actualites.views import SportViewSet, PaysViewSet, SelectionViewSet
+
 router = DefaultRouter()
+router.register("roles", RoleRedactionViewSet, basename="role")
+router.register("sports", SportViewSet)
+router.register("pays", PaysViewSet)
+router.register("selections", SelectionViewSet)
 router.register("utilisateurs", UtilisateurViewSet, basename="utilisateur")
 router.register("articles", ArticleViewSet, basename="article")
 router.register("categories", CategorieViewSet, basename="categorie")

@@ -13,12 +13,13 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from drf_spectacular.utils import extend_schema
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
-from .models import Utilisateur
+from .models import Utilisateur, RoleRedaction
 from .permissions import IsAdministrateur
 from .serializers import (
     UtilisateurCreateSerializer,
     UtilisateurSerializer,
     UtilisateurUpdateSerializer,
+    RoleRedactionSerializer,
 )
 
 
@@ -118,6 +119,12 @@ class CurrentUserView(APIView):
 
     def get(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
         return Response(UtilisateurSerializer(request.user, context={"request": request}).data)
+
+
+class RoleRedactionViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = RoleRedaction.objects.all()
+    serializer_class = RoleRedactionSerializer
+    permission_classes = [IsAdministrateur]
 
 
 class UtilisateurViewSet(viewsets.ModelViewSet):

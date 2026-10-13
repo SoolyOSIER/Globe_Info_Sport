@@ -30,6 +30,10 @@ def get_role_name(user: object) -> str | None:
 def has_minimum_role(user: object, role_minimum: str) -> bool:
     """Vérifie la hiérarchie cumulative des rôles rédactionnels."""
 
+    if not getattr(user, "is_authenticated", False) or not getattr(user, "is_active", False):
+        return False
+    if getattr(user, "is_superuser", False):
+        return True
     role = get_role_name(user)
     return HIERARCHIE_ROLES.get(role or "", 0) >= HIERARCHIE_ROLES[role_minimum]
 

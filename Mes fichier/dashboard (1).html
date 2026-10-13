@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>SYGMEBEC — Tableau de bord</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  :root{
+    --navy-950:#111a30;
+    --navy-900:#152140;
+    --navy-800:#1c2c52;
+    --navy-700:#28396b;
+    --burgundy:#7d3346;
+    --burgundy-light:#a9536a;
+    --gold:#c6a15b;
+    --gold-light:#e6d3a3;
+    --ivory:#f6f3ec;
+    --card:#ffffff;
+    --ink:#1e2438;
+    --muted:#767c94;
+    --muted-2:#9aa0b5;
+    --sage:#4c7a5e;
+    --sage-bg:#e7f0ea;
+    --rose-bg:#f6e9ec;
+    --gold-bg:#faf3e2;
+    --line:#e7e3d8;
+    --radius:16px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    font-family:'Inter',sans-serif;
+    background:var(--ivory);
+    color:var(--ink);
+    display:flex;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  .display{font-family:'Fraunces',serif;}
+
+  /* ---------- SIDEBAR ---------- */
+  .sidebar{
+    width:252px;
+    flex-shrink:0;
+    background:linear-gradient(180deg,var(--navy-950) 0%,var(--navy-900) 100%);
+    color:#dfe3ee;
+    display:flex;
+    flex-direction:column;
+    padding:26px 18px;
+    position:sticky;
+    top:0;
+    height:100vh;
+  }
+  .brand{display:flex; align-items:center; gap:12px; padding:0 6px 26px 6px; border-bottom:1px solid rgba(230,211,163,0.12); margin-bottom:22px;}
+  .seal{
+    width:40px; height:40px; border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, var(--gold-light), var(--gold) 60%, #96793c 100%);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Fraunces',serif; font-weight:700; color:var(--navy-950); font-size:15px;
+    box-shadow:0 0 0 3px rgba(198,161,91,0.15);
+  }
+  .brand-text .name{font-family:'Fraunces',serif; font-weight:600; font-size:16.5px; letter-spacing:.3px; color:#fff;}
+  .brand-text .sub{font-size:10.5px; letter-spacing:1.5px; color:var(--gold-light); text-transform:uppercase; margin-top:1px;}
+
+  .nav-label{font-size:10.5px; letter-spacing:1.6px; text-transform:uppercase; color:#6c7392; margin:6px 10px 8px;}
+  nav{display:flex; flex-direction:column; gap:2px;}
+  .nav-item{
+    display:flex; align-items:center; gap:12px;
+    padding:10px 12px; border-radius:10px;
+    font-size:14px; color:#c3c8dc; text-decoration:none;
+    transition:background .15s ease, color .15s ease;
+    cursor:pointer;
+  }
+  .nav-item svg{width:17px; height:17px; flex-shrink:0; opacity:.85;}
+  .nav-item:hover{background:rgba(255,255,255,0.05); color:#fff;}
+  .nav-item.active{
+    background:linear-gradient(90deg, rgba(198,161,91,0.18), rgba(198,161,91,0.04));
+    color:#fff; box-shadow:inset 2px 0 0 var(--gold);
+  }
+  .nav-item.active svg{opacity:1; stroke:var(--gold-light);}
+  .nav-divider{height:1px; background:rgba(230,211,163,0.1); margin:16px 8px;}
+
+  .sidebar-bottom{margin-top:auto;}
+  .user-chip{
+    display:flex; align-items:center; gap:10px;
+    padding:11px; border-radius:12px; background:rgba(255,255,255,0.04);
+    border:1px solid rgba(230,211,163,0.1);
+  }
+  .avatar-sm{width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg,var(--burgundy-light),var(--burgundy)); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; color:#fff;}
+  .user-chip .u-name{font-size:13px; font-weight:600; color:#fff;}
+  .user-chip .u-role{font-size:11px; color:var(--muted-2);}
+
+  /* ---------- MAIN ---------- */
+  .main{flex:1; min-width:0; display:flex; flex-direction:column;}
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:18px 34px; background:rgba(246,243,236,0.9); backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line); position:sticky; top:0; z-index:10;
+  }
+  .search-box{
+    display:flex; align-items:center; gap:10px;
+    background:#fff; border:1px solid var(--line); border-radius:11px;
+    padding:9px 14px; width:340px; color:var(--muted);
+  }
+  .search-box svg{width:15px; height:15px; opacity:.6;}
+  .search-box input{border:none; outline:none; font-size:13.5px; width:100%; font-family:'Inter'; background:transparent;}
+  .topbar-right{display:flex; align-items:center; gap:18px;}
+  .icon-btn{
+    width:38px; height:38px; border-radius:10px; border:1px solid var(--line); background:#fff;
+    display:flex; align-items:center; justify-content:center; cursor:pointer; position:relative; color:var(--ink);
+  }
+  .icon-btn svg{width:16px; height:16px;}
+  .badge-dot{position:absolute; top:-4px; right:-4px; background:var(--burgundy); color:#fff; font-size:9.5px; font-weight:700; width:16px; height:16px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid var(--ivory);}
+  .topbar-user{display:flex; align-items:center; gap:9px; cursor:pointer;}
+  .topbar-user .u-name{font-size:13px; font-weight:600;}
+  .topbar-user .u-role{font-size:11px; color:var(--muted);}
+
+  .content{padding:28px 34px 60px; display:flex; flex-direction:column; gap:22px;}
+
+  /* ---------- HERO ---------- */
+  .hero{
+    background:
+      radial-gradient(circle at 88% -10%, rgba(198,161,91,0.35), transparent 45%),
+      linear-gradient(120deg, var(--navy-950) 0%, var(--navy-800) 55%, var(--burgundy) 130%);
+    border-radius:20px; padding:30px 34px; color:#fff; position:relative; overflow:hidden;
+    display:flex; align-items:center; justify-content:space-between; gap:24px;
+  }
+  .hero::after{
+    content:""; position:absolute; inset:0;
+    background:repeating-linear-gradient(115deg, rgba(255,255,255,0.03) 0 2px, transparent 2px 34px);
+    pointer-events:none;
+  }
+  .hero-left{position:relative; z-index:1;}
+  .hero-eyebrow{font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--gold-light); display:flex; align-items:center; gap:8px; margin-bottom:10px;}
+  .hero-eyebrow .dot{width:6px; height:6px; border-radius:50%; background:#6fd39a; box-shadow:0 0 0 3px rgba(111,211,154,0.2);}
+  .hero h1{font-family:'Fraunces',serif; font-weight:600; font-size:29px; margin-bottom:6px;}
+  .hero p{font-size:13.5px; color:#c9cfe4;}
+  .hero-right{position:relative; z-index:1; display:flex; align-items:center; gap:12px;}
+  .seg{display:flex; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.14); border-radius:10px; padding:3px;}
+  .seg span{padding:7px 14px; font-size:12.5px; border-radius:8px; color:#c9cfe4; cursor:pointer;}
+  .seg span.active{background:var(--gold); color:var(--navy-950); font-weight:600;}
+  .btn-gold{
+    background:linear-gradient(135deg,var(--gold-light),var(--gold));
+    color:var(--navy-950); border:none; font-weight:700; font-size:13px;
+    padding:11px 18px; border-radius:10px; cursor:pointer; display:flex; align-items:center; gap:7px;
+    box-shadow:0 6px 16px rgba(198,161,91,0.25);
+  }
+  .btn-gold svg{width:14px; height:14px;}
+
+  /* ---------- SECTION LABELS ---------- */
+  .section-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;}
+  .section-head .st{display:flex; align-items:center; gap:10px;}
+  .section-head h2{font-family:'Fraunces',serif; font-size:15.5px; font-weight:600; letter-spacing:.2px;}
+  .section-head .rule{width:22px; height:2px; background:var(--gold);}
+  .section-head a{font-size:12.5px; color:var(--burgundy); font-weight:600; text-decoration:none; display:flex; align-items:center; gap:4px;}
+
+  /* ---------- KPI ROW ---------- */
+  .kpi-row{display:grid; grid-template-columns:repeat(4,1fr); gap:18px;}
+  .kpi-card{
+    background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+    padding:20px 20px 16px; position:relative; overflow:hidden;
+  }
+  .kpi-card::before{content:""; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,var(--gold-light),var(--gold));}
+  .kpi-top{display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:14px;}
+  .kpi-label{font-size:10.5px; letter-spacing:1.3px; text-transform:uppercase; color:var(--muted); font-weight:700;}
+  .kpi-icon{width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center;}
+  .kpi-icon svg{width:16px; height:16px;}
+  .kpi-value{font-family:'Fraunces',serif; font-size:32px; font-weight:600; line-height:1;}
+  .kpi-foot{display:flex; align-items:center; gap:6px; margin-top:10px; font-size:12px; color:var(--muted);}
+  .up{color:var(--sage); font-weight:700; display:flex; align-items:center; gap:2px;}
+  .down{color:var(--burgundy); font-weight:700; display:flex; align-items:center; gap:2px;}
+
+  /* ---------- GRID LAYOUTS ---------- */
+  .grid-2{display:grid; grid-template-columns:1.65fr 1fr; gap:18px;}
+  .grid-3{display:grid; grid-template-columns:repeat(3,1fr); gap:18px;}
+  .card{
+    background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:22px;
+    box-shadow:0 1px 2px rgba(17,26,48,0.02), 0 10px 30px -18px rgba(17,26,48,0.12);
+    transition:box-shadow .2s ease, transform .2s ease;
+  }
+  .card:hover{box-shadow:0 4px 8px rgba(17,26,48,0.03), 0 16px 36px -16px rgba(17,26,48,0.16);}
+  .kpi-card{box-shadow:0 1px 2px rgba(17,26,48,0.02), 0 10px 30px -18px rgba(17,26,48,0.12);}
+
+  /* sparkline row inside kpi */
+  .spark{display:flex; align-items:flex-end; gap:3px; height:22px; margin-top:2px;}
+  .spark i{display:block; width:5px; border-radius:2px 2px 0 0; background:var(--line);}
+  .spark i.on{background:var(--gold);}
+
+  /* progress goals */
+  .goal{margin-bottom:16px;}
+  .goal:last-child{margin-bottom:0;}
+  .goal-top{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:7px;}
+  .goal-name{font-size:13px; font-weight:600;}
+  .goal-nums{font-size:12px; color:var(--muted);}
+  .goal-nums b{color:var(--ink);}
+  .goal-track{height:8px; border-radius:6px; background:var(--ivory); overflow:hidden; border:1px solid var(--line);}
+  .goal-fill{height:100%; border-radius:6px; background:linear-gradient(90deg,var(--gold),var(--gold-light));}
+
+  /* verse / signature card */
+  .verse-card{
+    background:linear-gradient(150deg,var(--navy-950) 0%, var(--navy-800) 100%);
+    border-radius:var(--radius); padding:26px 26px 22px; color:#fff; position:relative; overflow:hidden;
+    display:flex; flex-direction:column; justify-content:space-between; min-height:100%;
+  }
+  .verse-card::before{
+    content:"\201C"; position:absolute; top:-18px; right:14px; font-family:'Fraunces',serif; font-size:130px;
+    color:rgba(230,211,163,0.08); line-height:1; pointer-events:none;
+  }
+  .verse-eyebrow{font-size:10.5px; letter-spacing:1.8px; text-transform:uppercase; color:var(--gold-light); display:flex; align-items:center; gap:8px; margin-bottom:14px;}
+  .verse-eyebrow .rule{width:18px; height:1px; background:var(--gold-light);}
+  .verse-text{font-family:'Fraunces',serif; font-size:19px; line-height:1.5; font-weight:500; position:relative; z-index:1;}
+  .verse-ref{margin-top:14px; font-size:12.5px; color:var(--gold-light); font-weight:600; position:relative; z-index:1;}
+  .verse-foot{display:flex; align-items:center; justify-content:space-between; margin-top:22px; padding-top:16px; border-top:1px solid rgba(230,211,163,0.15); position:relative; z-index:1;}
+  .verse-foot .lbl{font-size:11px; color:#a9b0c9;}
+  .verse-foot .val{font-family:'Fraunces',serif; font-size:14px; font-weight:600; color:#fff;}
+
+  /* mini age bars */
+  .age-row{display:flex; align-items:center; gap:12px; margin-bottom:13px;}
+  .age-row:last-child{margin-bottom:0;}
+  .age-label{width:64px; font-size:12px; color:var(--muted); font-weight:600; flex-shrink:0;}
+  .age-track{flex:1; height:11px; border-radius:6px; background:var(--ivory); overflow:hidden; position:relative;}
+  .age-fill{height:100%; border-radius:6px; background:linear-gradient(90deg,var(--navy-700),var(--navy-800));}
+  .age-val{width:34px; text-align:right; font-size:12px; font-weight:700; flex-shrink:0;}
+
+  .stat-mini-row{display:flex; gap:10px; margin-top:16px;}
+  .stat-mini{flex:1; background:var(--ivory); border-radius:10px; padding:10px 12px; text-align:center;}
+  .stat-mini .v{font-family:'Fraunces',serif; font-weight:700; font-size:16px;}
+  .stat-mini .l{font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.4px; margin-top:2px;}
+  .card-title{font-family:'Fraunces',serif; font-size:16px; font-weight:600;}
+  .card-sub{font-size:12px; color:var(--muted); margin-top:2px;}
+  .card-head{display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:18px;}
+  .legend-dot{display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px;}
+  .legend{display:flex; gap:16px; font-size:12px; color:var(--muted); align-items:center;}
+
+  /* member/event list items */
+  .list-item{display:flex; align-items:center; gap:12px; padding:11px 0; border-bottom:1px solid var(--line);}
+  .list-item:last-child{border-bottom:none;}
+  .list-avatar{width:38px; height:38px; border-radius:11px; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; flex-shrink:0;}
+  .list-name{font-size:13.5px; font-weight:600;}
+  .list-meta{font-size:11.5px; color:var(--muted); margin-top:1px;}
+  .pill{font-size:10.5px; font-weight:700; padding:4px 9px; border-radius:20px; white-space:nowrap;}
+  .pill-green{background:var(--sage-bg); color:var(--sage);}
+  .pill-pink{background:var(--rose-bg); color:var(--burgundy);}
+  .pill-gold{background:var(--gold-bg); color:#9c7a2c;}
+
+  /* event card */
+  .event-card{border:1px dashed var(--line); border-radius:12px; padding:14px; display:flex; gap:12px; align-items:flex-start; margin-bottom:10px;}
+  .event-date-block{width:46px; text-align:center; background:var(--navy-950); color:#fff; border-radius:9px; padding:6px 0; flex-shrink:0;}
+  .event-date-block .d{font-family:'Fraunces',serif; font-weight:700; font-size:16px; line-height:1;}
+  .event-date-block .m{font-size:9px; text-transform:uppercase; letter-spacing:.5px; color:var(--gold-light); margin-top:2px;}
+  .event-name{font-size:13.5px; font-weight:600;}
+  .event-loc{font-size:11.5px; color:var(--muted); margin-top:2px; display:flex; align-items:center; gap:5px;}
+
+  /* activity feed */
+  .feed-item{display:flex; gap:12px; padding:10px 0;}
+  .feed-icon{width:34px; height:34px; border-radius:9px; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+  .feed-icon svg{width:15px; height:15px;}
+  .feed-title{font-size:13px; font-weight:600;}
+  .feed-sub{font-size:11.5px; color:var(--muted); margin-top:1px;}
+  .feed-time{font-size:10.5px; color:var(--muted-2); margin-top:3px;}
+  .feed-line{position:relative; padding-left:17px;}
+  .feed-line::before{content:""; position:absolute; left:16.5px; top:38px; bottom:-4px; width:1px; background:var(--line);}
+  .feed-line:last-child::before{display:none;}
+
+  /* ranking */
+  .rank-item{display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--line);}
+  .rank-item:last-child{border-bottom:none;}
+  .rank-num{width:24px; height:24px; border-radius:50%; background:var(--ivory); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:var(--muted); flex-shrink:0;}
+  .rank-num.top{background:var(--gold); color:var(--navy-950); border-color:var(--gold);}
+  .rank-name{font-size:13px; font-weight:600;}
+  .rank-sub{font-size:11px; color:var(--muted);}
+  .rank-amt{font-size:13px; font-weight:700; text-align:right;}
+
+  /* pastoral indicator tiles */
+  .indic-grid{display:grid; grid-template-columns:repeat(6,1fr); gap:14px;}
+  .indic-tile{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px; position:relative;}
+  .indic-tile .ic{width:32px; height:32px; border-radius:9px; display:flex; align-items:center; justify-content:center; margin-bottom:12px;}
+  .indic-tile .ic svg{width:15px; height:15px;}
+  .indic-val{font-family:'Fraunces',serif; font-size:24px; font-weight:600;}
+  .indic-lbl{font-size:11.5px; color:var(--muted); margin-top:4px; line-height:1.3;}
+  .live-pill{display:flex; align-items:center; gap:6px; background:var(--sage-bg); color:var(--sage); font-size:11px; font-weight:700; padding:6px 12px; border-radius:20px;}
+  .live-pill .dot{width:6px; height:6px; border-radius:50%; background:var(--sage); animation:pulse 1.6s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+
+  .weekly-stats{display:flex; flex-direction:column; gap:14px; justify-content:center;}
+  .ws-item{padding:12px 14px; background:var(--ivory); border-radius:12px;}
+  .ws-item .lbl{font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.7px; font-weight:700;}
+  .ws-item .val{font-family:'Fraunces',serif; font-size:22px; font-weight:600; margin-top:4px;}
+
+  ::selection{background:var(--gold-light);}
+  canvas{max-width:100%;}
+</style>
+</head>
+<body>
+
+<!-- ================= SIDEBAR ================= -->
+<aside class="sidebar">
+  <div class="brand">
+    <div class="seal">EB</div>
+    <div class="brand-text">
+      <div class="name">SYGMEBEC</div>
+      <div class="sub">Registre · E.B.E.C</div>
+    </div>
+  </div>
+
+  <div class="nav-label">Pilotage</div>
+  <nav>
+    <a class="nav-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Tableau de bord</a>
+    <a class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6"/><circle cx="17.5" cy="8.5" r="2.3"/><path d="M15.5 14.2c2.7.3 4.8 2.4 5 5.8"/></svg>Membres</a>
+    <a class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 3v4M8 3v4M3 9h18"/><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M9 15l2 2 4-4"/></svg>Inscriptions en ligne</a>
+    <a class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 3v3M16 3v3"/><circle cx="8.5" cy="14" r="1.2" fill="currentColor" stroke="none"/><circle cx="12" cy="14" r="1.2" fill="currentColor" stroke="none"/><circle cx="15.5" cy="14" r="1.2" fill="currentColor" stroke="none"/></svg>Événements</a>
+    <a class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M8 21h8M12 18v3"/><circle cx="12" cy="11" r="2.2"/></svg>Images vitrine</a>
+    <a class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V9z"/><path d="M14 3v6h6M9 13h6M9 17h6"/></svg>Rapports</a>
+    <a class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>Lettres</a>
+  </nav>
+
+  <div class="nav-divider"></div>
+  <div class="nav-label">Administration</div>
+  <nav>
+    <a class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M2 21c1-4.5 5-7 10-7s9 2.5 10 7"/></svg>Comptes</a>
+    <a class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3v18h18M7 15l4-6 3 3 5-7"/></svg>Statistiques</a>
+    <a class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.9l.1.1a2 2 0 11-2.9 2.9l-.1-.1a1.7 1.7 0 00-1.9-.3 1.7 1.7 0 00-1 1.6V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1-1.6 1.7 1.7 0 00-1.9.3l-.1.1a2 2 0 11-2.9-2.9l.1-.1a1.7 1.7 0 00.3-1.9 1.7 1.7 0 00-1.6-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.6-1 1.7 1.7 0 00-.3-1.9l-.1-.1a2 2 0 112.9-2.9l.1.1a1.7 1.7 0 001.9.3H9a1.7 1.7 0 001-1.6V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.6 1.7 1.7 0 001.9-.3l.1-.1a2 2 0 112.9 2.9l-.1.1a1.7 1.7 0 00-.3 1.9V9a1.7 1.7 0 001.6 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.6 1z"/></svg>Paramètres</a>
+  </nav>
+
+  <div class="sidebar-bottom">
+    <div class="nav-item" style="color:#e3a9b4;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>Déconnexion</div>
+    <div class="nav-divider"></div>
+    <div class="user-chip">
+      <div class="avatar-sm">S</div>
+      <div>
+        <div class="u-name">Storly</div>
+        <div class="u-role">Administrateur</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- ================= MAIN ================= -->
+<div class="main">
+  <div class="topbar">
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input placeholder="Rechercher un membre, un événement…">
+    </div>
+    <div class="topbar-right">
+      <div class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3a6 6 0 00-6 6c0 7-3 9-3 9h18s-3-2-3-9a6 6 0 00-6-6z"/><path d="M10.3 21a1.9 1.9 0 003.4 0"/></svg><span class="badge-dot">1</span></div>
+      <div class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/></svg></div>
+      <div class="topbar-user">
+        <div class="avatar-sm">S</div>
+        <div>
+          <div class="u-name">Storly</div>
+          <div class="u-role">Administrateur</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- HERO -->
+    <div class="hero">
+      <div class="hero-left">
+        <div class="hero-eyebrow"><span class="dot"></span>Samedi 15 août 2026 · Communauté active</div>
+        <h1>Bonjour, Storly.</h1>
+        <p>Voici l'état de votre communauté aujourd'hui — 2 membres au registre, 1 événement à venir.</p>
+      </div>
+      <div class="hero-right">
+        <div class="seg"><span class="active">Semaine</span><span>Mois</span><span>Année</span></div>
+        <button class="btn-gold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>Nouveau</button>
+      </div>
+    </div>
+
+    <!-- KPI ROW -->
+    <div class="kpi-row">
+      <div class="kpi-card">
+        <div class="kpi-top">
+          <div class="kpi-label">Total membres</div>
+          <div class="kpi-icon" style="background:var(--rose-bg);"><svg viewBox="0 0 24 24" fill="none" stroke="#7d3346" stroke-width="1.8"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6"/><circle cx="17.5" cy="8.5" r="2.3"/></svg></div>
+        </div>
+        <div class="kpi-value">2</div>
+        <div class="spark"><i style="height:30%"></i><i style="height:30%"></i><i style="height:30%"></i><i style="height:60%"></i><i style="height:60%" class="on"></i><i style="height:100%" class="on"></i></div>
+        <div class="kpi-foot"><span class="up">↑ 8%</span> vs mois dernier</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-top">
+          <div class="kpi-label">Membres actifs</div>
+          <div class="kpi-icon" style="background:var(--sage-bg);"><svg viewBox="0 0 24 24" fill="none" stroke="#4c7a5e" stroke-width="1.8"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg></div>
+        </div>
+        <div class="kpi-value">1 <span style="font-size:14px; color:var(--muted); font-family:'Inter';">/ 50%</span></div>
+        <div class="spark"><i style="height:100%" class="on"></i><i style="height:100%" class="on"></i><i style="height:60%"></i><i style="height:60%"></i><i style="height:60%"></i><i style="height:100%" class="on"></i></div>
+        <div class="kpi-foot"><span class="up">↑ 5%</span> vs mois dernier</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-top">
+          <div class="kpi-label">Événements</div>
+          <div class="kpi-icon" style="background:var(--gold-bg);"><svg viewBox="0 0 24 24" fill="none" stroke="#9c7a2c" stroke-width="1.8"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 3v3M16 3v3"/></svg></div>
+        </div>
+        <div class="kpi-value">2</div>
+        <div class="spark"><i style="height:20%"></i><i style="height:20%"></i><i style="height:60%" class="on"></i><i style="height:60%"></i><i style="height:60%"></i><i style="height:100%" class="on"></i></div>
+        <div class="kpi-foot"><span class="up">↑ 12%</span> · 1 à venir</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-top">
+          <div class="kpi-label">Taux d'activité</div>
+          <div class="kpi-icon" style="background:#e9e4f7;"><svg viewBox="0 0 24 24" fill="none" stroke="#5b4a9c" stroke-width="1.8"><path d="M3 17l5-6 4 3 8-9"/></svg></div>
+        </div>
+        <div class="kpi-value">50%</div>
+        <div class="spark"><i style="height:40%"></i><i style="height:55%"></i><i style="height:45%"></i><i style="height:70%"></i><i style="height:60%"></i><i style="height:100%" class="on"></i></div>
+        <div class="kpi-foot"><span class="up">↑ 3%</span> membres engagés</div>
+      </div>
+    </div>
+
+    <!-- EVOLUTION + REPARTITION -->
+    <div class="section-head" style="margin-bottom:2px;">
+      <div class="st"><div class="rule"></div><h2>Vue d'ensemble du registre</h2></div>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Évolution du registre</div>
+            <div class="card-sub">Membres et événements enregistrés — 6 derniers mois</div>
+          </div>
+          <div class="legend">
+            <span><span class="legend-dot" style="background:var(--navy-800);"></span>Membres</span>
+            <span><span class="legend-dot" style="background:var(--burgundy-light);"></span>Événements</span>
+          </div>
+        </div>
+        <div style="position:relative; height:230px;"><canvas id="evoChart"></canvas></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Répartition</div>
+            <div class="card-sub">Statuts des membres</div>
+          </div>
+        </div>
+        <div style="position:relative; display:flex; justify-content:center; margin:6px 0 14px; height:170px;">
+          <div style="position:relative; width:170px; height:170px;"><canvas id="statusDonut"></canvas></div>
+          <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center;">
+            <div style="font-family:'Fraunces',serif; font-size:24px; font-weight:700;">2</div>
+            <div style="font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.5px;">membres</div>
+          </div>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; font-size:12.5px;">
+            <span><span class="legend-dot" style="background:var(--sage);"></span>Actif</span><b>1</b>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; font-size:12.5px;">
+            <span><span class="legend-dot" style="background:var(--burgundy-light);"></span>Nouveau converti</span><b>1</b>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CROISSANCE + ASSIDUITE -->
+    <div class="section-head" style="margin-bottom:2px;">
+      <div class="st"><div class="rule"></div><h2>Croissance & présence</h2></div>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Croissance cumulée</div>
+            <div class="card-sub">Total des membres au registre, avec projection</div>
+          </div>
+          <div class="legend">
+            <span><span class="legend-dot" style="background:var(--navy-800);"></span>Réel</span>
+            <span><span class="legend-dot" style="background:var(--gold);"></span>Projection</span>
+          </div>
+        </div>
+        <div style="position:relative; height:210px;"><canvas id="growthChart"></canvas></div>
+        <div class="stat-mini-row">
+          <div class="stat-mini"><div class="v">+6</div><div class="l">cette année</div></div>
+          <div class="stat-mini"><div class="v">2</div><div class="l">objectif Q4</div></div>
+          <div class="stat-mini"><div class="v">100%</div><div class="l">rétention</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Assiduité aux cultes</div>
+            <div class="card-sub">Présence dominicale — 6 dernières semaines</div>
+          </div>
+        </div>
+        <div style="position:relative; height:210px;"><canvas id="attendanceChart"></canvas></div>
+        <div class="stat-mini-row">
+          <div class="stat-mini"><div class="v">87%</div><div class="l">présence moy.</div></div>
+          <div class="stat-mini"><div class="v">S5</div><div class="l">meilleur dimanche</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FINANCES + TOP -->
+    <div class="section-head" style="margin-bottom:2px;">
+      <div class="st"><div class="rule"></div><h2>Finances & communautés</h2></div>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Offrandes vs dépenses</div>
+            <div class="card-sub">Évolution sur 6 mois</div>
+          </div>
+          <div class="legend">
+            <span><span class="legend-dot" style="background:var(--sage);"></span>Offrandes</span>
+            <span><span class="legend-dot" style="background:var(--burgundy-light);"></span>Dépenses</span>
+          </div>
+        </div>
+        <div style="position:relative; height:220px;"><canvas id="financeChart"></canvas></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Communautés — palmarès</div>
+            <div class="card-sub">Meilleures performances</div>
+          </div>
+          <span class="pill pill-gold">🏆 Classement</span>
+        </div>
+        <div>
+          <div class="rank-item">
+            <div class="rank-num top">1</div>
+            <div style="flex:1;"><div class="rank-name">Sanctuaire Gateway</div><div class="rank-sub">Cap-Haïtien</div></div>
+            <div><div class="rank-amt">874 000 FCFA</div><div class="up" style="font-size:11px; justify-content:flex-end;">+12.4%</div></div>
+          </div>
+          <div class="rank-item">
+            <div class="rank-num">2</div>
+            <div style="flex:1;"><div class="rank-name">Chapelle Renard Roux</div><div class="rank-sub">Port-au-Prince</div></div>
+            <div><div class="rank-amt">721 000 FCFA</div><div class="up" style="font-size:11px; justify-content:flex-end;">+8.7%</div></div>
+          </div>
+          <div class="rank-item">
+            <div class="rank-num">3</div>
+            <div style="flex:1;"><div class="rank-name">Temple Velours</div><div class="rank-sub">Jacmel</div></div>
+            <div><div class="rank-amt">598 000 FCFA</div><div class="down" style="font-size:11px; justify-content:flex-end;">-2.1%</div></div>
+          </div>
+          <div class="rank-item">
+            <div class="rank-num">4</div>
+            <div style="flex:1;"><div class="rank-name">Havre Bleu</div><div class="rank-sub">Gonaïves</div></div>
+            <div><div class="rank-amt">506 000 FCFA</div><div class="up" style="font-size:11px; justify-content:flex-end;">+15.3%</div></div>
+          </div>
+          <div class="rank-item">
+            <div class="rank-num">5</div>
+            <div style="flex:1;"><div class="rank-name">Nouveautés Nébuleuse</div><div class="rank-sub">Léogâne</div></div>
+            <div><div class="rank-amt">395 000 FCFA</div><div class="up" style="font-size:11px; justify-content:flex-end;">+5.8%</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DONS PAR CATEGORIE + TRANCHES D'AGE -->
+    <div class="section-head" style="margin-bottom:2px;">
+      <div class="st"><div class="rule"></div><h2>Portrait de la communauté</h2></div>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Dons par catégorie</div>
+            <div class="card-sub">Répartition du mois en cours</div>
+          </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:22px;">
+          <div style="position:relative; width:150px; height:150px; flex-shrink:0;"><canvas id="donationDonut"></canvas></div>
+          <div style="flex:1; display:flex; flex-direction:column; gap:11px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; font-size:12.5px;"><span><span class="legend-dot" style="background:var(--navy-800);"></span>Dîmes</span><b>48%</b></div>
+            <div style="display:flex; justify-content:space-between; align-items:center; font-size:12.5px;"><span><span class="legend-dot" style="background:var(--gold);"></span>Offrandes</span><b>27%</b></div>
+            <div style="display:flex; justify-content:space-between; align-items:center; font-size:12.5px;"><span><span class="legend-dot" style="background:var(--burgundy-light);"></span>Missions</span><b>15%</b></div>
+            <div style="display:flex; justify-content:space-between; align-items:center; font-size:12.5px;"><span><span class="legend-dot" style="background:var(--sage);"></span>Bâtiment</span><b>10%</b></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Répartition par tranche d'âge</div>
+            <div class="card-sub">Composition démographique du registre</div>
+          </div>
+        </div>
+        <div style="margin-top:6px;">
+          <div class="age-row"><div class="age-label">0–17 ans</div><div class="age-track"><div class="age-fill" style="width:15%; background:linear-gradient(90deg,#c6a15b,#e6d3a3);"></div></div><div class="age-val">15%</div></div>
+          <div class="age-row"><div class="age-label">18–29 ans</div><div class="age-track"><div class="age-fill" style="width:32%;"></div></div><div class="age-val">32%</div></div>
+          <div class="age-row"><div class="age-label">30–44 ans</div><div class="age-track"><div class="age-fill" style="width:28%;"></div></div><div class="age-val">28%</div></div>
+          <div class="age-row"><div class="age-label">45–59 ans</div><div class="age-track"><div class="age-fill" style="width:17%;"></div></div><div class="age-val">17%</div></div>
+          <div class="age-row"><div class="age-label">60 ans +</div><div class="age-track"><div class="age-fill" style="width:8%; background:linear-gradient(90deg,#7d3346,#a9536a);"></div></div><div class="age-val">8%</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MEMBRES / EVENEMENTS / ACTIVITES -->
+    <div class="section-head" style="margin-bottom:2px;">
+      <div class="st"><div class="rule"></div><h2>Registre en direct</h2></div>
+    </div>
+    <div class="grid-3">
+      <div class="card">
+        <div class="section-head">
+          <div class="st"><div class="rule"></div><h2>Membres récents</h2></div>
+          <a href="#">Voir tout →</a>
+        </div>
+        <div class="card-sub" style="margin-bottom:8px;">Dernières inscriptions</div>
+        <div class="list-item">
+          <div class="list-avatar" style="background:var(--rose-bg); color:var(--burgundy);">R</div>
+          <div style="flex:1;">
+            <div class="list-name">Raybene Richard</div>
+            <div class="list-meta">Nº 45632288</div>
+          </div>
+          <span class="pill pill-green">Actif</span>
+        </div>
+        <div class="list-item">
+          <div class="list-avatar" style="background:var(--gold-bg); color:#9c7a2c;">O</div>
+          <div style="flex:1;">
+            <div class="list-name">Osier Storly</div>
+            <div class="list-meta">+509 46 04 68 44</div>
+          </div>
+          <span class="pill pill-pink">Nouveau</span>
+        </div>
+        <div style="text-align:center; padding:18px 0 4px; color:var(--muted-2); font-size:12px;">— fin de la liste —</div>
+      </div>
+
+      <div class="card">
+        <div class="section-head">
+          <div class="st"><div class="rule"></div><h2>Événements</h2></div>
+          <a href="#">Voir tout →</a>
+        </div>
+        <div class="card-sub" style="margin-bottom:12px;">Prochains rendez-vous</div>
+        <div class="event-card">
+          <div class="event-date-block"><div class="d">25</div><div class="m">Déc</div></div>
+          <div style="flex:1;">
+            <div class="event-name">Cérémonie nuptiale</div>
+            <div class="event-loc">📍 Baptiste de l'espoir, Cap-Haïtien</div>
+          </div>
+          <span class="pill pill-gold">À venir</span>
+        </div>
+        <div style="text-align:center; padding:34px 0 4px; color:var(--muted-2); font-size:12px;">Aucun autre événement planifié</div>
+      </div>
+
+      <div class="card">
+        <div class="section-head">
+          <div class="st"><div class="rule"></div><h2>Activités</h2></div>
+          <div class="icon-btn" style="width:32px; height:32px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:14px;height:14px;"><path d="M12 3a6 6 0 00-6 6c0 7-3 9-3 9h18s-3-2-3-9a6 6 0 00-6-6z"/></svg></div>
+        </div>
+        <div class="card-sub" style="margin-bottom:12px;">Dernières actions</div>
+        <div class="feed-line">
+          <div class="feed-item">
+            <div class="feed-icon" style="background:var(--sage-bg);"><svg viewBox="0 0 24 24" fill="none" stroke="#4c7a5e" stroke-width="2"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3 2.5-5 6-5"/></svg></div>
+            <div><div class="feed-title">Nouveau membre</div><div class="feed-sub">Raybene Richard a rejoint le registre</div><div class="feed-time">Récemment</div></div>
+          </div>
+        </div>
+        <div class="feed-line">
+          <div class="feed-item">
+            <div class="feed-icon" style="background:var(--sage-bg);"><svg viewBox="0 0 24 24" fill="none" stroke="#4c7a5e" stroke-width="2"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3 2.5-5 6-5"/></svg></div>
+            <div><div class="feed-title">Nouveau membre</div><div class="feed-sub">Osier Storly a rejoint le registre</div><div class="feed-time">Récemment</div></div>
+          </div>
+        </div>
+        <div class="feed-line">
+          <div class="feed-item">
+            <div class="feed-icon" style="background:var(--gold-bg);"><svg viewBox="0 0 24 24" fill="none" stroke="#9c7a2c" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18"/></svg></div>
+            <div><div class="feed-title">Événement à venir</div><div class="feed-sub">Cérémonie nuptiale</div><div class="feed-time">25 déc. 2030</div></div>
+          </div>
+        </div>
+        <div class="feed-line">
+          <div class="feed-item">
+            <div class="feed-icon" style="background:#e9e4f7;"><svg viewBox="0 0 24 24" fill="none" stroke="#5b4a9c" stroke-width="2"><path d="M3 17l5-6 4 3 8-9"/></svg></div>
+            <div><div class="feed-title">Action système</div><div class="feed-sub">Synchronisation du registre</div><div class="feed-time">5 août 2026</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACTIVITE HEBDOMADAIRE -->
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Activité hebdomadaire</div>
+          <div class="card-sub">Répartition des interactions</div>
+        </div>
+        <div class="seg"><span class="active" style="color:var(--navy-950);">Cette semaine</span><span style="color:var(--muted);">Comparer</span></div>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 220px; gap:24px; align-items:center;">
+        <div style="position:relative; height:150px;"><canvas id="weeklyChart"></canvas></div>
+        <div class="weekly-stats">
+          <div class="ws-item"><div class="lbl">Total</div><div class="val">453</div></div>
+          <div class="ws-item"><div class="lbl">Moyenne / jour</div><div class="val">65</div></div>
+          <div class="ws-item"><div class="lbl">Pic</div><div class="val" style="color:var(--sage);">94</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OBJECTIFS + VERSET -->
+    <div class="section-head" style="margin-bottom:2px;">
+      <div class="st"><div class="rule"></div><h2>Pilotage pastoral</h2></div>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Objectifs du trimestre</div>
+            <div class="card-sub">Suivi des cibles fixées par le conseil</div>
+          </div>
+        </div>
+        <div class="goal">
+          <div class="goal-top"><span class="goal-name">Nouveaux membres</span><span class="goal-nums"><b>2</b> / 5</span></div>
+          <div class="goal-track"><div class="goal-fill" style="width:40%;"></div></div>
+        </div>
+        <div class="goal">
+          <div class="goal-top"><span class="goal-name">Baptêmes prévus</span><span class="goal-nums"><b>2</b> / 4</span></div>
+          <div class="goal-track"><div class="goal-fill" style="width:50%;"></div></div>
+        </div>
+        <div class="goal">
+          <div class="goal-top"><span class="goal-name">Offrandes du trimestre</span><span class="goal-nums"><b>238k</b> / 300k FCFA</span></div>
+          <div class="goal-track"><div class="goal-fill" style="width:79%;"></div></div>
+        </div>
+        <div class="goal">
+          <div class="goal-top"><span class="goal-name">Taux d'assiduité</span><span class="goal-nums"><b>87%</b> / 90%</span></div>
+          <div class="goal-track"><div class="goal-fill" style="width:87%;"></div></div>
+        </div>
+      </div>
+
+      <div class="verse-card">
+        <div>
+          <div class="verse-eyebrow"><span class="rule"></span>Verset du jour</div>
+          <div class="verse-text">« Car là où deux ou trois sont assemblés en mon nom, je suis au milieu d'eux. »</div>
+          <div class="verse-ref">— Matthieu 18:20</div>
+        </div>
+        <div class="verse-foot">
+          <div><div class="lbl">Prochain culte</div><div class="val">Dim. 16 août · 9h00</div></div>
+          <div><div class="lbl">Thème</div><div class="val">La communion fraternelle</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- INDICATEURS PASTORAUX -->
+    <div class="section-head" style="margin-top:4px;">
+      <div class="st"><div class="rule"></div><h2>Indicateurs des rapports pastoraux</h2></div>
+      <span class="live-pill"><span class="dot"></span>Mis à jour en direct</span>
+    </div>
+    <div class="indic-grid" style="grid-template-columns:repeat(7,1fr);">
+      <div class="indic-tile" style="background:linear-gradient(150deg,var(--navy-950),var(--navy-800)); border:none;">
+        <div class="ic" style="background:rgba(230,211,163,0.15);"><svg viewBox="0 0 24 24" fill="none" stroke="#e6d3a3" stroke-width="1.8"><path d="M12 2l2.4 6.9L21 11l-6.6 2.1L12 20l-2.4-6.9L3 11l6.6-2.1z"/></svg></div>
+        <div class="indic-val" style="color:#fff;">3</div>
+        <div class="indic-lbl" style="color:#a9b0c9;">Total sacrements<br>toutes catégories</div>
+      </div>
+      <div class="indic-tile">
+        <div class="ic" style="background:var(--sage-bg);"><svg viewBox="0 0 24 24" fill="none" stroke="#4c7a5e" stroke-width="1.8"><path d="M12 2v6M9 5l3 3 3-3M5 14a7 7 0 0114 0c0 4-3 6-7 8-4-2-7-4-7-8z"/></svg></div>
+        <div class="indic-val">2</div>
+        <div class="indic-lbl">Baptêmes<br>membres avec date</div>
+      </div>
+      <div class="indic-tile">
+        <div class="ic" style="background:var(--rose-bg);"><svg viewBox="0 0 24 24" fill="none" stroke="#7d3346" stroke-width="1.8"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3 2.7-5 6-5s6 2 6 5"/><path d="M16 3.5a3 3 0 010 5.8"/></svg></div>
+        <div class="indic-val">0</div>
+        <div class="indic-lbl">Affiliations<br>membres affiliés</div>
+      </div>
+      <div class="indic-tile">
+        <div class="ic" style="background:#e7e7ea;"><svg viewBox="0 0 24 24" fill="none" stroke="#5b5b66" stroke-width="1.8"><path d="M12 2v14M8 22h8M9 8l3-3 3 3"/></svg></div>
+        <div class="indic-val">0</div>
+        <div class="indic-lbl">Funérailles<br>événements enregistrés</div>
+      </div>
+      <div class="indic-tile">
+        <div class="ic" style="background:var(--gold-bg);"><svg viewBox="0 0 24 24" fill="none" stroke="#9c7a2c" stroke-width="1.8"><path d="M20.8 4.6c-1.6-1.6-4.2-1.6-5.8 0L12 7.5 9 4.6c-1.6-1.6-4.2-1.6-5.8 0-1.6 1.6-1.6 4.2 0 5.8L12 19l8.8-8.6c1.6-1.6 1.6-4.2 0-5.8z"/></svg></div>
+        <div class="indic-val">1</div>
+        <div class="indic-lbl">Mariages<br>événements enregistrés</div>
+      </div>
+      <div class="indic-tile">
+        <div class="ic" style="background:#e9e4f7;"><svg viewBox="0 0 24 24" fill="none" stroke="#5b4a9c" stroke-width="1.8"><circle cx="12" cy="7" r="3.2"/><path d="M6 21c0-3.5 2.7-6 6-6s6 2.5 6 6"/></svg></div>
+        <div class="indic-val">0</div>
+        <div class="indic-lbl">Présentation d'enfants<br>événements enregistrés</div>
+      </div>
+      <div class="indic-tile">
+        <div class="ic" style="background:var(--sage-bg);"><svg viewBox="0 0 24 24" fill="none" stroke="#4c7a5e" stroke-width="1.8"><path d="M4 21V9l8-6 8 6v12M9 21v-6h6v6"/></svg></div>
+        <div class="indic-val">0</div>
+        <div class="indic-lbl">Présentation au temple<br>événements enregistrés</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  Chart.defaults.font.family = "'Inter', sans-serif";
+  Chart.defaults.color = '#767c94';
+
+  // Évolution du registre
+  new Chart(document.getElementById('evoChart'), {
+    type:'line',
+    data:{
+      labels:['Jan','Fév','Mar','Avr','Mai','Juin'],
+      datasets:[
+        {label:'Membres', data:[1,1,1,2,2,2], borderColor:'#1c2c52', backgroundColor:'rgba(28,44,82,0.08)', fill:true, tension:.4, pointRadius:3, pointBackgroundColor:'#1c2c52', borderWidth:2.5},
+        {label:'Événements', data:[0,0,1,1,1,2], borderColor:'#a9536a', backgroundColor:'rgba(169,83,106,0.08)', fill:true, tension:.4, pointRadius:3, pointBackgroundColor:'#a9536a', borderWidth:2.5}
+      ]
+    },
+    options:{
+      plugins:{legend:{display:false}},
+      scales:{
+        y:{beginAtZero:true, grid:{color:'#eee9dd'}, ticks:{font:{size:11}}},
+        x:{grid:{display:false}, ticks:{font:{size:11}}}
+      },
+      maintainAspectRatio:false
+    }
+  });
+
+  // Donut statuts
+  new Chart(document.getElementById('statusDonut'), {
+    type:'doughnut',
+    data:{
+      labels:['Actif','Nouveau converti'],
+      datasets:[{data:[1,1], backgroundColor:['#4c7a5e','#a9536a'], borderWidth:3, borderColor:'#fff'}]
+    },
+    options:{plugins:{legend:{display:false}}, cutout:'72%', maintainAspectRatio:false}
+  });
+
+  // Finances
+  new Chart(document.getElementById('financeChart'), {
+    type:'bar',
+    data:{
+      labels:['Jan','Fév','Mar','Avr','Mai','Juin'],
+      datasets:[
+        {label:'Offrandes', data:[28000,17000,31000,37000,32000,38000], backgroundColor:'#4c7a5e', borderRadius:5, barPercentage:.55},
+        {label:'Dépenses', data:[41000,31000,44000,50000,45000,53000], backgroundColor:'#a9536a', borderRadius:5, barPercentage:.55}
+      ]
+    },
+    options:{
+      plugins:{legend:{display:false}},
+      scales:{
+        y:{beginAtZero:true, grid:{color:'#eee9dd'}, ticks:{font:{size:10.5}, callback:v=>v/1000+'k'}},
+        x:{grid:{display:false}, ticks:{font:{size:11}}}
+      },
+      maintainAspectRatio:false
+    }
+  });
+
+  // Croissance cumulée (réel + projection)
+  new Chart(document.getElementById('growthChart'), {
+    type:'line',
+    data:{
+      labels:['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Août','Sept','Oct'],
+      datasets:[
+        {label:'Réel', data:[1,1,1,2,2,2,2,2,null,null], borderColor:'#1c2c52', backgroundColor:'rgba(28,44,82,0.08)', fill:true, tension:.4, pointRadius:3, pointBackgroundColor:'#1c2c52', borderWidth:2.5, spanGaps:false},
+        {label:'Projection', data:[null,null,null,null,null,null,null,2,3,4], borderColor:'#c6a15b', borderDash:[5,4], fill:false, tension:.4, pointRadius:3, pointBackgroundColor:'#c6a15b', borderWidth:2.5}
+      ]
+    },
+    options:{
+      plugins:{legend:{display:false}},
+      scales:{
+        y:{beginAtZero:true, grid:{color:'#eee9dd'}, ticks:{font:{size:11}}},
+        x:{grid:{display:false}, ticks:{font:{size:10.5}}}
+      },
+      maintainAspectRatio:false
+    }
+  });
+
+  // Assiduité aux cultes
+  new Chart(document.getElementById('attendanceChart'), {
+    type:'bar',
+    data:{
+      labels:['S1','S2','S3','S4','S5','S6'],
+      datasets:[{
+        data:[78,82,74,90,96,88],
+        backgroundColor:'#28396b', borderRadius:7, barPercentage:.5
+      }]
+    },
+    options:{
+      plugins:{legend:{display:false}},
+      scales:{
+        y:{beginAtZero:true, max:100, grid:{color:'#eee9dd'}, ticks:{font:{size:10.5}, callback:v=>v+'%'}},
+        x:{grid:{display:false}, ticks:{font:{size:11}}}
+      },
+      maintainAspectRatio:false
+    }
+  });
+
+  // Dons par catégorie
+  new Chart(document.getElementById('donationDonut'), {
+    type:'doughnut',
+    data:{
+      labels:['Dîmes','Offrandes','Missions','Bâtiment'],
+      datasets:[{data:[48,27,15,10], backgroundColor:['#1c2c52','#c6a15b','#a9536a','#4c7a5e'], borderWidth:3, borderColor:'#fff'}]
+    },
+    options:{plugins:{legend:{display:false}}, cutout:'68%', maintainAspectRatio:false}
+  });
+
+  // Hebdomadaire
+  new Chart(document.getElementById('weeklyChart'), {
+    type:'bar',
+    data:{
+      labels:['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'],
+      datasets:[{
+        data:[62,71,58,84,94,73,29],
+        backgroundColor:ctx=>{
+          const v = ctx.raw;
+          return v>=90 ? '#c6a15b' : '#28396b';
+        },
+        borderRadius:7, barPercentage:.55
+      }]
+    },
+    options:{
+      plugins:{legend:{display:false}},
+      scales:{
+        y:{beginAtZero:true, grid:{color:'#eee9dd'}, ticks:{font:{size:10.5}}},
+        x:{grid:{display:false}, ticks:{font:{size:11}}}
+      },
+      maintainAspectRatio:false
+    }
+  });
+</script>
+
+</body>
+</html>

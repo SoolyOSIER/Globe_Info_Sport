@@ -27,6 +27,8 @@ Push-Location $backend
 try {
     & $python manage.py migrate --noinput
     if ($LASTEXITCODE -ne 0) { throw "Les migrations Django ont échoué." }
+    & $python manage.py seed_editorial
+    if ($LASTEXITCODE -ne 0) { throw "L’initialisation des référentiels éditoriaux a échoué." }
 } finally {
     Pop-Location
 }

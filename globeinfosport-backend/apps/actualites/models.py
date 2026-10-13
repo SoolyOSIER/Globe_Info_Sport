@@ -64,6 +64,7 @@ class Article(TimeStampedModel):
     class Statut(models.TextChoices):
         BROUILLON = "BROUILLON", "Brouillon"
         A_VALIDER = "A_VALIDER", "À valider"
+        PROGRAMME = "PROGRAMME", "Programmé"
         PUBLIE = "PUBLIE", "Publié"
         ARCHIVE = "ARCHIVE", "Archivé"
 
@@ -92,6 +93,19 @@ class Article(TimeStampedModel):
     source = models.CharField(max_length=200, blank=True)
     date_publication = models.DateTimeField(null=True, blank=True)
     compteur_vues = models.PositiveIntegerField(default=0)
+    sport = models.ForeignKey("Sport", null=True, blank=True, on_delete=models.PROTECT)
+    pays = models.ManyToManyField("Pays", blank=True, related_name="articles")
+    competitions = models.ManyToManyField("competitions.Competition", blank=True, related_name="articles")
+    clubs = models.ManyToManyField("competitions.Club", blank=True, related_name="articles")
+    athletes = models.ManyToManyField("joueurs.Joueur", blank=True, related_name="articles")
+    selections = models.ManyToManyField("Selection", blank=True, related_name="articles")
+    breaking = models.BooleanField(default=False)
+    recommande = models.BooleanField(default=False)
+    sponsorise = models.BooleanField(default=False)
+    titre_seo = models.CharField(max_length=250, blank=True)
+    description_seo = models.CharField(max_length=320, blank=True)
+    legende_image = models.CharField(max_length=300, blank=True)
+    galerie = models.ManyToManyField("galerie.ImageGalerie", blank=True, related_name="articles")
 
     class Meta:
         ordering = ["-date_publication", "-created_at"]
@@ -109,6 +123,73 @@ class Article(TimeStampedModel):
         if self.statut == self.Statut.PUBLIE and self.date_publication is None:
             self.date_publication = timezone.now()
         super().save(*args, **kwargs)
+
+
+class Sport(models.Model):
+    nom = models.CharField(max_length=100, unique=True)
+    slug = models.SlugField(unique=True, blank=True)
+
+    class Meta:
+        ordering = ["nom"]
+
+    def __str__(self):
+        return self.nom
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = _build_unique_slug(self, self.nom, "sport")
+        super().save(*args, **kwargs)
+
+
+class Pays(models.Model):
+    nom = models.CharField(max_length=100, unique=True)
+    code = models.CharField(max_length=2, unique=True)
+    region = models.CharField(max_length=40, choices=[(v, v) for v in [
+        "Amérique du Nord", "Amérique centrale", "Caraïbes", "Amérique du Sud",
+        "Europe", "Afrique", "Asie", "Océanie",
+    ]])
+
+    class Meta:
+        ordering = ["nom"]
+
+    def __str__(self):
+        return self.nom
+
+
+class Selection(TimeStampedModel):
+    nom = models.CharField(max_length=150)
+    pays = models.ForeignKey(Pays, on_delete=models.PROTECT)
+    sport = models.ForeignKey(Sport, on_delete=models.PROTECT)
+    logo = models.ImageField(upload_to="selections/", blank=True, null=True)
+    entraineur = models.CharField(max_length=150, blank=True)
+    histoire = models.TextField(blank=True)
+    joueurs = models.ManyToManyField("joueurs.Joueur", blank=True)
+    competitions = models.ManyToManyField("competitions.Competition", blank=True)
+
+    class Meta:
+        ordering = ["nom"]
+
+    def __str__(self):
+        return self.nom
+
+
+class RevisionArticle(TimeStampedModel):
+    article = models.ForeignKey(Article, on_delete=models.CASCADE, related_name="revisions")
+    auteur = models.ForeignKey("comptes.Utilisateur", null=True, on_delete=models.SET_NULL)
+    action = models.CharField(max_length=40)
+    donnees = models.JSONField(default=dict)
+
+    class Meta:
+        ordering = ["-created_at", "-pk"]
+
+
+class CommentaireInterne(TimeStampedModel):
+    article = models.ForeignKey(Article, on_delete=models.CASCADE, related_name="commentaires_internes")
+    auteur = models.ForeignKey("comptes.Utilisateur", null=True, on_delete=models.SET_NULL)
+    texte = models.TextField(max_length=5000)
+
+    class Meta:
+        ordering = ["created_at"]
 
 
 class Video(TimeStampedModel):

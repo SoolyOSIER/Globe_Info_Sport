@@ -1,0 +1,1061 @@
+================================================================================
+         SYGMEBEC — PLAN COMPLET FULL-STACK (VERSION 2.0)
+         Système de Gestion des Membres et Événements d'Église
+         Back-End : Django REST Framework (API)
+         Front-End : React SPA (Vite) - Version Premium avec Animations
+         Basé sur le Diagramme de Cas d'Utilisation + Diagramme de Classes fournis
+         Version 2.0 | 2026 | Mise à jour complète du front-end
+================================================================================
+
+TABLE DES MATIÈRES
+──────────────────
+  PARTIE 0   — ANALYSE DES DIAGRAMMES FOURNIS
+  PARTIE I   — ARCHITECTURE GÉNÉRALE
+  PARTIE II  — BACK-END DJANGO (API)
+    A. Arborescence du projet back-end
+    B. Applications Django (apps/)
+    C. Modèles (Models) — fidèles au diagramme de classes
+    D. Serializers DRF — par ressource
+    E. Vues API (ViewSets & APIViews) — fidèles aux cas d'utilisation
+    F. URLs API
+    G. Authentification JWT & Sécurité
+    H. Permissions & Hiérarchie des rôles
+    I. Signals
+    J. Tâches Celery
+    K. Settings (base / dev / prod)
+    L. Requirements
+    M. Fixtures & Données initiales
+    N. Commandes management
+    O. Récapitulatif Back-End
+
+  PARTIE III — FRONT-END REACT (VERSION PREMIUM COMPLÈTE)
+    A. Arborescence complète du projet front-end (80+ fichiers)
+    B. Couche API (axios) - 6 modules
+    C. Zustand Stores (état global) - 3 stores
+    D. Custom Hooks (TanStack Query) - 5 hooks
+    E. Composants UI Premium - 27 composants
+    F. Composants Métier - 7 composants
+    G. Layouts - 2 layouts
+    H. Pages (routes) - 14 pages
+    I. Router & Protection des routes (par rôle)
+    J. Animations & Design System
+    K. Variables d'environnement
+    L. Récapitulatif Front-End Premium
+
+  PARTIE IV  — INTÉGRATION & DÉPLOIEMENT
+    A. Communication Front ↔ Back
+    B. Configuration CORS
+    C. Déploiement (Docker / prod)
+    D. Variables d'environnement globales
+
+  RÉCAPITULATIF GLOBAL DU PROJET
+
+
+================================================================================
+PARTIE 0 — ANALYSE DES DIAGRAMMES FOURNIS
+================================================================================
+
+1. DIAGRAMME DE CAS D'UTILISATION (Image 1 — SYGMEBEC)
+───────────────────────────────────────────────────────
+
+ACTEURS (avec hiérarchie par généralisation — héritage des droits) :
+
+  Secretaire        → acteur de base
+      ▲
+      │ (hérite de)
+  Pasteur           → hérite de TOUS les cas d'utilisation de Secretaire + les siens
+      ▲
+      │ (hérite de)
+  Administrateur    → hérite de TOUS les cas d'utilisation de Pasteur + les siens
+
+CAS D'UTILISATION PAR ACTEUR :
+
+  SECRETAIRE :
+    • Enregistrer un membre
+    • Modifier un membre              «include» → Rechercher un membre
+    • Changer statut
+    • Creer un evenement
+    • Modifier un evenement           «include» → Consulter un evenement
+    • Generer rapport                 «include» → Consulter un evenement
+                                       «include» → Rechercher un membre
+
+  PASTEUR (en plus des droits de Secretaire) :
+    • Supprimer un evenement          «include» → Consulter un evenement
+    • Supprimer un membre             «include» → Rechercher un membre
+
+  ADMINISTRATEUR (en plus des droits de Pasteur) :
+    • Gerer les comptes utilisateurs
+
+  CAS D'UTILISATION INCLUS (réutilisés, non accessibles directement) :
+    • Rechercher un membre
+    • Consulter un evenement
+
+→ Cette hiérarchie sera traduite en back-end par un système de RÔLES CUMULATIFS
+  (RoleAcces) et en front-end par des routes protégées imbriquées par niveau.
+
+2. DIAGRAMME DE CLASSES (Image 2 — SYGMEBEC)
+──────────────────────────────────────────────
+
+  Utilisateur (Idenetifiant, motDePasse, DateCreationCompte, dernierAcces)
+      ── 1 a un 1 ──► RoleAcces (nomRole)
+      ── 0..1 correspond a 1 ──► Membre
+
+  Membre (nom)
+      ── 1 a un 1 ──► Statut (libelle)
+      ── 1 est responsable de 0..* ──► Evenement (titre, date, lieu, description, dateCreation)
+      ── 1 possede 0..* ──► HistoriqueStatut (ancienStatut, nouveauStatut, dateChangement)
+      ── 0..* occupe 0..* ──► Fonction (nomFonction, dateDebut, dateFin)
+      ── 1 contient 1 ──► Rapport (dateGeneration, titre, dateFin)
+
+  Rapport
+      ── 1 genere selon 1 ──► CritereFiltrage (statut, periode)
+
+→ Tous les modèles Django ci-dessous respectent EXACTEMENT ces classes,
+  attributs et cardinalités.
+
+
+================================================================================
+PARTIE I — ARCHITECTURE GÉNÉRALE
+================================================================================
+
+STACK TECHNIQUE
+───────────────
+  Back-End  : Django 4.2 + Django REST Framework + SimpleJWT
+  Front-End : React 18 + Vite + React Router v6 + TanStack Query + Zustand
+  Animations: Framer Motion
+  UI/UX     : Tailwind CSS + Recharts + React Icons
+  Base de données : PostgreSQL 15
+  Cache           : Redis 7 (optionnel, pour les sessions/recherches)
+  Tâches async    : Celery + django-celery-beat (rapports périodiques, emails)
+  PDF             : ReportLab / WeasyPrint (génération des rapports)
+  Emails          : SMTP (production) / console (dev)
+  Documentation API : drf-spectacular (Swagger / OpenAPI)
+
+RÔLES UTILISATEURS (hiérarchie cumulative — fidèle au diagramme de cas d'utilisation)
+──────────────────────────────────────────────────────────────────────────────────────
+  SECRETAIRE      → Enregistrer/Modifier membres, Rechercher, Changer statut,
+                     Créer/Modifier événements, Consulter événements, Générer rapports
+  PASTEUR         → Tous les droits de SECRETAIRE + Supprimer membre/événement
+  ADMINISTRATEUR  → Tous les droits de PASTEUR + Gérer les comptes utilisateurs
+
+FLUX GÉNÉRAL
+────────────
+  React (port 5173) ──HTTP/JSON──▶ Django API (port 8000/api/v1/)
+  Django            ──▶ PostgreSQL (Membres, Événements, Rapports…)
+  Django            ──▶ Celery/Redis (génération asynchrone des rapports PDF)
+  Django            ──▶ SMTP (notification de changement de statut, rapports)
+
+
+================================================================================
+PARTIE II — BACK-END DJANGO
+================================================================================
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+A. ARBORESCENCE DU PROJET BACK-END
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+sygmebec-backend/
+│
+├── config/
+│   ├── __init__.py
+│   ├── settings/
+│   │   ├── __init__.py
+│   │   ├── base.py
+│   │   ├── development.py
+│   │   └── production.py
+│   ├── urls.py
+│   ├── wsgi.py
+│   └── celery.py
+│
+├── apps/
+│   ├── accounts/
+│   ├── members/
+│   ├── events/
+│   ├── reports/
+│   └── core/
+│
+├── requirements/
+├── fixtures/
+├── static/
+├── media/
+├── manage.py
+├── .env.example
+├── Dockerfile
+└── docker-compose.yml
+
+TOTAL : 5 applications Django (accounts, members, events, reports, core)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+B. APPLICATIONS DJANGO — RÉSUMÉ DES RESPONSABILITÉS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  accounts  → Authentification, gestion des comptes (Administrateur),
+              attribution des rôles (RoleAcces), lien Utilisateur ↔ Membre
+  members   → Cœur métier : fiches membres, statuts, historique, fonctions
+  events    → Création, modification, consultation, suppression d'événements
+  reports   → Génération de rapports filtrés (par statut / par période)
+  core      → Classes abstraites, pagination, permissions et exceptions communes
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+C. MODÈLES (MODELS) — FIDÈLES AU DIAGRAMME DE CLASSES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  TOTAL : 9 modèles (RoleAcces, Utilisateur, Statut, Membre, HistoriqueStatut,
+                      Fonction, MembreFonction*, Evenement, CritereFiltrage, Rapport)
+        (*table pivot technique, non comptée comme classe métier du diagramme)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+D. SERIALIZERS DRF
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  TOTAL : 13 serializers
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+E. VUES API — FIDÈLES AUX CAS D'UTILISATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  TOTAL : 8 vues principales (ViewSets)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+F. URLS API
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  TOTAL : 24 routes API
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+G. AUTHENTIFICATION JWT & SÉCURITÉ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STRATÉGIE JWT :
+  • Access Token   : 15 minutes, envoyé dans le corps JSON
+  • Refresh Token  : 7 jours, stocké en httpOnly cookie sécurisé
+  • USERNAME_FIELD = 'identifiant'
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+H. PERMISSIONS & HIÉRARCHIE DES RÔLES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+HIERARCHIE = {'SECRETAIRE': 1, 'PASTEUR': 2, 'ADMINISTRATEUR': 3}
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+I. SIGNALS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  TOTAL : 3 signals
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+J. TÂCHES CELERY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  TOTAL : 5 tâches Celery
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+K. SETTINGS — BASE / DEV / PROD
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  • base.py         → Configuration commune
+  • development.py  → Configuration de développement
+  • production.py   → Configuration de production
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+L. REQUIREMENTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  • base.txt        → Dépendances communes
+  • development.txt → Dépendances de développement
+  • production.txt  → Dépendances de production
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+M. FIXTURES & DONNÉES INITIALES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  • roles.json       → SECRETAIRE, PASTEUR, ADMINISTRATEUR
+  • statuts.json     → Actif, Inactif, Suspendu, Visiteur, Nouveau converti
+  • fonctions.json   → Diacre, Chorale, École du dimanche, Protocole, Trésorier
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+N. COMMANDES MANAGEMENT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  TOTAL : 2 commandes
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+O. RÉCAPITULATIF BACK-END
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Applications Django      : 5 apps
+  Modèles                  : 9 modèles
+  Serializers DRF          : 13 serializers
+  Vues API (ViewSets)      : 8 vues principales
+  URL patterns API         : 24 routes
+  Signals                  : 3
+  Tâches Celery            : 5
+  Commandes management     : 2
+
+
+================================================================================
+PARTIE III — FRONT-END REACT (VERSION PREMIUM COMPLÈTE)
+================================================================================
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+A. ARBORESCENCE COMPLÈTE DU PROJET FRONT-END (80+ FICHIERS)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+sygmebec-frontend/
+│
+├── 📄 package.json                          # Dépendances avec Framer Motion, Recharts
+├── 📄 vite.config.js                        # Configuration Vite
+├── 📄 tailwind.config.js                    # Configuration Tailwind
+├── 📄 postcss.config.js                     # Configuration PostCSS
+├── 📄 index.html                            # Point d'entrée HTML
+├── 📄 .env.example                          # Variables d'environnement
+│
+└── src/
+    │
+    ├── 📄 main.jsx                          # Point d'entrée React
+    ├── 📄 App.jsx                           # Composant principal
+    ├── 📄 index.css                         # Styles globaux + animations personnalisées
+    │
+    ├── api/                                 # 6 modules API
+    │   ├── axiosClient.js                   # Client Axios avec intercepteurs JWT
+    │   ├── authApi.js                       # Authentification
+    │   ├── membresApi.js                    # CRUD Membres
+    │   ├── evenementsApi.js                 # CRUD Événements
+    │   ├── rapportsApi.js                   # Rapports
+    │   └── utilisateursApi.js               # Gestion utilisateurs
+    │
+    ├── store/                               # 3 stores Zustand
+    │   ├── authStore.js                     # Authentification (user, token, rôle)
+    │   ├── uiStore.js                       # UI (sidebar, modals, toasts)
+    │   └── filtersStore.js                  # Filtres de recherche
+    │
+    ├── hooks/                               # 5 hooks TanStack Query
+    │   ├── useAuth.js                       # Login, Logout, CurrentUser
+    │   ├── useMembres.js                    # CRUD Membres + Statuts + Fonctions
+    │   ├── useEvenements.js                 # CRUD Événements
+    │   ├── useRapports.js                   # Génération + Téléchargement
+    │   └── useUtilisateurs.js               # CRUD Utilisateurs + Reset Password
+    │
+    ├── utils/                               # 3 fichiers utilitaires
+    │   ├── roleHierarchy.js                 # Gestion des rôles + hiérarchie
+    │   ├── formatDate.js                    # Formatage des dates
+    │   └── cn.js                            # clsx + tailwind-merge
+    │
+    ├── layouts/                             # 2 layouts
+    │   ├── AuthLayout.jsx                   # Layout d'authentification (centré)
+    │   └── MainLayout.jsx                   # Layout principal (Sidebar + Navbar)
+    │
+    ├── router/                              # 3 fichiers de routage
+    │   ├── index.jsx                        # Routes principales (14 routes)
+    │   ├── PrivateRoute.jsx                 # Protection des routes authentifiées
+    │   └── RoleRoute.jsx                    # Protection par rôle (hiérarchie)
+    │
+    ├── components/                          # 36 composants au total
+    │   │
+    │   ├── ui/                              # 27 composants UI Premium
+    │   │   ├── Button.jsx                   # Boutons stylisés (variants, sizes, icons)
+    │   │   ├── Input.jsx                    # Champs de saisie (avec icon, textarea)
+    │   │   ├── Select.jsx                   # Sélecteurs (avec icon, multiple)
+    │   │   ├── Modal.jsx                    # Modals (taille variable)
+    │   │   ├── Table.jsx                    # Tableaux (composition)
+    │   │   ├── Badge.jsx                    # Badges (variants)
+    │   │   ├── Pagination.jsx               # Pagination complète
+    │   │   ├── ConfirmDialog.jsx            # Dialogue de confirmation
+    │   │   ├── ToastContainer.jsx           # Notifications toast
+    │   │   ├── AnimatedCard.jsx             # Cartes avec animations Framer Motion
+    │   │   ├── StatCard.jsx                 # Cartes statistiques premium (CountUp)
+    │   │   ├── GlassCard.jsx                # Effet glassmorphisme
+    │   │   ├── DataTable.jsx                # Tableau de données premium (search, sort)
+    │   │   ├── Logo.jsx                     # Logo animé (rotation)
+    │   │   ├── StatusIndicator.jsx          # Indicateurs de statut (online, busy...)
+    │   │   ├── EmptyState.jsx               # États vides stylisés
+    │   │   ├── ProgressBar.jsx              # Barres de progression animées
+    │   │   ├── Skeleton.jsx                 # Skeletons loading
+    │   │   ├── Tabs.jsx                     # Onglets avec animation
+    │   │   ├── Dropdown.jsx                 # Menus déroulants
+    │   │   ├── Alert.jsx                    # Alertes (success, error, warning, info)
+    │   │   ├── Tooltip.jsx                  # Info-bulles
+    │   │   ├── Chip.jsx                     # Puces (removable)
+    │   │   ├── Avatar.jsx                   # Avatars (avec statut)
+    │   │   ├── Breadcrumb.jsx               # Fil d'Ariane
+    │   │   ├── Spinner.jsx                  # Spinner de chargement
+    │   │   └── Switch.jsx                   # Interrupteur (toggle)
+    │   │
+    │   ├── layout/                          # 2 composants layout
+    │   │   ├── Navbar.jsx                   # Barre de navigation premium
+    │   │   └── Sidebar.jsx                  # Barre latérale premium (animée)
+    │   │
+    │   ├── membres/                         # 5 composants Membres
+    │   │   ├── MembreCard.jsx               # Carte membre premium
+    │   │   ├── MembreForm.jsx               # Formulaire membre
+    │   │   ├── StatutBadge.jsx              # Badge statut (coloré)
+    │   │   ├── ChangerStatutModal.jsx       # Modal changement statut
+    │   │   └── HistoriqueStatutList.jsx     # Liste historique statuts
+    │   │
+    │   ├── evenements/                      # 2 composants Événements
+    │   │   ├── EvenementCard.jsx            # Carte événement premium
+    │   │   └── EvenementForm.jsx            # Formulaire événement
+    │   │
+    │   ├── rapports/                        # 1 composant Rapports
+    │   │   └── RapportForm.jsx              # Formulaire génération rapport
+    │   │
+    │   └── comptes/                         # 1 composant Comptes
+    │       └── UtilisateurForm.jsx          # Formulaire création/modification utilisateur
+    │
+    └── pages/                               # 14 pages complètes
+        │
+        ├── 📄 DashboardPage.jsx             # Tableau de bord (stats + graphiques)
+        ├── 📄 ProfilePage.jsx               # Profil utilisateur
+        ├── 📄 SettingsPage.jsx              # Paramètres (tabs)
+        │
+        ├── auth/
+        │   └── 📄 LoginPage.jsx             # Page de connexion
+        │
+        ├── membres/                         # 4 pages Membres
+        │   ├── 📄 MembresListPage.jsx       # Liste + Recherche + Filtres
+        │   ├── 📄 MembreDetailPage.jsx      # Détail + Historique + Statut
+        │   ├── 📄 MembreCreatePage.jsx      # Création
+        │   └── 📄 MembreEditPage.jsx        # Modification
+        │
+        ├── evenements/                      # 4 pages Événements
+        │   ├── 📄 EvenementsListPage.jsx    # Liste + Statistiques
+        │   ├── 📄 EvenementDetailPage.jsx   # Détail + Bannière
+        │   ├── 📄 EvenementCreatePage.jsx   # Création
+        │   └── 📄 EvenementEditPage.jsx     # Modification
+        │
+        ├── rapports/                        # 2 pages Rapports
+        │   ├── 📄 RapportsListPage.jsx      # Liste + Statistiques
+        │   └── 📄 RapportGenererPage.jsx    # Génération
+        │
+        └── comptes/                         # 1 page Comptes
+            └── 📄 ComptesListPage.jsx       # Liste + CRUD (Admin uniquement)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+B. COUCHE API (AXIOS) — 6 MODULES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+src/api/axiosClient.js :
+  • Instance axios avec baseURL et withCredentials
+  • Intercepteur request : ajoute Bearer token
+  • Intercepteur response : refresh token automatique
+
+src/api/authApi.js :
+  • login(credentials)
+  • logout()
+  • refresh()
+  • getMe()
+
+src/api/membresApi.js :
+  • getAll(params) → recherche paginée
+  • getOne(id)
+  • create(data)
+  • update(id, data)
+  • delete(id)
+  • changerStatut(id, data)
+  • getStatuts()
+  • getFonctions()
+
+src/api/evenementsApi.js :
+  • getAll(params)
+  • getOne(id)
+  • create(data)
+  • update(id, data)
+  • delete(id)
+
+src/api/rapportsApi.js :
+  • getAll(params)
+  • getOne(id)
+  • generate(data)
+  • download(id) → responseType: 'blob'
+
+src/api/utilisateursApi.js :
+  • getAll(params)
+  • getOne(id)
+  • create(data)
+  • update(id, data)
+  • delete(id)
+  • resetPassword(id)
+  • desactiver(id)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+C. ZUSTAND STORES — 3 STORES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+authStore.js :
+  state    : { user, accessToken, role, isAuthenticated }
+  actions  : login(), logout(), setAccessToken(), setUser(), hasRole()
+
+uiStore.js :
+  state    : { sidebarOpen, activeModal, modalData, isLoading }
+  actions  : toggleSidebar(), setSidebarOpen(), openModal(), closeModal(), setLoading()
+
+filtersStore.js :
+  state    : { search, statutFiltre, fonctionFiltre, dateRange }
+  actions  : setSearch(), setStatutFiltre(), setFonctionFiltre(), 
+             setDateRange(), resetFilters()
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+D. CUSTOM HOOKS (TANSTACK QUERY) — 5 HOOKS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+useAuth.js :
+  • useLogin() → mutation avec redirection
+  • useLogout() → mutation avec redirection
+  • useCurrentUser() → query
+
+useMembres.js :
+  • useMembres(params) → query paginée
+  • useMembre(id) → query détail
+  • useStatuts() → query
+  • useFonctions() → query
+  • useCreateMembre() → mutation
+  • useUpdateMembre() → mutation
+  • useDeleteMembre() → mutation
+  • useChangerStatut() → mutation
+
+useEvenements.js :
+  • useEvenements(params) → query paginée
+  • useEvenement(id) → query détail
+  • useCreateEvenement() → mutation
+  • useUpdateEvenement() → mutation
+  • useDeleteEvenement() → mutation
+
+useRapports.js :
+  • useRapports(params) → query paginée
+  • useRapport(id) → query détail
+  • useGenerateRapport() → mutation
+  • useDownloadRapport() → mutation
+
+useUtilisateurs.js :
+  • useUtilisateurs(params) → query paginée
+  • useUtilisateur(id) → query détail
+  • useCreateUtilisateur() → mutation
+  • useUpdateUtilisateur() → mutation
+  • useDeleteUtilisateur() → mutation
+  • useResetPassword() → mutation
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+E. COMPOSANTS UI PREMIUM — 27 COMPOSANTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Liste complète des composants UI avec leurs fonctionnalités :
+
+  1. Button        → Variants (primary, secondary, success, danger, outline, ghost)
+                    → Sizes (sm, md, lg, xl) + Icon support + Loading state
+  
+  2. Input         → Label + Error + Icon (left/right) + Textarea support
+  
+  3. Select        → Label + Error + Icon + Multiple + Placeholder
+  
+  4. Modal         → Taille variable + Animation + Close on escape
+  
+  5. Table         → Composition (Table, TableHead, TableHeader, TableBody, TableRow, TableCell)
+  
+  6. Badge         → Variants (default, success, warning, danger, info, purple)
+  
+  7. Pagination    → Navigation + Page numbers + Total items display
+  
+  8. ConfirmDialog → Titre + Message + Variant (danger/warning) + Loading
+  
+  9. ToastContainer→ Notifications avec progression + Animations
+  
+  10. AnimatedCard → Framer Motion + Hover effects + Delay support
+  
+  11. StatCard     → CountUp animation + Change indicator + Icon + Gradient bar
+  
+  12. GlassCard    → Effet glassmorphisme + Dark mode support
+  
+  13. DataTable    → Search + Sort + Pagination + Loading + Empty state + Row click
+  
+  14. Logo         → Animation rotation + Taille variable
+  
+  15. StatusIndicator → Online/Busy/Offline/Away + Pulsation
+  
+  16. EmptyState   → Icon + Titre + Description + Action button
+  
+  17. ProgressBar  → Animation + Color variants + Size variants + Label
+  
+  18. Skeleton     → Variants (text, title, avatar, card, badge, button, table)
+  
+  19. Tabs         → Animation + Badge + Icon support
+  
+  20. Dropdown     → Align (left/right/center) + DropdownItem + Danger item
+  
+  21. Alert        → Types (success, error, warning, info) + Dismissible
+  
+  22. Tooltip      → Positions (top/bottom/left/right) + Delay + Arrow
+  
+  23. Chip         → Variants + Removable + Size + Icon
+  
+  24. Avatar       → Initials + Image + Status + Size + Clickable
+  
+  25. Breadcrumb   → Navigation + Path items
+  
+  26. Spinner      → Size + Color variants
+  
+  27. Switch       → Toggle + Label + Size + Disabled
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+F. COMPOSANTS MÉTIER — 7 COMPOSANTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Membres (5) :
+  1. MembreCard    → Carte avec informations + Statut + Fonctions + Lien détail
+  2. MembreForm    → Formulaire complet (nom, prénom, téléphone, email, adresse, date, statut, fonctions)
+  3. StatutBadge   → Badge coloré selon le statut (Actif, Inactif, Suspendu, Visiteur, Nouveau converti)
+  4. ChangerStatutModal → Modal avec sélection du nouveau statut
+  5. HistoriqueStatutList → Liste chronologique des changements de statut
+
+Événements (2) :
+  6. EvenementCard → Carte avec date, lieu, responsable, statut (Passé/Aujourd'hui/À venir)
+  7. EvenementForm → Formulaire (titre, date, lieu, description, responsable)
+
+Rapports (1) :
+  8. RapportForm   → Formulaire (titre, statut, période, dateFin)
+
+Comptes (1) :
+  9. UtilisateurForm → Formulaire (identifiant, password, rôle, membre associé)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+G. LAYOUTS — 2 LAYOUTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  MainLayout.jsx :
+    • Navbar premium (recherche, notifications, profil, thème)
+    • Sidebar premium (animée, hiérarchie des rôles)
+    • Outlet (contenu des pages)
+    • Transition fluide entre pages
+
+  AuthLayout.jsx :
+    • Design centré avec gradient
+    • Logo SYGMEBEC
+    • Formulaire de connexion
+    • Fond animé
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+H. PAGES (ROUTES) — 14 PAGES COMPLÈTES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+FONCTIONNALITÉS DÉTAILLÉES PAR PAGE :
+
+  1. DashboardPage.jsx
+     • Header de bienvenue avec date
+     • 4 cartes statistiques (Total Membres, Actifs, Événements à venir, Taux d'activité)
+     • Graphique Area (Évolution des membres)
+     • Graphique Pie (Répartition des statuts)
+     • Liste des événements à venir
+     • Activités récentes
+
+  2. ProfilePage.jsx
+     • Avatar + Nom + Rôle
+     • Informations personnelles
+     • Contact (email, téléphone, adresse)
+     • Fonctions assignées
+     • Statut du compte
+
+  3. SettingsPage.jsx
+     • Onglets (Général, Notifications, Sécurité)
+     • Mode sombre
+     • Langue
+     • Notifications push/email
+     • Authentification à deux facteurs
+
+  4. LoginPage.jsx
+     • Formulaire (identifiant, mot de passe)
+     • Animation d'entrée
+     • Gestion des erreurs
+
+  5. MembresListPage.jsx
+     • Recherche (nom, prénom, téléphone, email)
+     • Filtres (statut, fonction)
+     • Tableau avec colonnes (Membre, Contact, Statut, Fonctions, Adhésion, Actions)
+     • Pagination
+     • Statistiques rapides
+
+  6. MembreDetailPage.jsx
+     • Header avec nom et statut
+     • Informations (statut, adhésion, naissance, ID)
+     • Contact (téléphone, email, adresse)
+     • Fonctions
+     • Historique des statuts (chronologique)
+     • Actions (Changer statut, Modifier, Supprimer)
+
+  7. MembreCreatePage.jsx
+     • Formulaire complet
+     • Validation des champs
+     • Gestion des erreurs
+
+  8. MembreEditPage.jsx
+     • Formulaire pré-rempli
+     • Validation
+     • Mise à jour
+
+  9. EvenementsListPage.jsx
+     • Statistiques (Total, À venir, Aujourd'hui, Passés)
+     • Recherche
+     • Tableau (Titre, Date, Lieu, Responsable, Statut, Actions)
+     • Pagination
+
+  10. EvenementDetailPage.jsx
+      • Bannière avec gradient
+      • Informations (date, lieu, responsable, création)
+      • Description
+      • Statut (Passé/Aujourd'hui/À venir)
+      • Actions (Modifier, Supprimer)
+
+  11. EvenementCreatePage.jsx
+      • Formulaire complet
+      • Sélection du responsable
+
+  12. EvenementEditPage.jsx
+      • Formulaire pré-rempli
+      • Mise à jour
+
+  13. RapportsListPage.jsx
+      • Statistiques (Total, Disponibles, En cours)
+      • Tableau (Titre, Généré par, Date, Critères, Statut, Actions)
+      • Téléchargement PDF
+
+  14. RapportGenererPage.jsx
+      • Formulaire (Titre, Statut, Période, Date fin)
+      • Astuces d'utilisation
+      • Génération asynchrone
+
+  15. ComptesListPage.jsx
+      • Statistiques (Total, Actifs, Administrateurs, Pasteurs)
+      • Tableau (Identifiant, Rôle, Membre associé, Statut, Dernier accès, Actions)
+      • Création d'utilisateur (Modal)
+      • Modification d'utilisateur (Modal)
+      • Reset password
+      • Suppression (ConfirmDialog)
+      • Réservé aux Administrateurs
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+I. ROUTER & PROTECTION DES ROUTES (PAR RÔLE)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Routes publiques :
+  /login  → LoginPage (AuthLayout)
+
+Routes privées (authentification requise) :
+  /                      → DashboardPage
+  /profile               → ProfilePage
+  /settings              → SettingsPage
+
+  /membres               → MembresListPage
+  /membres/nouveau       → MembreCreatePage
+  /membres/:id           → MembreDetailPage
+  /membres/:id/modifier  → MembreEditPage
+
+  /evenements            → EvenementsListPage
+  /evenements/nouveau    → EvenementCreatePage
+  /evenements/:id        → EvenementDetailPage
+  /evenements/:id/modifier → EvenementEditPage
+
+  /rapports              → RapportsListPage
+  /rapports/generer      → RapportGenererPage
+
+Routes Administrateur uniquement :
+  /comptes               → ComptesListPage
+
+Protection par rôle :
+  • PrivateRoute : Vérifie l'authentification
+  • RoleRoute : Vérifie la hiérarchie des rôles
+  • Affichage conditionnel des boutons Supprimer (Pasteur+)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+J. ANIMATIONS & DESIGN SYSTEM
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ANIMATIONS (Framer Motion) :
+  • Transitions de pages
+  • Animations d'entrée (fade-in, slide-up, scale-in)
+  • Hover effects (scale, y, shadow)
+  • Stagger children (liste)
+  • Loading states (skeletons, spinners)
+  • Notifications (slide-in-right)
+  • Modals (scale-in)
+  • Dropdowns (fade-in + scale)
+  • Logo (rotation infinie)
+  • Progress bars (animation)
+  • Switch (spring animation)
+
+DESIGN SYSTEM (Tailwind CSS) :
+  • Thème personnalisé (primary, secondary, success, warning, danger, info)
+  • Gradients prédéfinis
+  • Glassmorphisme (backdrop-blur)
+  • Cartes premium (ombre, hover)
+  • Badges colorés
+  • Statistiques animées (CountUp)
+  • Graphiques Recharts (Area, Pie, Bar)
+  • Responsive design (mobile, tablet, desktop)
+  • Dark mode support (Switch)
+
+STYLES GLOBAUX :
+  • Animations CSS personnalisées (float, pulse-ring, shimmer, slide-in-right, fade-in-up, scale-in)
+  • Scrollbar personnalisée
+  • Font (Inter)
+  • Classes utilitaires (gradient-primary, gradient-secondary, stat-card-premium, sidebar-premium)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+K. VARIABLES D'ENVIRONNEMENT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+.env.example :
+  VITE_API_URL=http://localhost:8000/api/v1
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+L. RÉCAPITULATIF FRONT-END PREMIUM
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  📊 Statistiques générales :
+  ────────────────────────────
+  Fichiers de configuration  : 6
+  Fichiers source           : 3
+  API modules               : 6
+  Zustand stores            : 3
+  Custom hooks              : 5
+  Utilitaires               : 3
+  Layouts                   : 2
+  Router fichiers           : 3
+  Composants UI             : 27
+  Composants Layout         : 2
+  Composants Métier         : 7
+  Pages                     : 14
+  ────────────────────────────
+  TOTAL                     : 81 fichiers
+
+  🎨 Design & UX :
+  ────────────────
+  ✅ Animations Framer Motion
+  ✅ Glassmorphisme
+  ✅ Gradients personnalisés
+  ✅ 27 composants UI réutilisables
+  ✅ Dark mode support
+  ✅ Responsive design
+  ✅ Notifications toast
+  ✅ Skeletons loading
+  ✅ États vides stylisés
+
+  📊 Visualisation :
+  ──────────────────
+  ✅ Graphiques Recharts (Area, Pie)
+  ✅ Statistiques animées (CountUp)
+  ✅ Barres de progression
+  ✅ Indicateurs de statut
+
+  🔐 Sécurité :
+  ─────────────
+  ✅ Protection des routes par rôle
+  ✅ JWT avec refresh automatique
+  ✅ HttpOnly cookies
+  ✅ Intercepteurs Axios
+
+  📱 Pages fonctionnelles :
+  ─────────────────────────
+  ✅ Dashboard (stats + graphiques)
+  ✅ Profil utilisateur
+  ✅ Paramètres (tabs)
+  ✅ Login
+  ✅ Liste Membres (recherche + filtres)
+  ✅ Détail Membre (historique + statut)
+  ✅ Création Membre
+  ✅ Modification Membre
+  ✅ Liste Événements (stats + recherche)
+  ✅ Détail Événement (bannière + infos)
+  ✅ Création Événement
+  ✅ Modification Événement
+  ✅ Liste Rapports (stats + téléchargement)
+  ✅ Génération Rapport
+  ✅ Gestion Comptes (Admin)
+
+  🎯 Fidélité aux cas d'utilisation :
+  ────────────────────────────────────
+  ✓ Enregistrer un membre   → MembreCreatePage
+  ✓ Modifier un membre      → MembreEditPage
+  ✓ Rechercher un membre    → MembresListPage (search)
+  ✓ Changer statut          → ChangerStatutModal
+  ✓ Créer un événement      → EvenementCreatePage
+  ✓ Modifier un événement   → EvenementEditPage
+  ✓ Consulter un événement  → EvenementDetailPage
+  ✓ Générer rapport         → RapportGenererPage
+  ✓ Supprimer un membre     → MembreDetailPage (Pasteur+)
+  ✓ Supprimer un événement  → EvenementDetailPage (Pasteur+)
+  ✓ Gérer les comptes       → ComptesListPage (Admin)
+
+
+================================================================================
+PARTIE IV — INTÉGRATION & DÉPLOIEMENT
+================================================================================
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+A. COMMUNICATION FRONT ↔ BACK
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  React (5173) ──HTTPS/JSON──▶ Django (8000) /api/v1/
+  Django       ──TCP────────▶ PostgreSQL
+  Django       ──TCP────────▶ Redis (Celery broker)
+  Django       ──SMTP───────▶ Serveur de messagerie (notifications)
+
+  Architecture RESTful :
+    • GET    /api/v1/membres/        → Liste paginée
+    • GET    /api/v1/membres/?search= → Recherche
+    • POST   /api/v1/membres/        → Création
+    • GET    /api/v1/membres/{id}/   → Détail
+    • PUT    /api/v1/membres/{id}/   → Modification complète
+    • PATCH  /api/v1/membres/{id}/   → Modification partielle
+    • DELETE /api/v1/membres/{id}/   → Suppression
+    • POST   /api/v1/membres/{id}/changer-statut/ → Changement statut
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+B. CONFIGURATION CORS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  INSTALLED_APPS += ['corsheaders']
+  MIDDLEWARE.insert(0, 'corsheaders.middleware.CorsMiddleware')
+
+  CORS_ALLOWED_ORIGINS = [
+      'http://localhost:5173',
+      'https://sygmebec.org',
+  ]
+  CORS_ALLOW_CREDENTIALS = True
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+C. DOCKER — SERVICES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+docker-compose.yml (dev) — services :
+  db           → postgres:15
+  redis        → redis:7-alpine
+  backend      → Django (gunicorn)
+  celery       → worker Celery
+  celery-beat  → scheduler Celery Beat
+  frontend     → Node 20 + Vite dev server
+
+COMMANDES UTILES :
+  docker compose up -d
+  docker compose exec backend python manage.py migrate
+  docker compose exec backend python manage.py create_roles
+  docker compose exec backend python manage.py create_admin
+  docker compose exec backend python manage.py loaddata fixtures/statuts.json
+  docker compose exec backend python manage.py loaddata fixtures/fonctions.json
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+D. VARIABLES D'ENVIRONNEMENT GLOBALES (.env.example)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# Django
+SECRET_KEY=...
+DEBUG=True
+DATABASE_URL=postgres://sygmebec:password@db:5432/sygmebec
+REDIS_URL=redis://redis:6379/0
+ALLOWED_HOSTS=localhost,127.0.0.1
+
+# Email
+EMAIL_HOST=smtp.example.com
+EMAIL_PORT=587
+EMAIL_HOST_USER=...
+EMAIL_HOST_PASSWORD=...
+
+# React (Vite)
+VITE_API_URL=http://localhost:8000/api/v1
+
+
+================================================================================
+RÉCAPITULATIF GLOBAL DU PROJET (VERSION 2.0)
+================================================================================
+
+  ── BACK-END ───────────────────────────────────────────────────────────────
+  Applications Django      : 5 apps
+  Modèles                  : 9 modèles
+  Serializers DRF          : 13 serializers
+  Vues API (ViewSets)      : 8 vues principales
+  URL patterns API         : 24 routes
+  Signals                  : 3
+  Tâches Celery            : 5
+  Commandes management     : 2
+
+  ── FRONT-END PREMIUM ──────────────────────────────────────────────────────
+  Fichiers de configuration : 6
+  Fichiers source          : 3
+  API modules              : 6
+  Zustand stores           : 3
+  Custom hooks             : 5
+  Utilitaires              : 3
+  Layouts                  : 2
+  Router fichiers          : 3
+  Composants UI            : 27
+  Composants Layout        : 2
+  Composants Métier        : 7
+  Pages                    : 14
+  ──────────────────────────────────────────────────────
+  TOTAL                    : 81 fichiers
+
+  ── INFRASTRUCTURE ─────────────────────────────────────────────────────────
+  Base de données          : PostgreSQL 15
+  Cache / Broker           : Redis 7
+  Conteneurs Docker        : 5 services
+  Génération de rapports   : ReportLab (PDF) via Celery
+  Documentation API        : drf-spectacular (OpenAPI / Swagger)
+  Animations               : Framer Motion
+  Graphiques               : Recharts
+  UI Framework             : Tailwind CSS
+
+  ── FIDÉLITÉ AUX DIAGRAMMES FOURNIS ────────────────────────────────────────
+  ✓ 9 classes du diagramme de classes → 9 modèles Django (attributs identiques)
+  ✓ 3 acteurs hiérarchisés → système de rôles cumulatifs (SECRETAIRE < PASTEUR < ADMINISTRATEUR)
+  ✓ 10 cas d'utilisation → 10 actions API/Front correspondantes
+  ✓ 2 cas d'utilisation «include» (Rechercher un membre, Consulter un evenement)
+    → implémentés comme fonctionnalités transverses (search_fields / retrieve())
+    → réutilisées par toutes les actions qui les incluent dans le diagramme
+
+  ── NOUVEAUTÉS VERSION 2.0 ────────────────────────────────────────────────
+  ✓ 27 composants UI premium (vs 8 précédemment)
+  ✓ 14 pages complètes (vs 12 précédemment)
+  ✓ Animations Framer Motion
+  ✓ Graphiques Recharts interactifs
+  ✓ Glassmorphisme et effets visuels avancés
+  ✓ Dark mode support
+  ✓ Statistiques animées (CountUp)
+  ✓ Notifications toast premium
+  ✓ Skeletons loading
+  ✓ États vides stylisés
+  ✓ Indicateurs de statut en temps réel
+  ✓ Tabs avec animations
+  ✓ Dropdowns et Tooltips avancés
+  ✓ Profil utilisateur
+  ✓ Paramètres avec onglets
+  ✓ Thème clair/sombre
+  ✓ Responsive design complet
+
+================================================================================
+FIN DU PLAN COMPLET — SYGMEBEC Django + React (VERSION 2.0)
+================================================================================

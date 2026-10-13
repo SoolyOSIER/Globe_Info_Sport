@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Créer un utilisateur · SYGMEBEC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0e1830; --navy-2:#131f3d; --navy-soft:#1a2647; --navy-line:rgba(255,255,255,0.07);
+    --cream:#f7f1e3; --cream-2:#f2ead8; --bg:#f7f5f0; --card:#ffffff; --border:#eae5d8;
+    --text:#211f1a; --text-dim:#78746a; --text-faint:#a39e91;
+    --gold:#b6903f; --gold-light:#d9b876; --gold-soft:rgba(182,144,63,0.12);
+    --green:#1fa060; --green-soft:#dcf4e6;
+    --blue:#3768d6; --blue-soft:#dfe8fb;
+    --amber:#c17f18; --amber-soft:#faecd2;
+    --purple:#7c50d1; --purple-soft:#ece2fb;
+    --red:#c94f43; --red-soft:#fbe4e1;
+    --radius-lg:22px; --radius-md:14px; --radius-sm:9px;
+    --ease:cubic-bezier(.22,1,.36,1);
+    --shadow: 0 1px 0 rgba(255,255,255,0.6) inset, 0 18px 40px -26px rgba(30,25,10,0.18);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    font-family:'Inter', sans-serif; background:var(--bg); color:var(--text);
+    -webkit-font-smoothing:antialiased; min-height:100vh; overflow-x:hidden;
+  }
+  ::selection{ background:var(--gold-soft); color:var(--gold); }
+
+  /* ---------- fond d'ambiance (aperçu de l'app, flouté) ---------- */
+  .backdrop-app{
+    position:fixed; inset:0; display:grid; grid-template-columns:220px 1fr; filter:blur(3px) saturate(0.9);
+    transform:scale(1.01);
+  }
+  .bd-side{ background:linear-gradient(190deg, var(--navy-2), var(--navy) 60%); }
+  .bd-main{ background:linear-gradient(120deg, var(--cream), var(--cream-2)); padding:30px; }
+  .bd-block{ height:26px; width:60%; border-radius:8px; background:rgba(30,25,10,0.06); margin-bottom:18px; }
+  .bd-cards{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-top:24px; }
+  .bd-card{ height:120px; border-radius:20px; background:#fff; border:1px solid var(--border); }
+
+  .scrim{
+    position:fixed; inset:0; background:radial-gradient(circle at 32% 20%, rgba(182,144,63,0.10), transparent 55%), rgba(14,24,48,0.42);
+    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+    display:flex; align-items:center; justify-content:center; padding:34px;
+    opacity:0; animation: scrimIn .45s var(--ease) forwards;
+  }
+  @keyframes scrimIn{ to{ opacity:1; } }
+
+  /* ---------- shimmer doré ---------- */
+  .shimmer-bar{ position:absolute; top:0; left:0; right:0; height:3px; z-index:5; border-radius:var(--radius-lg) var(--radius-lg) 0 0; overflow:hidden; }
+  .shimmer-bar::after{
+    content:''; position:absolute; inset:0;
+    background:linear-gradient(90deg, transparent, var(--gold-light) 20%, #fff5de 50%, var(--gold-light) 80%, transparent);
+    background-size:200% 100%; animation: shimmer 4.5s linear infinite;
+  }
+  @keyframes shimmer{ 0%{ background-position:200% 0; } 100%{ background-position:-200% 0; } }
+
+  /* ---------- MODALE ---------- */
+  .modal{
+    position:relative; width:100%; max-width:620px; max-height:92vh; overflow:hidden;
+    background:var(--card); border-radius:var(--radius-lg);
+    box-shadow: 0 40px 90px -30px rgba(10,14,30,0.55), 0 1px 0 rgba(255,255,255,0.7) inset;
+    opacity:0; transform:translateY(26px) scale(.97); animation: modalIn .55s var(--ease) .08s forwards;
+    display:flex; flex-direction:column;
+  }
+  @keyframes modalIn{ to{ opacity:1; transform:translateY(0) scale(1); } }
+
+  /* ---------- HEADER ---------- */
+  .m-head{
+    position:relative; padding:28px 30px 22px; background:linear-gradient(150deg, var(--navy-2), var(--navy) 75%);
+    color:#fff; overflow:hidden; flex-shrink:0;
+  }
+  .m-head::before{
+    content:''; position:absolute; right:-50px; top:-60px; width:220px; height:220px; border-radius:50%;
+    background:radial-gradient(circle, rgba(217,184,118,0.22), transparent 68%);
+  }
+  .m-head::after{
+    content:''; position:absolute; left:-30px; bottom:-70px; width:150px; height:150px; border-radius:50%;
+    background:radial-gradient(circle, rgba(55,104,214,0.18), transparent 70%);
+  }
+  .m-head-row{ position:relative; display:flex; align-items:flex-start; justify-content:space-between; gap:16px; z-index:1; }
+  .m-head-left{ display:flex; align-items:center; gap:14px; }
+  .m-icon-badge{
+    width:48px; height:48px; border-radius:14px; flex-shrink:0;
+    background:linear-gradient(155deg, var(--gold-light), var(--gold)); color:#241a05;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 10px 22px -8px rgba(182,144,63,0.65), inset 0 1px 1px rgba(255,255,255,0.5);
+    position:relative;
+  }
+  .m-icon-badge::after{ content:''; position:absolute; inset:-4px; border-radius:16px; border:1px dashed rgba(217,184,118,0.35); animation: rotate-ring 14s linear infinite; }
+  @keyframes rotate-ring{ to{ transform:rotate(360deg); } }
+  .m-icon-badge svg{ width:23px; height:23px; }
+  .m-eyebrow{ font-size:10.5px; letter-spacing:2px; text-transform:uppercase; color:var(--gold-light); font-weight:700; margin-bottom:4px; }
+  .m-title{ font-family:'Fraunces', serif; font-size:22px; font-weight:600; letter-spacing:-0.2px; }
+  .m-sub{ font-size:12.5px; color:#9aa3bd; margin-top:4px; max-width:360px; line-height:1.5; }
+  .m-close{
+    width:34px; height:34px; border-radius:50%; border:1px solid rgba(255,255,255,0.14); background:rgba(255,255,255,0.06);
+    color:#c7cde3; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all .25s var(--ease); flex-shrink:0;
+  }
+  .m-close:hover{ background:rgba(201,79,67,0.22); border-color:rgba(201,79,67,0.4); color:#fff; transform:rotate(90deg); }
+  .m-close svg{ width:15px; height:15px; }
+
+  /* ---------- progression ---------- */
+  .m-steps{ display:flex; gap:6px; margin-top:20px; position:relative; z-index:1; }
+  .m-step{ flex:1; height:4px; border-radius:4px; background:rgba(255,255,255,0.14); overflow:hidden; }
+  .m-step i{ display:block; height:100%; width:0%; background:linear-gradient(90deg, var(--gold), var(--gold-light)); border-radius:4px; transition:width .6s var(--ease); }
+  .m-step.done i{ width:100%; }
+  .m-step-labels{ display:flex; justify-content:space-between; margin-top:8px; position:relative; z-index:1; }
+  .m-step-labels span{ font-size:10px; color:#7b84a0; font-weight:600; letter-spacing:.3px; }
+  .m-step-labels span.on{ color:var(--gold-light); }
+
+  /* ---------- BODY (scroll) ---------- */
+  .m-body{ padding:26px 30px 6px; overflow-y:auto; flex:1; }
+  .m-body::-webkit-scrollbar{ width:7px; }
+  .m-body::-webkit-scrollbar-thumb{ background:var(--border); border-radius:10px; }
+
+  .section{ margin-bottom:26px; opacity:0; transform:translateY(10px); animation:rise .5s var(--ease) forwards; }
+  .section:nth-of-type(1){ animation-delay:.10s; }
+  .section:nth-of-type(2){ animation-delay:.16s; }
+  .section:nth-of-type(3){ animation-delay:.22s; }
+  .section:nth-of-type(4){ animation-delay:.28s; }
+  .section:nth-of-type(5){ animation-delay:.34s; }
+  @keyframes rise{ to{ opacity:1; transform:translateY(0); } }
+
+  .section-head{ display:flex; align-items:center; gap:9px; margin-bottom:14px; }
+  .section-num{
+    width:22px; height:22px; border-radius:7px; background:var(--gold-soft); color:var(--gold);
+    display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:800; font-family:'Fraunces',serif;
+  }
+  .section-title{ font-size:13px; font-weight:700; color:var(--text); letter-spacing:.1px; }
+  .section-title small{ display:block; font-size:11px; font-weight:500; color:var(--text-faint); margin-top:1px; }
+
+  /* ---------- champs ---------- */
+  .field{ position:relative; margin-bottom:14px; }
+  .field-row{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  label{ display:block; font-size:11.5px; font-weight:600; color:var(--text-dim); margin-bottom:6px; }
+  label .req{ color:var(--red); margin-left:2px; }
+  label .opt{ color:var(--text-faint); font-weight:500; }
+
+  .input-wrap{ position:relative; }
+  .input-wrap svg.ic{
+    position:absolute; left:13px; top:50%; transform:translateY(-50%); width:16px; height:16px; color:var(--text-faint);
+    transition: color .25s var(--ease); pointer-events:none;
+  }
+  input[type="text"], input[type="email"], input[type="tel"], input[type="password"], textarea{
+    width:100%; font-family:inherit; font-size:13.5px; padding:11px 14px 11px 40px; color:var(--text);
+    border-radius:var(--radius-sm); border:1.5px solid var(--border); background:var(--bg);
+    transition:all .25s var(--ease); outline:none;
+  }
+  textarea{ resize:vertical; min-height:64px; padding-left:14px; font-family:inherit; }
+  input::placeholder, textarea::placeholder{ color:var(--text-faint); }
+  input:hover, textarea:hover{ border-color:#ddd5c0; }
+  input:focus, textarea:focus{ background:#fff; border-color:var(--gold); box-shadow:0 0 0 4px var(--gold-soft); }
+  .input-wrap:has(input:focus) svg.ic{ color:var(--gold); }
+  .field.ok .input-wrap input{ border-color:var(--green); }
+  .field.ok .check-ic{ opacity:1; transform:translateY(-50%) scale(1); }
+  .check-ic{
+    position:absolute; right:13px; top:50%; transform:translateY(-50%) scale(.6); opacity:0; color:var(--green);
+    transition:all .3s var(--ease); width:16px; height:16px;
+  }
+
+  .eye-btn{
+    position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer;
+    color:var(--text-faint); display:flex; padding:2px; transition:color .2s;
+  }
+  .eye-btn:hover{ color:var(--gold); }
+  .eye-btn svg{ width:16px; height:16px; }
+
+  /* force du mot de passe */
+  .pw-meter{ display:flex; gap:4px; margin-top:8px; }
+  .pw-meter i{ flex:1; height:4px; border-radius:4px; background:var(--border); transition:background .3s var(--ease); }
+  .pw-hint{ font-size:10.5px; color:var(--text-faint); margin-top:6px; display:flex; align-items:center; gap:5px; transition:color .3s; }
+  .pw-hint svg{ width:11px; height:11px; }
+
+  /* ---------- avatar en direct ---------- */
+  .id-card{
+    display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:var(--radius-md);
+    background:linear-gradient(120deg, var(--cream-2), var(--cream)); border:1px solid var(--border); margin-bottom:16px;
+  }
+  .id-avatar{
+    width:44px; height:44px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    font-weight:700; font-size:15px; color:#241a05; background:linear-gradient(160deg,var(--gold-light),var(--gold));
+    border:2px solid #fff; box-shadow:0 3px 10px rgba(0,0,0,0.1); transition:background .3s var(--ease);
+  }
+  .id-name{ font-size:13.5px; font-weight:700; color:var(--text); }
+  .id-role{ font-size:11px; color:var(--text-faint); margin-top:1px; }
+
+  /* ---------- cartes de rôle ---------- */
+  .role-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .role-card{
+    position:relative; border:1.5px solid var(--border); border-radius:var(--radius-md); padding:13px 14px;
+    cursor:pointer; transition:all .25s var(--ease); background:#fff;
+  }
+  .role-card:hover{ border-color:var(--gold-light); transform:translateY(-2px); box-shadow:0 10px 20px -12px rgba(30,25,10,0.2); }
+  .role-card.sel{ border-color:var(--gold); background:linear-gradient(120deg, var(--gold-soft), transparent); box-shadow:0 0 0 3px var(--gold-soft); }
+  .role-top{ display:flex; align-items:center; justify-content:space-between; }
+  .role-ic{ width:30px; height:30px; border-radius:9px; display:flex; align-items:center; justify-content:center; }
+  .role-ic svg{ width:15px; height:15px; }
+  .role-card[data-role="admin"] .role-ic{ background:var(--purple-soft); color:var(--purple); }
+  .role-card[data-role="tresorier"] .role-ic{ background:var(--green-soft); color:var(--green); }
+  .role-card[data-role="secretaire"] .role-ic{ background:var(--blue-soft); color:var(--blue); }
+  .role-card[data-role="membre"] .role-ic{ background:var(--amber-soft); color:var(--amber); }
+  .role-check{ width:17px; height:17px; border-radius:50%; border:1.5px solid var(--border); transition:all .25s var(--ease); flex-shrink:0; }
+  .role-card.sel .role-check{ background:var(--gold); border-color:var(--gold); position:relative; }
+  .role-card.sel .role-check::after{ content:''; position:absolute; left:4px; top:1px; width:4px; height:8px; border:solid #fff; border-width:0 2px 2px 0; transform:rotate(45deg); }
+  .role-name{ font-size:12.5px; font-weight:700; margin-top:9px; }
+  .role-desc{ font-size:10.5px; color:var(--text-faint); margin-top:2px; line-height:1.4; }
+
+  /* ---------- sélecteur membre ---------- */
+  .member-select{ position:relative; }
+  .member-trigger{
+    display:flex; align-items:center; gap:10px; padding:9px 12px; border:1.5px solid var(--border); border-radius:var(--radius-sm);
+    cursor:pointer; background:var(--bg); transition:all .25s var(--ease);
+  }
+  .member-trigger:hover{ border-color:#ddd5c0; }
+  .member-trigger.open{ border-color:var(--gold); box-shadow:0 0 0 4px var(--gold-soft); background:#fff; }
+  .m-avatar-sm{
+    width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:11px; font-weight:700; color:#fff; flex-shrink:0;
+  }
+  .member-trigger .placeholder{ color:var(--text-faint); font-size:13px; }
+  .member-trigger .chosen{ font-size:13px; font-weight:600; }
+  .member-trigger .chosen small{ display:block; font-size:10.5px; color:var(--text-faint); font-weight:500; }
+  .chev{ margin-left:auto; width:15px; height:15px; color:var(--text-faint); transition:transform .3s var(--ease); }
+  .member-trigger.open .chev{ transform:rotate(180deg); }
+
+  .member-panel{
+    position:absolute; top:calc(100% + 8px); left:0; right:0; background:#fff; border:1px solid var(--border);
+    border-radius:var(--radius-md); box-shadow:0 20px 40px -16px rgba(30,25,10,0.28); z-index:20; overflow:hidden;
+    max-height:0; opacity:0; transition:max-height .35s var(--ease), opacity .25s var(--ease);
+  }
+  .member-panel.open{ max-height:280px; opacity:1; }
+  .member-panel-inner{ padding:8px; max-height:280px; overflow-y:auto; }
+  .member-opt{ display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:10px; cursor:pointer; transition:background .2s; }
+  .member-opt:hover{ background:var(--cream); }
+  .member-opt .mo-name{ font-size:12.5px; font-weight:600; }
+  .member-opt .mo-role{ font-size:10.5px; color:var(--text-faint); }
+  .member-opt.none .mo-name{ color:var(--text-faint); font-style:italic; font-weight:500; }
+
+  /* ---------- statut toggle ---------- */
+  .status-row{ display:flex; align-items:center; justify-content:space-between; padding:13px 15px; border:1.5px solid var(--border); border-radius:var(--radius-md); background:var(--bg); }
+  .status-left{ display:flex; align-items:center; gap:11px; }
+  .status-dot{ width:9px; height:9px; border-radius:50%; background:var(--green); box-shadow:0 0 0 4px var(--green-soft); transition:all .3s var(--ease); }
+  .status-dot.off{ background:var(--text-faint); box-shadow:0 0 0 4px rgba(163,158,145,0.15); }
+  .status-title{ font-size:12.5px; font-weight:700; }
+  .status-desc{ font-size:11px; color:var(--text-faint); margin-top:1px; }
+  .switch{ position:relative; width:42px; height:24px; border-radius:20px; background:var(--green); cursor:pointer; transition:background .3s var(--ease); flex-shrink:0; }
+  .switch.off{ background:#d8d2c2; }
+  .switch::after{ content:''; position:absolute; top:3px; left:21px; width:18px; height:18px; border-radius:50%; background:#fff; box-shadow:0 2px 5px rgba(0,0,0,0.2); transition:left .3s var(--ease); }
+  .switch.off::after{ left:3px; }
+
+  /* ---------- footer ---------- */
+  .m-foot{
+    display:flex; align-items:center; justify-content:space-between; gap:14px; padding:18px 30px; border-top:1px solid var(--border);
+    background:linear-gradient(0deg, #fff, #fffdf8); flex-shrink:0;
+  }
+  .m-foot-note{ font-size:10.5px; color:var(--text-faint); display:flex; align-items:center; gap:6px; }
+  .m-foot-note svg{ width:12px; height:12px; color:var(--gold); flex-shrink:0; }
+  .m-foot-actions{ display:flex; gap:10px; }
+  .btn{
+    font-family:inherit; font-size:13px; font-weight:600; padding:11px 20px; border-radius:11px; cursor:pointer;
+    display:flex; align-items:center; gap:8px; transition:all .25s var(--ease); border:1px solid var(--border); background:#fff;
+  }
+  .btn:hover{ transform:translateY(-1px); box-shadow:0 8px 18px -10px rgba(30,25,10,0.25); }
+  .btn-primary{
+    border:none; background:linear-gradient(155deg,var(--gold-light),var(--gold)); color:#241a05;
+    box-shadow:0 8px 20px -8px rgba(182,144,63,0.6); position:relative; overflow:hidden;
+  }
+  .btn-primary svg{ width:15px; height:15px; }
+  .btn-primary:hover{ box-shadow:0 12px 26px -8px rgba(182,144,63,0.75); }
+  .btn-primary.loading{ pointer-events:none; }
+  .btn-primary .spinner{ display:none; width:15px; height:15px; border:2px solid rgba(36,26,5,0.25); border-top-color:#241a05; border-radius:50%; }
+  .btn-primary.loading .spinner{ display:block; animation:spin .7s linear infinite; }
+  .btn-primary.loading .btn-label, .btn-primary.loading .btn-ic{ display:none; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  .toast{
+    position:fixed; bottom:26px; left:50%; transform:translateX(-50%) translateY(20px); opacity:0;
+    background:var(--navy); color:#fff; padding:13px 20px; border-radius:12px; font-size:12.5px; font-weight:600;
+    display:flex; align-items:center; gap:10px; box-shadow:0 20px 40px -14px rgba(0,0,0,0.5); z-index:50;
+    transition:all .4s var(--ease); pointer-events:none;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+  .toast svg{ width:16px; height:16px; color:var(--green); }
+
+  @media (max-width:640px){
+    .field-row, .role-grid{ grid-template-columns:1fr; }
+    .modal{ max-width:100%; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="backdrop-app" aria-hidden="true">
+    <div class="bd-side"></div>
+    <div class="bd-main">
+      <div class="bd-block"></div>
+      <div class="bd-cards">
+        <div class="bd-card"></div><div class="bd-card"></div><div class="bd-card"></div><div class="bd-card"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="scrim">
+    <div class="modal">
+      <div class="shimmer-bar"></div>
+
+      <!-- HEADER -->
+      <div class="m-head">
+        <div class="m-head-row">
+          <div class="m-head-left">
+            <div class="m-icon-badge">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
+            </div>
+            <div>
+              <div class="m-eyebrow">SYGMEBEC · Gestion des accès</div>
+              <div class="m-title">Créer un utilisateur</div>
+              <div class="m-sub">Donnez accès au système à un membre de l'équipe et définissez son rôle.</div>
+            </div>
+          </div>
+          <div class="m-close" id="btnClose" title="Fermer">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          </div>
+        </div>
+
+        <div class="m-steps">
+          <div class="m-step done"><i></i></div>
+          <div class="m-step done"><i></i></div>
+          <div class="m-step done"><i></i></div>
+        </div>
+        <div class="m-step-labels">
+          <span class="on">Identité</span>
+          <span class="on">Accès &amp; sécurité</span>
+          <span class="on">Rôle &amp; statut</span>
+        </div>
+      </div>
+
+      <!-- BODY -->
+      <div class="m-body">
+
+        <!-- aperçu identité -->
+        <div class="id-card">
+          <div class="id-avatar" id="idAvatar">?</div>
+          <div>
+            <div class="id-name" id="idName">Nouvel utilisateur</div>
+            <div class="id-role" id="idRoleLabel">Aucun rôle sélectionné</div>
+          </div>
+        </div>
+
+        <!-- 1. Identité -->
+        <div class="section">
+          <div class="section-head">
+            <div class="section-num">1</div>
+            <div class="section-title">Informations personnelles<small>Nom, courriel et téléphone de contact</small></div>
+          </div>
+
+          <div class="field">
+            <label>Nom complet <span class="req">*</span></label>
+            <div class="input-wrap">
+              <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 21a8 8 0 1 0-16 0"/><circle cx="12" cy="7" r="4"/></svg>
+              <input type="text" id="fullName" placeholder="ex. Osier Storly">
+              <svg class="check-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label>Courriel <span class="opt">(optionnel)</span></label>
+              <div class="input-wrap">
+                <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m3 7 9 6 9-6"/></svg>
+                <input type="email" placeholder="nom@sygmebec.org">
+              </div>
+            </div>
+            <div class="field">
+              <label>Téléphone <span class="opt">(optionnel)</span></label>
+              <div class="input-wrap">
+                <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.7A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.3 1.9.6 2.7a2 2 0 0 1-.5 2.1L8 9.7a16 16 0 0 0 6 6l1.2-1.2a2 2 0 0 1 2.1-.5c.9.3 1.8.5 2.7.6a2 2 0 0 1 2 2z"/></svg>
+                <input type="tel" placeholder="+509 34 00 0000">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Accès -->
+        <div class="section">
+          <div class="section-head">
+            <div class="section-num">2</div>
+            <div class="section-title">Identifiants de connexion<small>Servent à ouvrir une session sur SYGMEBEC</small></div>
+          </div>
+
+          <div class="field">
+            <label>Identifiant <span class="req">*</span></label>
+            <div class="input-wrap">
+              <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4.2"/><path d="M4 20c1.3-4 4.3-6 8-6s6.7 2 8 6"/></svg>
+              <input type="text" placeholder="Nom d'utilisateur" id="username">
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Mot de passe <span class="req">*</span></label>
+            <div class="input-wrap">
+              <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="10" width="16" height="10" rx="2.5"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+              <input type="password" placeholder="Mot de passe sécurisé" id="pwField">
+              <button class="eye-btn" id="eyeBtn" type="button" aria-label="Afficher le mot de passe">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+            <div class="pw-meter"><i></i><i></i><i></i><i></i></div>
+            <div class="pw-hint" id="pwHint">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+              8 caractères minimum, avec une majuscule et un chiffre
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Rôle -->
+        <div class="section">
+          <div class="section-head">
+            <div class="section-num">3</div>
+            <div class="section-title">Rôle <span class="req">*</span><small>Détermine les permissions accordées dans le système</small></div>
+          </div>
+          <div class="role-grid" id="roleGrid">
+            <div class="role-card" data-role="admin" data-label="Administrateur">
+              <div class="role-top">
+                <div class="role-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2 4 6v6c0 5 3.4 8.7 8 10 4.6-1.3 8-5 8-10V6z"/></svg></div>
+                <div class="role-check"></div>
+              </div>
+              <div class="role-name">Administrateur</div>
+              <div class="role-desc">Accès complet : membres, finances, rapports, utilisateurs</div>
+            </div>
+            <div class="role-card" data-role="tresorier" data-label="Trésorier">
+              <div class="role-top">
+                <div class="role-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M15 9.5c0-1.4-1.3-2.5-3-2.5s-3 1-3 2.3 1.3 2 3 2.2 3 .9 3 2.2-1.3 2.3-3 2.3-3-1-3-2.4"/></svg></div>
+                <div class="role-check"></div>
+              </div>
+              <div class="role-name">Trésorier(ère)</div>
+              <div class="role-desc">Gère les cotisations, dépenses et rapports financiers</div>
+            </div>
+            <div class="role-card" data-role="secretaire" data-label="Secrétaire">
+              <div class="role-top">
+                <div class="role-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
+                <div class="role-check"></div>
+              </div>
+              <div class="role-name">Secrétaire</div>
+              <div class="role-desc">Gère les membres, comptes rendus et communications</div>
+            </div>
+            <div class="role-card" data-role="membre" data-label="Membre">
+              <div class="role-top">
+                <div class="role-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4.2"/><path d="M4 20c1.3-4 4.3-6 8-6s6.7 2 8 6"/></svg></div>
+                <div class="role-check"></div>
+              </div>
+              <div class="role-name">Membre</div>
+              <div class="role-desc">Consultation seule de son profil et des annonces</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Membre associé -->
+        <div class="section">
+          <div class="section-head">
+            <div class="section-num">4</div>
+            <div class="section-title">Membre associé <span class="opt">(optionnel)</span><small>Relie ce compte à une fiche membre existante</small></div>
+          </div>
+          <div class="member-select">
+            <div class="member-trigger" id="memberTrigger">
+              <svg class="ic" style="position:static; width:16px; height:16px; color:var(--text-faint);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3"/><path d="M3.5 19c1-3.2 3-4.8 5.5-4.8s4.5 1.6 5.5 4.8"/><circle cx="17" cy="8.5" r="2.4"/><path d="M15 14.5c2 .1 3.4 1.4 4.2 3.8"/></svg>
+              <span class="placeholder" id="memberLabel">Aucun membre associé</span>
+              <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+            </div>
+            <div class="member-panel" id="memberPanel">
+              <div class="member-panel-inner">
+                <div class="member-opt none" data-name="Aucun membre associé" data-role="">
+                  <div class="m-avatar-sm" style="background:var(--border); color:var(--text-faint);">—</div>
+                  <div><div class="mo-name">Aucun membre associé</div></div>
+                </div>
+                <div class="member-opt" data-name="Jean Baptiste" data-role="Diacre">
+                  <div class="m-avatar-sm" style="background:linear-gradient(160deg,#4c7be0,#3768d6);">JB</div>
+                  <div><div class="mo-name">Jean Baptiste</div><div class="mo-role">Diacre</div></div>
+                </div>
+                <div class="member-opt" data-name="Sarah Innocent" data-role="Chorale">
+                  <div class="m-avatar-sm" style="background:linear-gradient(160deg,#2fc07f,#1fa060);">SI</div>
+                  <div><div class="mo-name">Sarah Innocent</div><div class="mo-role">Chorale</div></div>
+                </div>
+                <div class="member-opt" data-name="Marie Charles" data-role="Nouveau converti">
+                  <div class="m-avatar-sm" style="background:linear-gradient(160deg,#d9b876,#b6903f); color:#241a05;">MC</div>
+                  <div><div class="mo-name">Marie Charles</div><div class="mo-role">Nouveau converti</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. Statut + notes -->
+        <div class="section" style="margin-bottom:6px;">
+          <div class="section-head">
+            <div class="section-num">5</div>
+            <div class="section-title">Statut du compte<small>Contrôlez l'accès dès la création</small></div>
+          </div>
+          <div class="status-row">
+            <div class="status-left">
+              <div class="status-dot" id="statusDot"></div>
+              <div>
+                <div class="status-title" id="statusTitle">Compte actif</div>
+                <div class="status-desc" id="statusDesc">L'utilisateur pourra se connecter immédiatement</div>
+              </div>
+            </div>
+            <div class="switch" id="statusSwitch"></div>
+          </div>
+
+          <div class="field" style="margin-top:14px;">
+            <label>Note interne <span class="opt">(optionnel)</span></label>
+            <textarea placeholder="ex. Accès temporaire pour la période des récoltes de fonds…"></textarea>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- FOOTER -->
+      <div class="m-foot">
+        <div class="m-foot-note">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="10" rx="2.5"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+          Les identifiants sont chiffrés et envoyés par courriel
+        </div>
+        <div class="m-foot-actions">
+          <button class="btn" id="btnCancel">Annuler</button>
+          <button class="btn btn-primary" id="btnCreate">
+            <div class="spinner"></div>
+            <svg class="btn-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
+            <span class="btn-label">Créer l'utilisateur</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+    <span id="toastText">Utilisateur créé avec succès</span>
+  </div>
+
+<script>
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---- avatar / carte identité en direct ---- */
+  const fullName = document.getElementById('fullName');
+  const idAvatar = document.getElementById('idAvatar');
+  const idName = document.getElementById('idName');
+  const idRoleLabel = document.getElementById('idRoleLabel');
+  let selectedRole = '';
+
+  function initials(name){
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    if(!parts.length) return '?';
+    return (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
+  }
+  fullName.addEventListener('input', () => {
+    const v = fullName.value;
+    idName.textContent = v.trim() ? v : 'Nouvel utilisateur';
+    idAvatar.textContent = initials(v);
+    fullName.closest('.field').classList.toggle('ok', v.trim().length > 1);
+  });
+
+  /* ---- rôles ---- */
+  document.querySelectorAll('.role-card').forEach(card => {
+    card.addEventListener('click', () => {
+      document.querySelectorAll('.role-card').forEach(c => c.classList.remove('sel'));
+      card.classList.add('sel');
+      selectedRole = card.dataset.label;
+      idRoleLabel.textContent = selectedRole;
+    });
+  });
+
+  /* ---- mot de passe : visibilité + force ---- */
+  const pwField = document.getElementById('pwField');
+  const eyeBtn = document.getElementById('eyeBtn');
+  eyeBtn.addEventListener('click', () => {
+    pwField.type = pwField.type === 'password' ? 'text' : 'password';
+  });
+
+  const meterBars = document.querySelectorAll('.pw-meter i');
+  const pwHint = document.getElementById('pwHint');
+  pwField.addEventListener('input', () => {
+    const v = pwField.value;
+    let score = 0;
+    if (v.length >= 8) score++;
+    if (/[A-Z]/.test(v)) score++;
+    if (/[0-9]/.test(v)) score++;
+    if (/[^A-Za-z0-9]/.test(v)) score++;
+    const colors = ['var(--red)', 'var(--red)', 'var(--amber)', 'var(--green)', 'var(--green)'];
+    meterBars.forEach((bar, i) => { bar.style.background = i < score ? colors[score] : 'var(--border)'; });
+    const labels = ['8 caractères minimum, avec une majuscule et un chiffre','Faible — ajoutez des chiffres et majuscules','Moyen — ajoutez un caractère spécial','Bon niveau de sécurité','Excellent, mot de passe robuste'];
+    pwHint.lastChild.textContent = labels[score] || labels[0];
+  });
+
+  /* ---- sélecteur membre ---- */
+  const trigger = document.getElementById('memberTrigger');
+  const panel = document.getElementById('memberPanel');
+  const memberLabel = document.getElementById('memberLabel');
+  trigger.addEventListener('click', () => {
+    trigger.classList.toggle('open');
+    panel.classList.toggle('open');
+  });
+  document.querySelectorAll('.member-opt').forEach(opt => {
+    opt.addEventListener('click', () => {
+      const name = opt.dataset.name;
+      const role = opt.dataset.role;
+      memberLabel.className = 'chosen';
+      memberLabel.innerHTML = role ? `${name}<small>${role}</small>` : name;
+      trigger.classList.remove('open');
+      panel.classList.remove('open');
+    });
+  });
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.member-select')) { trigger.classList.remove('open'); panel.classList.remove('open'); }
+  });
+
+  /* ---- statut actif/inactif ---- */
+  const statusSwitch = document.getElementById('statusSwitch');
+  const statusDot = document.getElementById('statusDot');
+  const statusTitle = document.getElementById('statusTitle');
+  const statusDesc = document.getElementById('statusDesc');
+  let active = true;
+  statusSwitch.addEventListener('click', () => {
+    active = !active;
+    statusSwitch.classList.toggle('off', !active);
+    statusDot.classList.toggle('off', !active);
+    statusTitle.textContent = active ? 'Compte actif' : 'Compte suspendu';
+    statusDesc.textContent = active ? "L'utilisateur pourra se connecter immédiatement" : "L'accès sera bloqué jusqu'à réactivation";
+  });
+
+  /* ---- création (simulation) ---- */
+  const btnCreate = document.getElementById('btnCreate');
+  const toast = document.getElementById('toast');
+  const toastText = document.getElementById('toastText');
+  btnCreate.addEventListener('click', () => {
+    if (!fullName.value.trim()) { fullName.focus(); return; }
+    btnCreate.classList.add('loading');
+    setTimeout(() => {
+      btnCreate.classList.remove('loading');
+      toastText.textContent = `${fullName.value.trim() || 'Utilisateur'} a été créé avec succès`;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2800);
+    }, 1100);
+  });
+
+  document.getElementById('btnCancel').addEventListener('click', closeModal);
+  document.getElementById('btnClose').addEventListener('click', closeModal);
+  function closeModal(){
+    const modal = document.querySelector('.modal');
+    const scrim = document.querySelector('.scrim');
+    modal.style.transition = 'all .3s var(--ease)';
+    modal.style.opacity = '0';
+    modal.style.transform = 'translateY(16px) scale(.97)';
+    scrim.style.transition = 'opacity .3s var(--ease)';
+    scrim.style.opacity = '0';
+  }
+
+  /* ---- légère inclinaison de la modale au survol du header (désactivable) ---- */
+  if(!reduceMotion){
+    document.querySelectorAll('.role-card, .id-card').forEach(el => {
+      el.style.willChange = 'transform';
+    });
+  }
+</script>
+</body>
+</html>

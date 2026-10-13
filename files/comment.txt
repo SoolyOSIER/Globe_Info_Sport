@@ -1,0 +1,982 @@
+# PROMPT — REFONTE COMPLÈTE ET PROFESSIONNALISATION DE GLOBE INFO SPORT
+
+Je développe une plateforme web sportive appelée **Globe Info Sport**.
+
+Le projet doit évoluer vers une **véritable plateforme d'information sportive internationale**, moderne, professionnelle, dynamique et évolutive.
+
+Le site ne doit surtout pas être conçu uniquement comme un site consacré au sport haïtien. **Globe Info Sport doit couvrir le sport dans le monde entier**, tout en accordant une place particulière à Haïti puisque la plateforme est dirigée et alimentée par des Haïtiens.
+
+---
+
+# 1. ANALYSE DES SOURCES EXISTANTES
+
+Utiliser comme références les plateformes officielles de Globe Info Sport :
+
+* Facebook : https://www.facebook.com/Globein21
+* YouTube : https://www.youtube.com/@GlobeInfosports21
+
+Analyser en profondeur les informations, contenus, rubriques, publications, sujets traités, identité éditoriale et types de contenus présents sur la page Facebook et la chaîne YouTube.
+
+L'objectif est de **récupérer et structurer les informations pertinentes présentes sur ces plateformes afin de les intégrer dans le nouveau site web**, lorsque leur contenu est disponible et approprié.
+
+Ne pas simplement copier les publications.
+
+Il faut plutôt identifier :
+
+* les différents types d'actualités ;
+* les catégories sportives ;
+* les championnats suivis ;
+* les clubs ;
+* les sélections nationales ;
+* les joueurs et personnalités sportives ;
+* les compétitions ;
+* les résultats ;
+* les analyses ;
+* les interviews ;
+* les vidéos ;
+* les reportages ;
+* les événements ;
+* les informations concernant Haïti ;
+* les informations internationales ;
+* les sujets récurrents ;
+* la manière dont Globe Info Sport présente ses informations.
+
+Transformer ensuite ces informations en une **architecture éditoriale professionnelle et cohérente pour le site web**.
+
+---
+
+# 2. POSITIONNEMENT DE GLOBE INFO SPORT
+
+Globe Info Sport doit être présenté comme :
+
+> **Une plateforme internationale d'information sportive qui couvre les sports, championnats, compétitions, clubs, sélections nationales, athlètes et actualités du monde entier, avec une attention particulière portée au sport haïtien.**
+
+Le site doit pouvoir couvrir :
+
+### Haïti
+
+* Football haïtien
+* Basketball
+* Volleyball
+* Athlétisme
+* Boxe
+* Judo
+* Cyclisme
+* Tennis
+* Baseball
+* Autres sports pratiqués en Haïti
+* Sélections nationales haïtiennes
+* Clubs haïtiens
+* Championnats nationaux
+* Joueurs et athlètes haïtiens
+* Actualités des fédérations
+* Compétitions locales et internationales impliquant Haïti
+
+### International
+
+Le système doit également permettre de couvrir :
+
+* Premier League
+* La Liga
+* Ligue 1
+* Serie A
+* Bundesliga
+* UEFA Champions League
+* Europa League
+* Conference League
+* Coupe du Monde
+* Copa América
+* CAN
+* Gold Cup
+* Coupe d'Asie
+* compétitions CONCACAF
+* compétitions CAF
+* compétitions UEFA
+* compétitions AFC
+* compétitions CONMEBOL
+* compétitions internationales de tous types
+
+Mais le système ne doit pas être limité au football.
+
+---
+
+# 3. TOUS LES SPORTS
+
+L'architecture doit être suffisamment flexible pour permettre l'ajout de n'importe quel sport.
+
+Créer une structure permettant par exemple :
+
+* Football
+* Basketball
+* Volleyball
+* Tennis
+* Athlétisme
+* Natation
+* Cyclisme
+* Boxe
+* MMA
+* Judo
+* Karaté
+* Rugby
+* Cricket
+* Baseball
+* Hockey
+* Formule 1
+* Moto
+* Golf
+* Handball
+* Esport
+* Jeux olympiques
+* etc.
+
+L'administrateur doit pouvoir **créer de nouveaux sports sans modifier le code de l'application**.
+
+---
+
+# 4. NOUVELLE PARTIE « RÉDACTION »
+
+La partie **Rédaction** doit être profondément améliorée.
+
+Je ne veux pas seulement une page permettant de consulter une liste d'informations.
+
+Je veux un véritable **espace de rédaction journalistique**, permettant aux rédacteurs de créer, modifier, enregistrer, programmer et publier leurs propres contenus.
+
+Créer un véritable système de gestion éditoriale de type CMS sportif.
+
+## Le rédacteur doit pouvoir :
+
+* créer un article ;
+* écrire un titre ;
+* choisir une catégorie ;
+* choisir un sport ;
+* choisir un pays ;
+* choisir une compétition ;
+* choisir un championnat ;
+* associer un club ;
+* associer une sélection nationale ;
+* associer un joueur/athlète ;
+* ajouter un chapeau ;
+* écrire le contenu complet ;
+* ajouter une image principale ;
+* ajouter plusieurs images ;
+* intégrer une vidéo ;
+* ajouter une source ;
+* ajouter des tags ;
+* enregistrer comme brouillon ;
+* modifier un brouillon ;
+* prévisualiser l'article ;
+* soumettre pour validation ;
+* programmer une publication ;
+* publier immédiatement ;
+* archiver un article.
+
+---
+
+# 5. ÉDITEUR DE TEXTE PROFESSIONNEL
+
+La rédaction doit utiliser un éditeur riche et moderne.
+
+Prévoir notamment :
+
+* titres H1/H2/H3 ;
+* paragraphes ;
+* texte en gras ;
+* italique ;
+* listes ;
+* citations ;
+* liens ;
+* images ;
+* vidéos ;
+* tableaux si nécessaire ;
+* séparation de sections ;
+* légendes d'images ;
+* insertion de médias ;
+* aperçu avant publication.
+
+L'interface doit être simple et agréable pour un journaliste.
+
+---
+
+# 6. TYPES D'ARTICLES
+
+Ne pas limiter les articles à « Championnat / International / Portrait / Sélection nationale ».
+
+Créer un système beaucoup plus flexible.
+
+Exemples :
+
+* Actualité
+* Breaking News
+* Championnat
+* Compétition
+* Match
+* Résultat
+* Transfert
+* Mercato
+* Portrait
+* Interview
+* Analyse
+* Reportage
+* Opinion
+* Sélection nationale
+* Club
+* Joueur
+* Entraîneur
+* Fédération
+* Technologie sportive
+* Santé sportive
+* Esport
+* Autres
+
+L'administrateur doit pouvoir créer, modifier ou supprimer des catégories.
+
+---
+
+# 7. STRUCTURE DES ARTICLES
+
+Chaque article doit pouvoir contenir :
+
+### Informations générales
+
+* Titre
+* Slug
+* Catégorie
+* Sport
+* Pays
+* Région/continent
+* Championnat
+* Compétition
+* Club
+* Sélection
+* Auteur
+* Date de création
+* Date de modification
+* Date de publication
+* Statut
+
+### Contenu
+
+* Chapeau
+* Contenu principal
+* Image à la une
+* Galerie
+* Vidéo
+* Source
+* Légende
+* Tags
+
+### Publication
+
+* Brouillon
+* En attente de validation
+* Programmé
+* Publié
+* Archivé
+
+### Mise en avant
+
+* Article à la une
+* Breaking News
+* Article populaire
+* Article recommandé
+
+---
+
+# 8. SYSTÈME DE PAYS ET DE RÉGIONS
+
+Créer une architecture internationale.
+
+Le système doit comprendre :
+
+### Continents
+
+* Amérique du Nord
+* Amérique centrale
+* Caraïbes
+* Amérique du Sud
+* Europe
+* Afrique
+* Asie
+* Océanie
+
+### Pays
+
+Créer une base permettant d'associer chaque contenu à un ou plusieurs pays.
+
+Haïti doit avoir une **présence particulière dans l'interface**, mais ne doit pas empêcher la couverture des autres pays.
+
+Exemple :
+
+**Haïti**
+
+* Actualités
+* Clubs
+* Sélections
+* Athlètes
+* Championnats
+* Compétitions
+
+Puis :
+
+**International**
+
+* Amérique
+* Europe
+* Afrique
+* Asie
+* Océanie
+
+---
+
+# 9. CLUBS
+
+Créer une gestion complète des clubs.
+
+Chaque club doit pouvoir avoir :
+
+* nom ;
+* logo ;
+* pays ;
+* ville ;
+* sport ;
+* championnat ;
+* description ;
+* site officiel ;
+* réseaux sociaux ;
+* joueurs ;
+* entraîneur ;
+* historique ;
+* statistiques ;
+* actualités associées.
+
+---
+
+# 10. SÉLECTIONS NATIONALES
+
+Créer une section dédiée aux équipes nationales.
+
+Chaque sélection peut contenir :
+
+* pays ;
+* drapeau ;
+* sport ;
+* logo ;
+* entraîneur ;
+* joueurs ;
+* compétitions ;
+* résultats ;
+* calendrier ;
+* classement ;
+* actualités ;
+* historique.
+
+---
+
+# 11. CHAMPIONNATS ET COMPÉTITIONS
+
+Créer une véritable gestion des compétitions.
+
+Une compétition doit pouvoir contenir :
+
+* nom ;
+* logo ;
+* sport ;
+* pays ;
+* région ;
+* saison ;
+* description ;
+* clubs/équipes participants ;
+* calendrier ;
+* résultats ;
+* classement ;
+* statistiques ;
+* actualités ;
+* vidéos ;
+* photos.
+
+---
+
+# 12. MATCHS ET RÉSULTATS
+
+Prévoir un module permettant de gérer :
+
+* matchs ;
+* équipes ;
+* date ;
+* heure ;
+* stade ;
+* compétition ;
+* score ;
+* statut du match ;
+* événements du match ;
+* buteurs ;
+* cartons ;
+* statistiques ;
+* résumé ;
+* articles liés.
+
+Le système doit pouvoir évoluer ultérieurement vers des **résultats sportifs en temps réel**.
+
+---
+
+# 13. PAGE D'ACCUEIL
+
+Créer une homepage très professionnelle.
+
+Elle doit présenter par exemple :
+
+### Header
+
+* Logo Globe Info Sport
+* navigation principale
+* recherche
+* connexion
+* menu mobile
+
+### Hero
+
+Une grande zone dynamique présentant les principales actualités.
+
+### Sections
+
+* Dernières nouvelles
+* Breaking News
+* À la une
+* Haïti
+* International
+* Football
+* Autres sports
+* Championnats
+* Résultats
+* Interviews
+* Analyses
+* Vidéos
+* Photos
+* Articles populaires
+
+La page doit être dynamique et visuellement attractive.
+
+---
+
+# 14. RECHERCHE INTELLIGENTE
+
+Créer une recherche globale permettant de rechercher :
+
+* article ;
+* joueur ;
+* athlète ;
+* club ;
+* sélection ;
+* championnat ;
+* compétition ;
+* pays ;
+* sport ;
+* auteur.
+
+Ajouter des filtres.
+
+Exemple :
+
+**Recherche : Messi**
+
+Afficher :
+
+* articles ;
+* vidéos ;
+* clubs associés ;
+* compétitions ;
+* actualités.
+
+---
+
+# 15. VIDÉOS ET YOUTUBE
+
+La chaîne YouTube de Globe Info Sport doit être intégrée intelligemment au site.
+
+Prévoir une section :
+
+**Globe Info Sport TV**
+
+Afficher :
+
+* dernières vidéos ;
+* interviews ;
+* reportages ;
+* analyses ;
+* conférences ;
+* résumés ;
+* émissions.
+
+Les vidéos doivent pouvoir être associées aux articles correspondants.
+
+---
+
+# 16. FACEBOOK ET RÉSEAUX SOCIAUX
+
+Créer une stratégie d'intégration des réseaux sociaux.
+
+Prévoir :
+
+* Facebook ;
+* YouTube ;
+* Instagram ;
+* TikTok ;
+* X/Twitter lorsque disponible.
+
+Chaque article doit pouvoir être partagé facilement.
+
+Prévoir également des boutons de partage.
+
+---
+
+# 17. ESPACE ADMINISTRATION
+
+Créer un dashboard professionnel.
+
+L'administrateur doit pouvoir gérer :
+
+* articles ;
+* rédacteurs ;
+* utilisateurs ;
+* sports ;
+* pays ;
+* clubs ;
+* sélections ;
+* championnats ;
+* compétitions ;
+* matchs ;
+* joueurs ;
+* athlètes ;
+* vidéos ;
+* albums ;
+* FAQ ;
+* blocs de présentation ;
+* publicités ;
+* paramètres du site.
+
+---
+
+# 18. RÔLES ET PERMISSIONS
+
+Créer différents niveaux d'accès.
+
+### Super Administrateur
+
+Accès complet.
+
+### Administrateur
+
+Gestion globale du contenu et des utilisateurs.
+
+### Rédacteur
+
+Peut :
+
+* créer des articles ;
+* modifier ses articles ;
+* sauvegarder ses brouillons ;
+* soumettre ses articles ;
+* consulter les contenus autorisés.
+
+### Éditeur
+
+Peut :
+
+* relire ;
+* corriger ;
+* modifier ;
+* valider ;
+* publier.
+
+### Utilisateur
+
+Accès au site public et fonctionnalités autorisées.
+
+Les permissions doivent être contrôlées côté backend et frontend.
+
+---
+
+# 19. DESIGN
+
+Le design doit être :
+
+* moderne ;
+* élégant ;
+* dynamique ;
+* professionnel ;
+* responsive ;
+* rapide ;
+* premium ;
+* intuitif.
+
+L'identité visuelle doit correspondre au nom :
+
+# GLOBE INFO SPORT
+
+Le design doit donner immédiatement une impression de :
+
+**Sport + Information + International + Modernité + Crédibilité**
+
+Éviter une interface trop chargée.
+
+Utiliser :
+
+* cartes modernes ;
+* espaces blancs équilibrés ;
+* typographie professionnelle ;
+* animations discrètes ;
+* transitions fluides ;
+* icônes cohérentes ;
+* images de qualité ;
+* hiérarchie visuelle claire.
+
+---
+
+# 20. RESPONSIVE DESIGN
+
+Le site doit fonctionner parfaitement sur :
+
+* ordinateur ;
+* laptop ;
+* tablette ;
+* smartphone.
+
+L'expérience mobile est très importante.
+
+La navigation mobile doit être simple et rapide.
+
+---
+
+# 21. SEO
+
+Optimiser chaque article pour les moteurs de recherche.
+
+Prévoir :
+
+* titre SEO ;
+* meta description ;
+* slug ;
+* Open Graph ;
+* Twitter/X Card ;
+* données structurées ;
+* sitemap ;
+* robots.txt ;
+* URLs propres ;
+* canonical ;
+* optimisation des images.
+
+---
+
+# 22. PERFORMANCE
+
+Le site doit être rapide.
+
+Prévoir :
+
+* lazy loading ;
+* compression des images ;
+* cache ;
+* pagination ;
+* chargement progressif ;
+* optimisation des requêtes backend ;
+* optimisation des API ;
+* gestion efficace des médias.
+
+---
+
+# 23. ARCHITECTURE TECHNIQUE
+
+Conserver une architecture propre et évolutive.
+
+Séparer clairement :
+
+### Backend
+
+API REST, authentification, base de données, logique métier et administration.
+
+### Frontend
+
+Interface publique + dashboard d'administration/rédaction.
+
+L'architecture doit permettre d'ajouter facilement de nouveaux sports, pays, compétitions et fonctionnalités sans devoir reconstruire toute l'application.
+
+---
+
+# 24. IMPORTANT : NE PAS LIMITER LE PROJET À HAÏTI
+
+C'est un point fondamental.
+
+**Globe Info Sport n'est pas un simple site d'information sportive haïtienne.**
+
+C'est une plateforme :
+
+> **SPORTIVE INTERNATIONALE**
+
+Haïti doit bénéficier d'une visibilité particulière parce que le projet est porté par des Haïtiens, mais le système doit être conçu dès maintenant pour fonctionner à l'échelle mondiale.
+
+Un utilisateur doit pouvoir consulter aussi bien :
+
+**Haïti → Football → Championnat haïtien**
+
+que :
+
+**Angleterre → Football → Premier League**
+
+ou :
+
+**USA → Basketball → NBA**
+
+ou :
+
+**France → Rugby → Top 14**
+
+ou :
+
+**Japon → Baseball**
+
+ou encore n'importe quel autre sport, pays ou compétition.
+
+---
+
+# 25. PAGE « HAÏTI »
+
+Créer une page spéciale :
+
+## HAÏTI
+
+Cette page doit regrouper :
+
+* actualités sportives haïtiennes ;
+* football haïtien ;
+* sélections nationales ;
+* clubs ;
+* athlètes ;
+* compétitions ;
+* résultats ;
+* interviews ;
+* vidéos ;
+* reportages.
+
+Cette section doit être mise en valeur sans transformer tout le site en plateforme uniquement haïtienne.
+
+---
+
+# 26. PAGE « INTERNATIONAL »
+
+Créer également :
+
+## INTERNATIONAL
+
+Avec :
+
+* Amérique ;
+* Europe ;
+* Afrique ;
+* Asie ;
+* Océanie ;
+* Caraïbes.
+
+Permettre ensuite de filtrer par :
+
+**Pays → Sport → Compétition → Club → Sélection → Article**
+
+---
+
+# 27. PAGE ARTICLE
+
+Créer une page article extrêmement professionnelle.
+
+Elle doit afficher :
+
+* catégorie ;
+* titre ;
+* chapeau ;
+* auteur ;
+* date ;
+* image principale ;
+* contenu ;
+* images ;
+* vidéos ;
+* sources ;
+* tags ;
+* articles similaires ;
+* dernières actualités ;
+* partage social.
+
+Ajouter une navigation :
+
+**Article précédent / Article suivant**
+
+---
+
+# 28. SYSTÈME DE TAGS
+
+Créer des tags dynamiques.
+
+Exemple :
+
+`#Haiti`
+
+`#PremierLeague`
+
+`#ChampionsLeague`
+
+`#Basketball`
+
+`#NBA`
+
+`#Football`
+
+`#CAN`
+
+etc.
+
+Cliquer sur un tag doit afficher tous les contenus correspondants.
+
+---
+
+# 29. NEWSLETTER
+
+Prévoir éventuellement :
+
+* inscription newsletter ;
+* dernières actualités ;
+* actualités personnalisées ;
+* possibilité de choisir certains sports.
+
+---
+
+# 30. NOTIFICATIONS
+
+Préparer l'architecture pour permettre plus tard :
+
+* Breaking News ;
+* notifications de résultats ;
+* notifications d'articles ;
+* notifications concernant une équipe ;
+* notifications concernant une compétition.
+
+---
+
+# 31. MONÉTISATION
+
+Prévoir une architecture compatible avec :
+
+* publicité ;
+* espaces sponsorisés ;
+* articles sponsorisés clairement identifiés ;
+* partenariats ;
+* abonnements futurs ;
+* sponsoring.
+
+---
+
+# 32. CRÉER UNE EXPÉRIENCE ÉDITORIALE PROFESSIONNELLE
+
+Le système de rédaction doit être pensé comme une véritable salle de rédaction.
+
+Workflow :
+
+**Rédacteur → Brouillon → Soumission → Éditeur → Validation → Publication**
+
+Avec possibilité de :
+
+* commentaires internes ;
+* historique des modifications ;
+* versioning ;
+* auteur ;
+* date ;
+* statut.
+
+---
+
+# 33. OBJECTIF FINAL
+
+Je veux que le résultat final ressemble à une **véritable plateforme internationale d'information sportive**, et non à un simple site CRUD.
+
+L'application doit être :
+
+**complète, structurée, élégante, magnifique, moderne, dynamique, ultra-professionnelle, rapide, responsive et évolutive.**
+
+Le nom **Globe Info Sport** doit être au centre de l'expérience.
+
+Le système doit pouvoir grandir progressivement et accueillir :
+
+* davantage de rédacteurs ;
+* davantage de pays ;
+* davantage de sports ;
+* davantage de compétitions ;
+* davantage de clubs ;
+* davantage de joueurs ;
+* davantage de contenus ;
+* davantage de vidéos ;
+* davantage d'utilisateurs.
+
+---
+
+# 34. RÈGLE IMPORTANTE POUR L'IMPLÉMENTATION
+
+Avant de modifier le projet :
+
+1. analyser l'architecture actuelle ;
+2. analyser le backend ;
+3. analyser le frontend ;
+4. analyser les modèles existants ;
+5. analyser les API existantes ;
+6. analyser les pages déjà développées ;
+7. analyser le système d'administration ;
+8. identifier ce qui peut être conservé ;
+9. identifier ce qui doit être amélioré ;
+10. éviter de casser les fonctionnalités existantes.
+
+Ensuite, implémenter progressivement les nouvelles fonctionnalités.
+
+Ne pas créer plusieurs systèmes qui font la même chose.
+
+Réutiliser les composants, modèles, API et services existants lorsque cela est pertinent.
+
+---
+
+# 35. PRIORITÉ
+
+La priorité est :
+
+### 1. Architecture solide
+
+### 2. Système de rédaction professionnel
+
+### 3. Gestion internationale des sports et contenus
+
+### 4. Gestion Haïti + International
+
+### 5. Articles et actualités
+
+### 6. Clubs / sélections / compétitions
+
+### 7. Résultats sportifs
+
+### 8. Vidéos et médias
+
+### 9. Design premium
+
+### 10. SEO et performance
+
+### 11. Évolutivité
+
+---
+
+# RÉSULTAT ATTENDU
+
+Transformer **Globe Info Sport** en une plateforme sportive internationale moderne, capable de publier et organiser les informations sportives provenant d'Haïti et du monde entier.
+
+Le résultat doit être suffisamment professionnel pour pouvoir évoluer vers un véritable média sportif numérique.
+
+**Ne pas penser uniquement "site web haïtien".**
+
+Penser :
+
+# GLOBE INFO SPORT
+
+## L'information sportive d'Haïti vers le monde, et du monde vers Haïti.
+
+Construire une architecture qui permet de couvrir **tous les sports, tous les pays, tous les championnats, toutes les compétitions, tous les clubs et toutes les sélections nationales**, tout en conservant une identité éditoriale forte et une présence particulière pour Haïti.

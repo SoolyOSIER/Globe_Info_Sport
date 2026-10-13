@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "../api/axiosClient";
 import { ErrorMessage, Loading } from "../components/ui/UI";
@@ -10,19 +9,19 @@ import ResourcePage from "./ResourcePage";
 
 const fields = {
   articles: [{ name: "titre", label: "Titre", required: true, full: true }, { name: "categorie", label: "Catégorie", required: true }, { name: "chapo", label: "Chapeau", required: true, full: true }, { name: "contenu", label: "Contenu", type: "textarea", required: true, full: true }, { name: "image_une", label: "Image à la une", type: "file" }, { name: "a_la_une", label: "À la une", type: "checkbox" }, { name: "source", label: "Source" }],
-  joueurs: [{ name: "nom", label: "Nom", required: true }, { name: "prenom", label: "Prénom" }, { name: "poste", label: "ID poste", type: "number", required: true }, { name: "club_actuel", label: "Club actuel" }, { name: "numero_maillot", label: "N° maillot", type: "number" }, { name: "photo", label: "Photo", type: "file" }, { name: "biographie", label: "Biographie", type: "textarea", full: true }, { name: "selection_nationale", label: "Sélection nationale", type: "checkbox" }, { name: "emblematique", label: "Emblématique", type: "checkbox" }],
+  joueurs: [{ name: "nom", label: "Nom", required: true }, { name: "prenom", label: "Prénom" }, { name: "poste", label: "Poste (si applicable)" }, { name: "club_actuel", label: "Club actuel" }, { name: "numero_maillot", label: "N° maillot", type: "number" }, { name: "photo", label: "Photo", type: "file" }, { name: "biographie", label: "Biographie", type: "textarea", full: true }, { name: "selection_nationale", label: "Sélection nationale", type: "checkbox" }, { name: "emblematique", label: "Emblématique", type: "checkbox" }],
   legendes: [{ name: "nom", label: "Nom", required: true }, { name: "periode_active", label: "Période" }, { name: "poste", label: "Poste" }, { name: "photo", label: "Photo", type: "file" }, { name: "biographie", label: "Biographie", type: "textarea", required: true, full: true }, { name: "exploits", label: "Exploits", type: "textarea", full: true }, { name: "ordre_affichage", label: "Ordre", type: "number" }],
-  competitions: [{ name: "nom", label: "Nom", required: true }, { name: "type", label: "Type", required: true, options: [{ value: "CHAMPIONNAT_NATIONAL", label: "Championnat national" }, { value: "ELIMINATOIRES_CDM", label: "Éliminatoires CDM" }, { value: "LIGUE_NATIONS", label: "Ligue des Nations" }, { value: "AUTRE", label: "Autre" }] }, { name: "saison", label: "Saison", required: true }, { name: "actif", label: "Active", type: "checkbox" }],
+  competitions: [{ name: "nom", label: "Nom", required: true }, { name: "type", label: "Type", required: true, options: [{ value: "CHAMPIONNAT_NATIONAL", label: "Championnat national" }, { value: "ELIMINATOIRES_CDM", label: "Éliminatoires CDM" }, { value: "LIGUE_NATIONS", label: "Ligue des Nations" }, { value: "AUTRE", label: "Autre" }] }, { name: "saison", label: "Saison", required: true }, { name: "actif", label: "Active", type: "checkbox", defaultValue: true }],
   clubs: [{ name: "nom", label: "Nom", required: true }, { name: "ville", label: "Ville" }, { name: "stade", label: "Stade" }, { name: "fondation", label: "Fondation", type: "number" }, { name: "couleurs", label: "Couleurs du club" }, { name: "site_web", label: "Site officiel", type: "url" }, { name: "logo", label: "Logo", type: "file" }, { name: "description", label: "Présentation du club", type: "textarea", full: true }, { name: "histoire", label: "Histoire du club", type: "textarea", full: true }, { name: "palmares", label: "Palmarès", type: "textarea", full: true }],
   "clubs-etrangers": [{ name: "nom", label: "Nom", required: true }, { name: "pays", label: "Pays", required: true }, { name: "ligue", label: "Ligue" }, { name: "logo", label: "Logo", type: "file" }],
-  "joueurs-expatries": [{ name: "joueur", label: "ID joueur", type: "number", required: true }, { name: "club_etranger", label: "ID club étranger", type: "number", required: true }, { name: "date_arrivee", label: "Date d’arrivée", type: "date" }, { name: "statut", label: "Statut", options: [{ value: "ACTIF", label: "Actif" }, { value: "PRETE", label: "Prêté" }, { value: "BLESSE", label: "Blessé" }, { value: "LIBRE", label: "Libre" }] }, { name: "en_vedette", label: "En vedette", type: "checkbox" }],
-  transferts: [{ name: "joueur", label: "ID joueur", type: "number", required: true }, { name: "club_origine", label: "Club origine", required: true }, { name: "club_destination", label: "Club destination", required: true }, { name: "date_transfert", label: "Date", type: "date", required: true }, { name: "type_transfert", label: "Type", options: [{ value: "DEFINITIF", label: "Définitif" }, { value: "PRET", label: "Prêt" }] }, { name: "montant", label: "Montant" }, { name: "source", label: "Source" }],
-  albums: [{ name: "titre", label: "Titre", required: true }, { name: "match_lie", label: "ID match", type: "number" }, { name: "description", label: "Description", type: "textarea", full: true }],
-  images: [{ name: "album", label: "ID album", type: "number", required: true }, { name: "image", label: "Photo", type: "file", required: true }, { name: "legende", label: "Légende", full: true }, { name: "ordre", label: "Ordre", type: "number" }],
+  "joueurs-expatries": [{ name: "joueur", label: "Joueur", required: true }, { name: "club_etranger", label: "Club étranger", required: true }, { name: "date_arrivee", label: "Date d’arrivée", type: "date" }, { name: "statut", label: "Statut", defaultValue: "ACTIF", options: [{ value: "ACTIF", label: "Actif" }, { value: "PRETE", label: "Prêté" }, { value: "BLESSE", label: "Blessé" }, { value: "LIBRE", label: "Libre" }] }, { name: "en_vedette", label: "En vedette", type: "checkbox" }],
+  transferts: [{ name: "joueur", label: "Joueur", required: true }, { name: "club_origine", label: "Club origine", required: true }, { name: "club_destination", label: "Club destination", required: true }, { name: "date_transfert", label: "Date", type: "date", required: true }, { name: "type_transfert", label: "Type", defaultValue: "DEFINITIF", options: [{ value: "DEFINITIF", label: "Définitif" }, { value: "PRET", label: "Prêt" }] }, { name: "montant", label: "Montant" }, { name: "source", label: "Source" }],
+  albums: [{ name: "titre", label: "Titre", required: true }, { name: "match_lie", label: "Match lié" }, { name: "description", label: "Description", type: "textarea", full: true }],
+  images: [{ name: "album", label: "Album", required: true }, { name: "image", label: "Photo", type: "file", required: true }, { name: "legende", label: "Légende", full: true }, { name: "ordre", label: "Ordre", type: "number" }],
   partenaires: [{ name: "nom", label: "Nom", required: true }, { name: "logo", label: "Logo", type: "file", required: true }, { name: "url", label: "Lien" }, { name: "ordre", label: "Ordre", type: "number" }, { name: "actif", label: "Actif", type: "checkbox" }],
   faq: [{ name: "question", label: "Question", required: true, full: true }, { name: "reponse", label: "Réponse", type: "textarea", required: true, full: true }, { name: "ordre", label: "Ordre", type: "number" }],
   "pages-contenu": [{ name: "cle", label: "Clé", required: true }, { name: "titre", label: "Titre", required: true }, { name: "image", label: "Image", type: "file" }, { name: "contenu", label: "Contenu", type: "textarea", required: true, full: true }, { name: "actif", label: "Actif", type: "checkbox" }],
-  utilisateurs: [{ name: "identifiant", label: "Identifiant", required: true }, { name: "nom", label: "Nom", required: true }, { name: "prenom", label: "Prénom" }, { name: "email", label: "Email", type: "email" }, { name: "role_redaction", label: "ID rôle", type: "number", required: true }, { name: "password", label: "Mot de passe", type: "password" }],
+  utilisateurs: [{ name: "identifiant", label: "Identifiant", required: true }, { name: "nom", label: "Nom", required: true }, { name: "prenom", label: "Prénom" }, { name: "email", label: "Email", type: "email" }, { name: "role_redaction", label: "Rôle", required: true }, { name: "password", label: "Mot de passe", type: "password", required: true }],
 };
 export const ArticlesPage = () => {
   // Un référentiel peut avoir été ajouté pendant une session ouverte : il est
@@ -48,22 +47,71 @@ export const ArticlesPage = () => {
     ...field,
     options: categories.data.map((category) => ({ value: category.id, label: category.nom })),
   } : field);
-  return <ResourcePage title="Articles" description="Les nouveaux contenus sont des brouillons. Un éditeur en chef les publie sur la vitrine." resource="articles" fields={articleFields} format={(row, field) => field.name === "categorie" ? row.categorie?.nom : field.name === "statut" ? row.statut : undefined} rowActions={(article) => can(user, "EDITEUR_EN_CHEF") && article.statut !== "PUBLIE" ? <button type="button" disabled={publishArticle.isPending} onClick={() => publishArticle.mutate(article.id)} className="mr-2 rounded bg-emerald-50 px-2 py-1 text-xs font-bold text-emerald-700 disabled:opacity-50" aria-label={`Publier ${article.titre}`}>Publier</button> : null} />;
+  return <ResourcePage title="Articles" description="Les nouveaux contenus sont des brouillons. Un éditeur en chef les publie sur la vitrine." resource="articles" allowDelete={can(user, "EDITEUR_EN_CHEF")} fields={articleFields} format={(row, field) => field.name === "categorie" ? row.categorie?.nom : field.name === "statut" ? row.statut : undefined} rowActions={(article) => can(user, "EDITEUR_EN_CHEF") && article.statut !== "PUBLIE" ? <button type="button" disabled={publishArticle.isPending} onClick={() => publishArticle.mutate(article.id)} className="mr-2 rounded bg-emerald-50 px-2 py-1 text-xs font-bold text-emerald-700 disabled:opacity-50" aria-label={`Publier ${article.titre}`}>Publier</button> : null} />;
 };
 export const JoueursPage = () => {
   const postes = useList("postes");
-  if (postes.isLoading) return <Loading />;
-  if (postes.isError) return <ErrorMessage error={postes.error} />;
+  const sports = useList("sports", { page_size: 200 });
+  const pays = useList("pays", { page_size: 200 });
+  if (postes.isLoading || sports.isLoading || pays.isLoading) return <Loading />;
+  if (postes.isError || sports.isError || pays.isError) return <ErrorMessage error={postes.error || sports.error || pays.error} />;
   const joueurFields = fields.joueurs.map((field) => field.name === "poste" ? {
     ...field,
     label: "Poste",
     options: postes.data.map((poste) => ({ value: poste.id, label: poste.nom })),
   } : field);
-  return <ResourcePage title="Joueurs" resource="joueurs" fields={joueurFields} format={(row, field) => field.name === "poste" ? row.poste?.nom : field.name === "nom" ? row.nom_complet : undefined} />;
+  return <ResourcePage title="Joueurs et athlètes" resource="joueurs" fields={[...joueurFields, { name: "sport", label: "Sport", options: sports.data.map(item => ({ value: item.id, label: item.nom })) }, { name: "pays", label: "Pays", options: pays.data.map(item => ({ value: item.id, label: item.nom })) }]} format={(row, field) => field.name === "poste" ? row.poste?.nom : field.name === "nom" ? row.nom_complet : undefined} />;
 };
 export const LegendesPage = () => <ResourcePage title="Légendes" resource="legendes" fields={fields.legendes} />;
-export const CompetitionsPage = () => <ResourcePage title="Compétitions" resource="competitions" fields={fields.competitions} />;
-export const ClubsPage = () => <ResourcePage title="Clubs" description="Créez les fiches complètes : identité, histoire, palmarès et informations pratiques." resource="clubs" fields={fields.clubs} />;
+const footballDataNotConfigured = (error) => String(error?.response?.data?.detail || "").includes("FOOTBALL_DATA_API_TOKEN");
+export const CompetitionsPage = () => {
+  const sports = useList("sports", { page_size: 200 }); const pays = useList("pays", { page_size: 200 }); const clubs = useList("clubs", { page_size: 200 });
+  const user = useAuthStore((state) => state.user);
+  const pushToast = useUiStore((state) => state.pushToast);
+  const queryClient = useQueryClient();
+  const synchroniser = useMutation({
+    mutationFn: () => api.post("/competitions/synchroniser-donnees/"),
+    onSuccess: (response) => {
+      queryClient.invalidateQueries({ queryKey: ["competitions"] });
+      queryClient.invalidateQueries({ queryKey: ["clubs"] });
+      queryClient.invalidateQueries({ queryKey: ["matchs"] });
+      queryClient.invalidateQueries({ queryKey: ["public"] });
+      const resume = response.data;
+      pushToast(`${resume.competitions} championnat(s) actualisé(s), ${resume.matchs} match(s) synchronisé(s).`);
+    },
+    onError: (error) => pushToast(footballDataNotConfigured(error)
+      ? "Ajoutez votre clé football-data.org dans globeinfosport-backend/.env, puis relancez les services."
+      : error?.response?.data?.detail || "La synchronisation des données sportives a échoué."),
+  });
+  if (sports.isLoading || pays.isLoading || clubs.isLoading) return <Loading />;
+  if (sports.isError || pays.isError || clubs.isError) return <ErrorMessage error={sports.error || pays.error || clubs.error} />;
+  const competitionFields = [...fields.competitions.slice(0, 3), { name: "sport", label: "Sport", options: sports.data.map((item) => ({ value: item.id, label: item.nom })) }, { name: "pays", label: "Pays", options: pays.data.map((item) => ({ value: item.id, label: item.nom })) }, { name: "clubs", label: "Clubs participants", multiple: true, full: true, options: clubs.data.map((item) => ({ value: item.id, label: item.nom })) }, { name: "description", label: "Présentation", type: "textarea", full: true }, { name: "logo", label: "Logo", type: "file" }, fields.competitions[3]];
+  return <div className="space-y-6">
+    {can(user, "EDITEUR_EN_CHEF") && <section className="rounded-2xl border border-blue-100 bg-blue-50 p-5">
+      <p className="font-bold text-haiti-ink">Données automatiques des cinq grands championnats</p>
+      <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-600">Actualisez les équipes, le calendrier, les scores et le classement de Premier League, Liga, Serie A, Bundesliga et Ligue 1 depuis la source sportive configurée.</p>
+      <p className="mt-3 rounded-lg border border-blue-100 bg-white/75 px-3 py-2 text-xs font-medium leading-5 text-slate-600">Première utilisation : ouvrez <code>globeinfosport-backend/.env</code>, renseignez <code>FOOTBALL_DATA_API_TOKEN</code>, puis relancez le démarrage local.</p>
+      <button type="button" disabled={synchroniser.isPending} onClick={() => synchroniser.mutate()} className="mt-4 rounded-lg bg-haiti-blue px-4 py-2 text-sm font-bold text-white disabled:opacity-50">
+        {synchroniser.isPending ? "Synchronisation en cours…" : "Synchroniser maintenant"}
+      </button>
+    </section>}
+    <ResourcePage title="Compétitions" description="Répertoriez les championnats, leurs équipes participantes et les tournois de tous les pays et de tous les sports." resource="competitions" fields={competitionFields} />
+  </div>;
+};
+export const ClubsPage = () => {
+  const sports = useList("sports", { page_size: 200 }); const pays = useList("pays", { page_size: 200 });
+  if (sports.isLoading || pays.isLoading) return <Loading />;
+  if (sports.isError || pays.isError) return <ErrorMessage error={sports.error || pays.error} />;
+  const clubFields = [fields.clubs[0], { name: "sport", label: "Sport", options: sports.data.map((item) => ({ value: item.id, label: item.nom })) }, { name: "pays", label: "Pays", options: pays.data.map((item) => ({ value: item.id, label: item.nom })) }, { name: "entraineur", label: "Entraîneur" }, ...fields.clubs.slice(1)];
+  return <ResourcePage title="Clubs" description="Créez les fiches complètes : identité, pays, sport, histoire, palmarès et informations pratiques." resource="clubs" fields={clubFields} />;
+};
+export const SelectionsPage = () => {
+  const sports = useList("sports", { page_size: 200 }); const pays = useList("pays", { page_size: 200 }); const joueurs = useList("joueurs", { page_size: 200 }); const competitions = useList("competitions", { page_size: 200 });
+  if (sports.isLoading || pays.isLoading || joueurs.isLoading || competitions.isLoading) return <Loading />;
+  if (sports.isError || pays.isError || joueurs.isError || competitions.isError) return <ErrorMessage error={sports.error || pays.error || joueurs.error || competitions.error} />;
+  const selectionFields = [{ name: "nom", label: "Nom", required: true }, { name: "pays", label: "Pays", required: true, options: pays.data.map((item) => ({ value: item.id, label: item.nom })) }, { name: "sport", label: "Sport", required: true, options: sports.data.map((item) => ({ value: item.id, label: item.nom })) }, { name: "entraineur", label: "Entraîneur" }, { name: "logo", label: "Logo", type: "file" }, { name: "histoire", label: "Histoire et présentation", type: "textarea", full: true }, { name: "joueurs", label: "Joueurs / athlètes", multiple: true, full: true, options: joueurs.data.map((item) => ({ value: item.id, label: item.nom_complet })) }, { name: "competitions", label: "Compétitions suivies", multiple: true, full: true, options: competitions.data.map((item) => ({ value: item.id, label: `${item.nom} · ${item.saison}` })) }];
+  return <ResourcePage title="Sélections nationales" description="Préparez les fiches des équipes nationales, leurs effectifs et les compétitions associées." resource="selections" fields={selectionFields} />;
+};
 export const ParcoursClubsPage = () => {
   const clubs = useList("clubs", {}, { refetchOnMount: "always" });
   if (clubs.isLoading) return <Loading />;
@@ -80,12 +128,33 @@ export const SyndicationPage = () => {
   const fluxFields = [{ name: "nom", label: "Nom de la source", required: true }, { name: "url", label: "URL RSS autorisée", type: "url", required: true, full: true }, { name: "categorie", label: "Rubrique", options: categories.data.map((category) => ({ value: category.id, label: category.nom })) }, { name: "actif", label: "Flux actif", type: "checkbox" }];
   return <div className="space-y-6"><div className="rounded-2xl border border-blue-100 bg-blue-50 p-5"><p className="font-bold text-haiti-ink">Fil externe attribué</p><p className="mt-1 text-sm leading-6 text-slate-600">Ajoutez uniquement des flux RSS dont la republication sous forme de titre, extrait et lien est autorisée. Les contenus restent liés à leur média d’origine.</p><button type="button" disabled={synchroniser.isPending} onClick={() => synchroniser.mutate()} className="mt-4 rounded-lg bg-haiti-blue px-4 py-2 text-sm font-bold text-white disabled:opacity-50">{synchroniser.isPending ? "Synchronisation…" : "Synchroniser maintenant"}</button></div><ResourcePage title="Sources RSS" description="Les nouveaux éléments sont affichés sur la vitrine comme liens externes attribués." resource="flux-syndication" fields={fluxFields} format={(row, field) => field.name === "categorie" ? categories.data.find((category) => category.id === row.categorie)?.nom : undefined} /></div>;
 };
-export const ExpatriesPage = () => <ResourcePage title="Joueurs expatriés" resource="joueurs-expatries" fields={fields["joueurs-expatries"]} />;
-export const TransfertsPage = () => <ResourcePage title="Transferts" resource="transferts" fields={fields.transferts} />;
-export const GaleriePage = () => <div className="space-y-10"><ResourcePage title="Albums" resource="albums" fields={fields.albums} /><ResourcePage title="Images" resource="images" fields={fields.images} /></div>;
-export const MessagesPage = () => <ResourcePage title="Messages de contact" description="Marquez un message comme traité après réponse." resource="messages-contact" fields={[{ name: "nom", label: "Nom" }, { name: "email", label: "Email" }, { name: "sujet", label: "Sujet" }, { name: "message", label: "Message", type: "textarea", full: true }, { name: "traite", label: "Traité", type: "checkbox" }]} />;
-export const AccountsPage = () => <div className="space-y-10"><ResourcePage title="Comptes rédaction" resource="utilisateurs" fields={fields.utilisateurs} /><ResourcePage title="Partenaires" resource="partenaires" fields={fields.partenaires} /><ResourcePage title="FAQ" resource="faq" fields={fields.faq} /><ResourcePage title="Contenus Accueil" resource="pages-contenu" fields={fields["pages-contenu"]} /></div>;
-
-export function MatchesPage() { const matches = useList("matchs"); return <ResourcePage title="Calendrier et matchs" description="Créez un match, puis saisissez son résultat final dans la page dédiée." resource="matchs" fields={[{ name: "competition", label: "ID compétition", type: "number", required: true }, { name: "club_domicile", label: "ID club domicile", type: "number", required: true }, { name: "club_exterieur", label: "ID club extérieur", type: "number" }, { name: "adversaire_texte", label: "Adversaire (si hors championnat)" }, { name: "date_heure", label: "Date et heure", type: "datetime-local", required: true }, { name: "lieu", label: "Lieu" }, { name: "diffusion_tv", label: "Diffusion TV" }, { name: "resume", label: "Résumé", type: "textarea", full: true }]} format={(row, field) => field.name === "club_domicile" ? row.club_domicile_detail?.nom : field.name === "club_exterieur" ? row.club_exterieur_detail?.nom ?? row.adversaire_texte : undefined} />; }
-
-export function ResultatPage() { const [id, setId] = useState(""); const [home, setHome] = useState(""); const [away, setAway] = useState(""); const [resume, setResume] = useState(""); const [buteurs, setButeurs] = useState("[]"); const client = useQueryClient(); const mutation = useMutation({ mutationFn: (payload) => api.post(`/matchs/${id}/saisir-resultat/`, payload), onSuccess: () => { client.invalidateQueries({ queryKey: ["matchs"] }); client.invalidateQueries({ queryKey: ["classement"] }); } }); const submit = (event) => { event.preventDefault(); try { mutation.mutate({ score_domicile: Number(home), score_exterieur: Number(away), resume, buteurs: JSON.parse(buteurs) }); } catch { alert("La liste des buteurs doit être du JSON valide. Exemple : [{\"joueur\": 1, \"minute\": 42, \"type_but\": \"BUT\"}]"); } }; return <div className="max-w-2xl"><h1 className="font-display text-3xl font-black text-haiti-ink">Saisir un résultat</h1><p className="mt-2 text-sm text-slate-500">La validation recalcule immédiatement le classement et les statistiques.</p><form onSubmit={submit} className="mt-6 grid gap-4 rounded-2xl bg-white p-6 shadow-panel"><label className="text-sm font-bold">ID match<input required type="number" value={id} onChange={(event) => setId(event.target.value)} className="mt-1 w-full rounded-lg border p-3" /></label><div className="grid grid-cols-2 gap-4"><label className="text-sm font-bold">Score domicile<input required min="0" type="number" value={home} onChange={(event) => setHome(event.target.value)} className="mt-1 w-full rounded-lg border p-3" /></label><label className="text-sm font-bold">Score extérieur<input required min="0" type="number" value={away} onChange={(event) => setAway(event.target.value)} className="mt-1 w-full rounded-lg border p-3" /></label></div><label className="text-sm font-bold">Buteurs (liste JSON)<textarea value={buteurs} onChange={(event) => setButeurs(event.target.value)} rows="5" className="mt-1 w-full rounded-lg border p-3 font-mono text-xs" /></label><label className="text-sm font-bold">Résumé<textarea value={resume} onChange={(event) => setResume(event.target.value)} rows="5" className="mt-1 w-full rounded-lg border p-3" /></label>{mutation.isError && <ErrorMessage error={mutation.error} />}<button disabled={mutation.isPending} className="rounded-lg bg-haiti-red py-3 font-bold text-white">{mutation.isPending ? "Validation…" : "Valider le résultat"}</button>{mutation.isSuccess && <p className="text-sm font-bold text-emerald-700">Résultat enregistré et calculs lancés.</p>}</form></div>; }
+export const ExpatriesPage = () => {
+  const joueurs = useList("joueurs", { page_size: 200 }); const clubs = useList("clubs-etrangers", { page_size: 200 });
+  if (joueurs.isLoading || clubs.isLoading) return <Loading />;
+  if (joueurs.isError || clubs.isError) return <ErrorMessage error={joueurs.error || clubs.error} />;
+  const expatFields = fields["joueurs-expatries"].map((field) => field.name === "joueur" ? { ...field, options: joueurs.data.map((item) => ({ value: item.id, label: item.nom_complet })) } : field.name === "club_etranger" ? { ...field, options: clubs.data.map((item) => ({ value: item.id, label: `${item.nom} · ${item.pays}` })) } : field);
+  return <ResourcePage title="Joueurs expatriés" resource="joueurs-expatries" fields={expatFields} format={(row, field) => field.name === "joueur" ? row.joueur_nom : field.name === "club_etranger" ? row.club_etranger_detail?.nom : undefined} />;
+};
+export const TransfertsPage = () => {
+  const joueurs = useList("joueurs", { page_size: 200 });
+  if (joueurs.isLoading) return <Loading />;
+  if (joueurs.isError) return <ErrorMessage error={joueurs.error} />;
+  const transfertFields = fields.transferts.map((field) => field.name === "joueur" ? { ...field, options: joueurs.data.map((item) => ({ value: item.id, label: item.nom_complet })) } : field);
+  return <ResourcePage title="Transferts" resource="transferts" fields={transfertFields} format={(row, field) => field.name === "joueur" ? row.joueur_nom : undefined} />;
+};
+export const GaleriePage = () => {
+  const matchs = useList("matchs", { page_size: 200 }); const albums = useList("albums", { page_size: 200 });
+  if (matchs.isLoading || albums.isLoading) return <Loading />;
+  if (matchs.isError || albums.isError) return <ErrorMessage error={matchs.error || albums.error} />;
+  const albumFields = fields.albums.map((field) => field.name === "match_lie" ? { ...field, options: matchs.data.map((item) => ({ value: item.id, label: `${item.club_domicile_detail?.nom || "Équipe"} – ${item.club_exterieur_detail?.nom || item.adversaire_texte || "Adversaire"}` })) } : field);
+  const imageFields = fields.images.map((field) => field.name === "album" ? { ...field, options: albums.data.map((item) => ({ value: item.id, label: item.titre })) } : field);
+  return <div className="space-y-10"><ResourcePage title="Albums" resource="albums" fields={albumFields} /><ResourcePage title="Images" resource="images" fields={imageFields} format={(row, field) => field.name === "album" ? row.album_titre : undefined} /></div>;
+};
+export const MessagesPage = () => <ResourcePage title="Messages de contact" description="Consultez le message puis marquez-le comme traité après réponse." resource="messages-contact" allowCreate={false} allowDelete={false} fields={[{ name: "nom", label: "Nom", readOnly: true }, { name: "email", label: "Email", readOnly: true }, { name: "sujet", label: "Sujet", readOnly: true }, { name: "message", label: "Message", type: "textarea", full: true, readOnly: true }, { name: "traite", label: "Traité", type: "checkbox" }]} />;
+export const AccountsPage = () => {
+  const roles = useList("roles");
+  if (roles.isLoading) return <Loading />;
+  if (roles.isError) return <ErrorMessage error={roles.error} />;
+  return <ResourcePage title="Comptes de la rédaction" resource="utilisateurs" fields={fields.utilisateurs.map(field => field.name === "role_redaction" ? { ...field, options: roles.data.map(role => ({ value: role.id, label: role.libelle })) } : field)} format={(row, field) => field.name === "role_redaction" ? row.role_redaction?.libelle : undefined} />;
+};
+export const ClubsEtrangersPage = () => <ResourcePage title="Clubs internationaux des expatriés" resource="clubs-etrangers" fields={fields["clubs-etrangers"]} />;

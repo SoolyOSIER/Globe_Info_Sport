@@ -1,0 +1,2079 @@
+================================================================================
+         SYGMEBEC — PLAN COMPLET FULL-STACK
+         Système de Gestion des Membres et Événements d'Église
+         Back-End : Django REST Framework (API)
+         Front-End : React SPA "Back-Office" (Vite) + React SPA "Site Vitrine" (Vite)
+         Basé sur le Diagramme de Cas d'Utilisation + Diagramme de Classes fournis
+         Version 2.0 | 2026 — ajout complet de la PARTIE SITE VITRINE PUBLIC
+================================================================================
+
+TABLE DES MATIÈRES
+──────────────────
+  PARTIE 0   — ANALYSE DES DIAGRAMMES FOURNIS
+  PARTIE I   — ARCHITECTURE GÉNÉRALE
+  PARTIE II  — BACK-END DJANGO (API)
+    A. Arborescence du projet back-end
+    B. Applications Django (apps/)
+    C. Modèles (Models) — fidèles au diagramme de classes
+    D. Serializers DRF — par ressource
+    E. Vues API (ViewSets & APIViews) — fidèles aux cas d'utilisation
+    F. URLs API
+    G. Authentification JWT & Sécurité
+    H. Permissions & Hiérarchie des rôles
+    I. Signals
+    J. Tâches Celery
+    K. Settings (base / dev / prod)
+    L. Requirements
+    M. Fixtures & Données initiales
+    N. Commandes management
+    O. Récapitulatif Back-End
+
+  PARTIE III — FRONT-END REACT (BACK-OFFICE ADMINISTRATIF)
+    A. Arborescence du projet front-end
+    B. Couche API (axios)
+    C. Zustand Stores (état global)
+    D. Custom Hooks (TanStack Query)
+    E. Composants réutilisables
+    F. Pages (routes) — fidèles aux cas d'utilisation
+    G. Layouts
+    H. Router & Protection des routes (par rôle)
+    I. Variables d'environnement
+    J. Récapitulatif Front-End Back-Office
+
+  PARTIE IV  — SITE VITRINE PUBLIC (NOUVELLE PARTIE)
+    A. Objectif, périmètre et justification
+    B. Back-end additionnel — application "vitrine"
+       B.1 Modèles (DemandeAdhesion, InscriptionEvenement, MessageContact, ImageGalerie)
+       B.2 Champs additionnels sur Evenement (visibilité publique)
+       B.3 Serializers publics
+       B.4 Vues API publiques (AllowAny + throttling)
+       B.5 URLs publiques
+       B.6 Permissions, anti-spam et rate-limiting
+       B.7 Signals
+       B.8 Tâches Celery
+       B.9 Admin Django — validation des demandes
+       B.10 Settings additionnels
+    C. Front-end — arborescence complète du site vitrine
+    D. Pages publiques détaillées
+    E. Composants par section
+    F. Couche services (axios)
+    G. State management (Zustand)
+    H. Hooks personnalisés
+    I. Router, SEO & accessibilité
+    J. Formulaires publics & protection anti-spam
+    K. Espace membre (mini-portail authentifié)
+    L. Variables d'environnement
+    M. Récapitulatif Site Vitrine
+
+  PARTIE V   — INTÉGRATION & DÉPLOIEMENT
+    A. Communication Front ↔ Back (2 SPA ↔ 1 API)
+    B. Configuration CORS (multi-origine)
+    C. Déploiement (Docker / prod / Nginx)
+    D. Variables d'environnement globales
+
+  RÉCAPITULATIF GLOBAL DU PROJET
+
+
+================================================================================
+PARTIE 0 — ANALYSE DES DIAGRAMMES FOURNIS
+================================================================================
+
+1. DIAGRAMME DE CAS D'UTILISATION (Image 1 — SYGMEBEC)
+───────────────────────────────────────────────────────
+
+ACTEURS (avec hiérarchie par généralisation — héritage des droits) :
+
+  Secretaire        → acteur de base
+      ▲
+      │ (hérite de)
+  Pasteur           → hérite de TOUS les cas d'utilisation de Secretaire + les siens
+      ▲
+      │ (hérite de)
+  Administrateur    → hérite de TOUS les cas d'utilisation de Pasteur + les siens
+
+CAS D'UTILISATION PAR ACTEUR :
+
+  SECRETAIRE :
+    • Enregistrer un membre
+    • Modifier un membre              «include» → Rechercher un membre
+    • Changer statut
+    • Creer un evenement
+    • Modifier un evenement           «include» → Consulter un evenement
+    • Generer rapport                 «include» → Consulter un evenement
+                                       «include» → Rechercher un membre
+
+  PASTEUR (en plus des droits de Secretaire) :
+    • Supprimer un evenement          «include» → Consulter un evenement
+    • Supprimer un membre             «include» → Rechercher un membre
+
+  ADMINISTRATEUR (en plus des droits de Pasteur) :
+    • Gerer les comptes utilisateurs
+
+  CAS D'UTILISATION INCLUS (réutilisés, non accessibles directement) :
+    • Rechercher un membre
+    • Consulter un evenement
+
+→ Cette hiérarchie sera traduite en back-end par un système de RÔLES CUMULATIFS
+  (RoleAcces) et en front-end par des routes protégées imbriquées par niveau.
+
+2. DIAGRAMME DE CLASSES (Image 2 — SYGMEBEC)
+──────────────────────────────────────────────
+
+  Utilisateur (Idenetifiant, motDePasse, DateCreationCompte, dernierAcces)
+      ── 1 a un 1 ──► RoleAcces (nomRole)
+      ── 0..1 correspond a 1 ──► Membre
+
+  Membre (nom)
+      ── 1 a un 1 ──► Statut (libelle)
+      ── 1 est responsable de 0..* ──► Evenement (titre, date, lieu, description, dateCreation)
+      ── 1 possede 0..* ──► HistoriqueStatut (ancienStatut, nouveauStatut, dateChangement)
+      ── 0..* occupe 0..* ──► Fonction (nomFonction, dateDebut, dateFin)
+      ── 1 contient 1 ──► Rapport (dateGeneration, titre, dateFin)
+
+  Rapport
+      ── 1 genere selon 1 ──► CritereFiltrage (statut, periode)
+
+→ Tous les modèles Django ci-dessous respectent EXACTEMENT ces classes,
+  attributs et cardinalités, en y ajoutant uniquement les champs techniques
+  indispensables (id, timestamps, related_name) sans dénaturer le diagramme.
+
+3. NOTE SUR L'AJOUT DU SITE VITRINE (extension hors diagrammes fournis)
+─────────────────────────────────────────────────────────────────────────
+Les diagrammes fournis (cas d'utilisation + classes) couvrent uniquement la
+gestion INTERNE des membres/événements par le personnel de l'église
+(Secrétaire, Pasteur, Administrateur). Ils ne modélisent pas la présence
+PUBLIQUE de l'organisation sur le web.
+
+La PARTIE IV de ce plan ajoute donc un périmètre complémentaire, cohérent
+avec le métier mais non représenté dans les diagrammes UML d'origine :
+un SITE VITRINE PUBLIC, consultable sans authentification, permettant aux
+visiteurs de découvrir l'organisation, consulter les événements publics,
+soumettre une demande d'adhésion en ligne, s'inscrire à un événement et
+contacter l'église. Ces nouveaux besoins sont traduits par :
+  • une nouvelle application Django "vitrine" (back-end, PARTIE IV.B) qui
+    RÉUTILISE les modèles existants (Membre, Evenement, Statut) sans les
+    modifier structurellement, et ajoute uniquement des modèles de
+    "capture" (DemandeAdhesion, InscriptionEvenement, MessageContact,
+    ImageGalerie) qui alimentent ensuite les modèles métier via validation
+    humaine (le Secrétaire transforme une DemandeAdhesion en Membre) ;
+  • un second projet front-end React ("gestmembres-vitrine", PARTIE IV.C
+    à M), indépendant du back-office, déployé séparément, consommant
+    uniquement les endpoints publics de la même API Django.
+
+
+================================================================================
+PARTIE I — ARCHITECTURE GÉNÉRALE
+================================================================================
+
+STACK TECHNIQUE
+───────────────
+  Back-End  : Django 4.2 + Django REST Framework + SimpleJWT
+  Front-End : 2 SPA distinctes servies séparément
+                1) React 18 + Vite (Back-Office / Admin)     — PARTIE III
+                2) React 18 + Vite (Site Vitrine Public)      — PARTIE IV
+              Router v6 + TanStack Query + Zustand (les deux projets)
+  Base de données : PostgreSQL 15
+  Cache           : Redis 7 (sessions/recherches + broker Celery)
+  Tâches async    : Celery + django-celery-beat (rapports périodiques, emails)
+  PDF             : ReportLab / WeasyPrint (génération des rapports)
+  Emails          : SMTP (production) / console (dev)
+  Documentation API : drf-spectacular (Swagger / OpenAPI)
+  Anti-spam       : Honeypot + Google reCAPTCHA v3 + throttling DRF (site vitrine)
+  CI/CD           : GitHub Actions
+  Conteneurisation: Docker + docker-compose
+
+RÔLES & PUBLICS
+────────────────────────────────────────────────────────────────────────────
+  Personnel interne (Back-Office, authentifié) — hiérarchie cumulative :
+    SECRETAIRE      → Enregistrer/Modifier membres, Rechercher, Changer statut,
+                       Créer/Modifier événements, Consulter événements,
+                       Générer rapports, Valider les demandes d'adhésion en ligne
+    PASTEUR         → Tous les droits de SECRETAIRE + Supprimer membre/événement
+    ADMINISTRATEUR  → Tous les droits de PASTEUR + Gérer les comptes utilisateurs
+
+  Public (Site Vitrine, anonyme ou membre authentifié léger) :
+    VISITEUR ANONYME → Consulter le site, les événements publics, la galerie,
+                        soumettre une demande d'adhésion, s'inscrire à un
+                        événement, envoyer un message de contact
+    MEMBRE CONNECTÉ   → (si Utilisateur lié à son Membre) accès à un espace
+                        personnel : profil, historique de ses inscriptions
+
+FLUX GÉNÉRAL
+────────────
+  React Back-Office (5173) ──HTTP/JSON──▶ Django API (8000) /api/v1/...
+  React Vitrine      (5174) ──HTTP/JSON──▶ Django API (8000) /api/v1/public/...
+  Django             ──▶ PostgreSQL (Membres, Événements, Rapports, Demandes…)
+  Django             ──▶ Celery/Redis (rapports PDF, emails, notifications)
+  Django             ──▶ SMTP (statuts, rapports, adhésions, contact)
+
+
+================================================================================
+PARTIE II — BACK-END DJANGO
+================================================================================
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+A. ARBORESCENCE DU PROJET BACK-END
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+sygmebec-backend/
+│
+├── config/
+│   ├── __init__.py
+│   ├── settings/
+│   │   ├── __init__.py
+│   │   ├── base.py
+│   │   ├── development.py
+│   │   └── production.py
+│   ├── urls.py                       # URL racine + api/v1/
+│   ├── wsgi.py
+│   └── celery.py
+│
+├── apps/
+│   ├── accounts/                     # Utilisateur, RoleAcces, Auth
+│   │   ├── migrations/
+│   │   ├── management/commands/
+│   │   │   ├── create_roles.py
+│   │   │   └── create_admin.py
+│   │   ├── __init__.py
+│   │   ├── models.py                 # Utilisateur, RoleAcces
+│   │   ├── serializers.py
+│   │   ├── views.py
+│   │   ├── urls.py
+│   │   ├── admin.py
+│   │   ├── permissions.py            # Hiérarchie des rôles
+│   │   ├── signals.py
+│   │   ├── managers.py               # UtilisateurManager (create_user, create_superuser)
+│   │   └── apps.py
+│   │
+│   ├── members/                      # Membre, Statut, HistoriqueStatut, Fonction
+│   │   ├── migrations/
+│   │   ├── __init__.py
+│   │   ├── models.py                 # Membre, Statut, HistoriqueStatut, Fonction
+│   │   ├── serializers.py
+│   │   ├── views.py                  # Enregistrer, Modifier, Rechercher, Supprimer,
+│   │   │                             # Changer statut
+│   │   ├── urls.py
+│   │   ├── admin.py
+│   │   ├── filters.py                # Recherche par nom, statut, fonction
+│   │   ├── signals.py                # Historisation auto du changement de statut
+│   │   ├── managers.py
+│   │   └── apps.py
+│   │
+│   ├── events/                       # Evenement (+ champs publics, voir PARTIE IV.B.2)
+│   │   ├── migrations/
+│   │   ├── __init__.py
+│   │   ├── models.py                 # Evenement
+│   │   ├── serializers.py
+│   │   ├── views.py                  # Créer, Modifier, Consulter, Supprimer
+│   │   ├── urls.py
+│   │   ├── admin.py
+│   │   ├── filters.py                # Filtre par date, lieu, responsable
+│   │   └── apps.py
+│   │
+│   ├── reports/                      # Rapport, CritereFiltrage
+│   │   ├── migrations/
+│   │   ├── __init__.py
+│   │   ├── models.py                 # Rapport, CritereFiltrage
+│   │   ├── serializers.py
+│   │   ├── views.py                  # Générer rapport (membres / événements)
+│   │   ├── urls.py
+│   │   ├── admin.py
+│   │   ├── generators.py             # Logique de génération PDF/Excel du rapport
+│   │   ├── tasks.py                  # Génération asynchrone (Celery)
+│   │   └── apps.py
+│   │
+│   ├── vitrine/                      # NOUVEAU — voir détails complets PARTIE IV.B
+│   │   ├── migrations/
+│   │   ├── __init__.py
+│   │   ├── models.py                 # DemandeAdhesion, InscriptionEvenement,
+│   │   │                             # MessageContact, ImageGalerie
+│   │   ├── serializers.py            # Serializers publics (lecture/écriture limitée)
+│   │   ├── views.py                  # Vues AllowAny + throttling
+│   │   ├── urls.py                   # préfixe /api/v1/public/
+│   │   ├── admin.py                  # Validation des demandes, marquage traité
+│   │   ├── throttles.py              # PublicAnonThrottle
+│   │   ├── signals.py
+│   │   ├── tasks.py
+│   │   └── apps.py
+│   │
+│   └── core/                         # Utilitaires partagés
+│       ├── __init__.py
+│       ├── models.py                 # TimeStampedModel (abstrait)
+│       ├── pagination.py
+│       ├── permissions.py            # Permissions génériques (IsOwnerOrRole…)
+│       ├── exceptions.py             # Handler d'erreurs uniformisé
+│       └── apps.py
+│
+├── requirements/
+│   ├── base.txt
+│   ├── development.txt
+│   └── production.txt
+│
+├── fixtures/
+│   ├── roles.json
+│   ├── statuts.json
+│   └── fonctions.json
+│
+├── static/
+├── media/                            # photos de galerie, images d'événements
+├── manage.py
+├── .env.example
+├── Dockerfile
+└── docker-compose.yml
+
+TOTAL : 6 applications Django (accounts, members, events, reports, vitrine, core)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+B. APPLICATIONS DJANGO — RÉSUMÉ DES RESPONSABILITÉS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  accounts  → Authentification, gestion des comptes (Administrateur),
+              attribution des rôles (RoleAcces), lien Utilisateur ↔ Membre
+  members   → Cœur métier : fiches membres, statuts, historique, fonctions
+  events    → Création, modification, consultation, suppression d'événements
+  reports   → Génération de rapports filtrés (par statut / par période)
+  vitrine   → Points d'entrée publics (sans authentification) : demandes
+              d'adhésion, inscriptions aux événements, messages de contact,
+              galerie photo — alimente members/events après validation humaine
+  core      → Classes abstraites, pagination, permissions et exceptions communes
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+C. MODÈLES (MODELS) — FIDÈLES AU DIAGRAMME DE CLASSES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+──────────────────────────────
+core/models.py
+──────────────────────────────
+  class TimeStampedModel(models.Model):
+      created_at = models.DateTimeField(auto_now_add=True)
+      updated_at = models.DateTimeField(auto_now=True)
+      class Meta:
+          abstract = True
+
+──────────────────────────────
+accounts/models.py
+──────────────────────────────
+  class RoleAcces(models.Model):
+      """ Diagramme : RoleAcces (+nomRole) """
+      nomRole = models.CharField(max_length=30, unique=True, choices=[
+          ('SECRETAIRE', 'Secrétaire'),
+          ('PASTEUR', 'Pasteur'),
+          ('ADMINISTRATEUR', 'Administrateur'),
+      ])
+
+      def __str__(self):
+          return self.nomRole
+
+  class UtilisateurManager(BaseUserManager):
+      def create_user(self, identifiant, password=None, **extra):
+          user = self.model(identifiant=identifiant, **extra)
+          user.set_password(password)        # motDePasse hashé (jamais en clair)
+          user.save(using=self._db)
+          return user
+
+      def create_superuser(self, identifiant, password=None, **extra):
+          extra.setdefault('is_staff', True)
+          extra.setdefault('is_superuser', True)
+          return self.create_user(identifiant, password, **extra)
+
+  class Utilisateur(AbstractBaseUser, PermissionsMixin):
+      """ Diagramme : Utilisateur (+Idenetifiant, +motDePasse,
+                                    +DateCreationCompte, +dernierAcces) """
+      identifiant         = models.CharField(max_length=150, unique=True)   # Idenetifiant
+      # motDePasse est géré nativement par AbstractBaseUser (champ 'password', hashé)
+      date_creation_compte = models.DateTimeField(auto_now_add=True)        # DateCreationCompte
+      dernier_acces        = models.DateTimeField(null=True, blank=True)    # dernierAcces
+
+      role_acces = models.ForeignKey(                  # 1 a un 1 RoleAcces
+          RoleAcces, on_delete=models.PROTECT, related_name='utilisateurs')
+
+      membre = models.OneToOneField(                   # 0..1 correspond a 1 Membre
+          'members.Membre', on_delete=models.SET_NULL,
+          null=True, blank=True, related_name='utilisateur')
+
+      is_active = models.BooleanField(default=True)
+      is_staff  = models.BooleanField(default=False)
+
+      objects = UtilisateurManager()
+      USERNAME_FIELD = 'identifiant'
+      REQUIRED_FIELDS = []
+
+      def __str__(self):
+          return self.identifiant
+
+──────────────────────────────
+members/models.py
+──────────────────────────────
+  class Statut(models.Model):
+      """ Diagramme : Statut (+libelle) """
+      libelle = models.CharField(max_length=50, unique=True)
+      # Exemples : Actif, Inactif, Suspendu, Visiteur, Nouveau converti
+
+      def __str__(self):
+          return self.libelle
+
+  class Membre(TimeStampedModel):
+      """ Diagramme : Membre (+nom) """
+      nom = models.CharField(max_length=150)
+      # Champs additionnels indispensables (non dénaturants, requis pour un vrai
+      # système de gestion de membres) :
+      prenom        = models.CharField(max_length=150, blank=True)
+      telephone     = models.CharField(max_length=30, blank=True)
+      email         = models.EmailField(blank=True)
+      adresse       = models.CharField(max_length=255, blank=True)
+      date_naissance = models.DateField(null=True, blank=True)
+      date_adhesion  = models.DateField(auto_now_add=True)
+
+      statut = models.ForeignKey(                      # 1 a un 1 Statut
+          Statut, on_delete=models.PROTECT, related_name='membres')
+
+      fonctions = models.ManyToManyField(               # 0..* occupe 0..*
+          'Fonction', through='MembreFonction', related_name='membres')
+
+      def __str__(self):
+          return f"{self.nom} {self.prenom}"
+
+  class HistoriqueStatut(models.Model):
+      """ Diagramme : HistoriqueStatut (+ancienStatut, +nouveauStatut,
+                                          +dateChangement) — 1 possede 0..* """
+      membre         = models.ForeignKey(
+          Membre, on_delete=models.CASCADE, related_name='historiques_statut')
+      ancien_statut  = models.CharField(max_length=50)   # ancienStatut
+      nouveau_statut = models.CharField(max_length=50)   # nouveauStatut
+      date_changement = models.DateTimeField(auto_now_add=True)  # dateChangement
+      modifie_par    = models.ForeignKey(
+          'accounts.Utilisateur', on_delete=models.SET_NULL, null=True)
+
+      class Meta:
+          ordering = ['-date_changement']
+
+  class Fonction(models.Model):
+      """ Diagramme : Fonction (+nomFonction, +dateDebut, +dateFin)
+                       — 0..* occupe 0..* avec Membre """
+      nomFonction = models.CharField(max_length=100)
+      dateDebut   = models.DateField()
+      dateFin     = models.DateField(null=True, blank=True)
+
+      def __str__(self):
+          return self.nomFonction
+
+  class MembreFonction(models.Model):
+      """ Table pivot explicite de la relation M2M 'occupe' """
+      membre   = models.ForeignKey(Membre, on_delete=models.CASCADE)
+      fonction = models.ForeignKey(Fonction, on_delete=models.CASCADE)
+
+      class Meta:
+          unique_together = ('membre', 'fonction')
+
+──────────────────────────────
+events/models.py
+──────────────────────────────
+  class Evenement(TimeStampedModel):
+      """ Diagramme : Evenement (+titre, +date, +lieu, +description,
+                                   +dateCreation) — 1 est responsable de 0..* """
+      titre        = models.CharField(max_length=200)
+      date         = models.DateTimeField()
+      lieu         = models.CharField(max_length=255)
+      description  = models.TextField(blank=True)
+      dateCreation = models.DateTimeField(auto_now_add=True)
+
+      responsable = models.ForeignKey(
+          'members.Membre', on_delete=models.PROTECT, related_name='evenements')
+
+      # ── Champs additionnels pour la vitrine publique (PARTIE IV.B.2) ──
+      est_public = models.BooleanField(default=False)
+      image      = models.ImageField(upload_to='evenements/', null=True, blank=True)
+      capacite   = models.PositiveIntegerField(null=True, blank=True)
+
+      def __str__(self):
+          return self.titre
+
+  (Rapport, CritereFiltrage → voir reports/models.py, inchangés)
+
+──────────────────────────────
+vitrine/models.py  — NOUVEAU (détail complet en PARTIE IV.B.1)
+──────────────────────────────
+  DemandeAdhesion, InscriptionEvenement, MessageContact, ImageGalerie
+  → voir PARTIE IV.B.1 pour le code complet des modèles.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+D. SERIALIZERS DRF — PAR RESSOURCE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  accounts : UtilisateurSerializer, UtilisateurCreateSerializer, RoleAccesSerializer
+  members  : MembreListSerializer, MembreDetailSerializer, MembreCreateSerializer,
+             ChangerStatutSerializer, StatutSerializer, FonctionSerializer,
+             HistoriqueStatutSerializer
+  events   : EvenementListSerializer, EvenementDetailSerializer, EvenementCreateSerializer
+  reports  : RapportListSerializer, RapportDetailSerializer, GenererRapportSerializer,
+             CritereFiltrageSerializer
+  vitrine  : voir PARTIE IV.B.3 (serializers publics dédiés)
+
+TOTAL BACK-OFFICE : 13 serializers  (+ 4 serializers publics détaillés en PARTIE IV)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+E. VUES API (VIEWSETS & APIVIEWS) — FIDÈLES AUX CAS D'UTILISATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+members/views.py
+───────────────────
+  class MembreViewSet(ModelViewSet):
+      # «Enregistrer un membre»   → create()             (SECRETAIRE+)
+      # «Modifier un membre»      → update()/partial_update() [include Rechercher]
+      # «Supprimer un membre»     → destroy()             [include Rechercher] (PASTEUR+)
+      # «Rechercher un membre»    → list() avec ?search=  (cas d'utilisation inclus)
+      filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+      search_fields = ['nom', 'prenom', 'email', 'telephone']
+      filterset_fields = ['statut', 'fonctions']
+
+      def get_permissions(self):
+          if self.action == 'destroy':
+              return [IsPasteurOrPlus()]
+          return [IsSecretaireOrPlus()]
+
+      @action(detail=True, methods=['post'])
+      def changer_statut(self, request, pk):
+          """ «Changer statut» — crée automatiquement une HistoriqueStatut """
+          membre = self.get_object()
+          ancien = membre.statut.libelle
+          serializer = ChangerStatutSerializer(data=request.data)
+          serializer.is_valid(raise_exception=True)
+          nouveau = serializer.validated_data['nouveau_statut']
+          membre.statut = Statut.objects.get(libelle=nouveau)
+          membre.save()
+          HistoriqueStatut.objects.create(
+              membre=membre, ancien_statut=ancien, nouveau_statut=nouveau,
+              modifie_par=request.user)
+          return Response(MembreDetailSerializer(membre).data)
+
+  class FonctionViewSet(ModelViewSet)          # CRUD des fonctions disponibles
+  class StatutViewSet(ModelViewSet)            # CRUD des statuts disponibles
+  class HistoriqueStatutListView(ListAPIView)  # historique en lecture seule
+
+events/views.py
+───────────────────
+  class EvenementViewSet(ModelViewSet):
+      # «Creer un evenement»      → create()             (SECRETAIRE+)
+      # «Modifier un evenement»   → update()/partial_update() [include Consulter]
+      # «Supprimer un evenement»  → destroy()             [include Consulter] (PASTEUR+)
+      # «Consulter un evenement»  → retrieve()/list()      (cas d'utilisation inclus)
+      filter_backends = [DjangoFilterBackend, OrderingFilter]
+      filterset_fields = ['lieu', 'responsable']
+      ordering_fields = ['date', 'dateCreation']
+
+      def get_permissions(self):
+          if self.action == 'destroy':
+              return [IsPasteurOrPlus()]
+          return [IsSecretaireOrPlus()]
+
+reports/views.py
+───────────────────
+  class RapportViewSet(ModelViewSet):
+      # «Generer rapport»  [include Consulter un evenement, Rechercher un membre]
+      def create(self, request):
+          """ Construit un CritereFiltrage puis déclenche generer_rapport.delay() """
+          serializer = GenererRapportSerializer(data=request.data)
+          serializer.is_valid(raise_exception=True)
+          critere = CritereFiltrage.objects.create(
+              statut=serializer.validated_data.get('statut', ''),
+              periode=serializer.validated_data.get('periode', ''))
+          rapport = Rapport.objects.create(
+              titre=serializer.validated_data['titre'],
+              dateFin=serializer.validated_data.get('dateFin'),
+              genere_par=request.user.membre, critere=critere)
+          generer_rapport_pdf.delay(rapport.id)        # tâche Celery asynchrone
+          return Response(RapportDetailSerializer(rapport).data, status=201)
+
+      @action(detail=True, methods=['get'])
+      def telecharger(self, request, pk):
+          """ Retourne le fichier PDF/Excel généré """
+          ...
+
+vitrine/views.py  → voir PARTIE IV.B.4 (vues publiques complètes)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+F. URLS API
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+config/urls.py :
+  path('api/v1/', include('config.api_urls'))
+  path('api/v1/docs/', SpectacularSwaggerView.as_view())
+
+config/api_urls.py :
+  AUTHENTIFICATION
+  ├── auth/login/                       POST    (LoginView)
+  ├── auth/logout/                      POST
+  ├── auth/token/refresh/               POST
+  └── auth/me/                          GET
+
+  COMPTES (Administrateur)
+  ├── utilisateurs/                     GET, POST
+  ├── utilisateurs/{id}/                GET, PUT, PATCH, DELETE
+  ├── utilisateurs/{id}/reset-password/ POST
+  └── utilisateurs/{id}/desactiver/     POST
+
+  MEMBRES (Secrétaire+)
+  ├── membres/                          GET (recherche ?search=), POST
+  ├── membres/{id}/                     GET, PUT, PATCH, DELETE (Pasteur+)
+  ├── membres/{id}/changer-statut/      POST
+  ├── statuts/                          GET, POST
+  ├── fonctions/                        GET, POST
+  └── historiques-statut/               GET (lecture seule)
+
+  EVENEMENTS (Secrétaire+)
+  ├── evenements/                       GET, POST
+  └── evenements/{id}/                  GET, PUT, PATCH, DELETE (Pasteur+)
+
+  RAPPORTS (Secrétaire+)
+  ├── rapports/                         GET, POST  («Generer rapport»)
+  ├── rapports/{id}/                    GET
+  └── rapports/{id}/telecharger/        GET
+
+  PUBLIC / SITE VITRINE (AllowAny — voir détail PARTIE IV.B.5)
+  ├── public/evenements/                GET
+  ├── public/evenements/{id}/           GET
+  ├── public/evenements/{id}/inscription/  POST
+  ├── public/adhesion/                  POST
+  ├── public/contact/                   POST
+  ├── public/galerie/                   GET
+  ├── membre/mon-profil/                GET, PATCH (membre connecté)
+  └── membre/mes-inscriptions/          GET         (membre connecté)
+
+TOTAL BACK-OFFICE : 24 routes API   (+ 8 routes publiques détaillées en PARTIE IV)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+G. AUTHENTIFICATION JWT & SÉCURITÉ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STRATÉGIE JWT :
+  • Access Token   : 15 minutes, envoyé dans le corps JSON
+  • Refresh Token  : 7 jours, stocké en httpOnly cookie sécurisé
+  • USERNAME_FIELD = 'identifiant' (correspond au champ "Idenetifiant" du diagramme)
+  • Le même mécanisme JWT est réutilisé, en lecture restreinte, par l'espace
+    membre du site vitrine (PARTIE IV.K) — un Membre ne peut se connecter que
+    si son compte Utilisateur existe déjà et lui a été communiqué.
+
+FLUX D'AUTHENTIFICATION :
+  1. POST /auth/login/    { identifiant, password } → { access, user } + cookie refresh
+  2. React stocke 'access' en mémoire (Zustand, jamais localStorage)
+  3. Axios interceptor ajoute Authorization: Bearer <access>
+  4. À expiration → POST /auth/token/refresh/ (cookie envoyé automatiquement)
+  5. Mise à jour de dernier_acces à chaque login (signal post_save côté vue)
+
+CODE BACK-END (accounts/views.py) :
+────────────────────────────────────
+  class LoginView(TokenObtainPairView):
+      def post(self, request, *args, **kwargs):
+          response = super().post(request, *args, **kwargs)
+          refresh = response.data.pop('refresh')
+          response.set_cookie('refresh_token', refresh, httponly=True,
+                               secure=True, samesite='Lax', max_age=7*24*3600)
+          user = Utilisateur.objects.get(identifiant=request.data['identifiant'])
+          user.dernier_acces = timezone.now()
+          user.save(update_fields=['dernier_acces'])
+          response.data['user'] = UtilisateurSerializer(user).data
+          return response
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+H. PERMISSIONS & HIÉRARCHIE DES RÔLES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+apps/accounts/permissions.py :
+─────────────────────────────────
+  # Traduit fidèlement la généralisation du diagramme :
+  # Administrateur ⊃ Pasteur ⊃ Secretaire
+
+  HIERARCHIE = {'SECRETAIRE': 1, 'PASTEUR': 2, 'ADMINISTRATEUR': 3}
+
+  class IsSecretaireOrPlus(BasePermission):
+      def has_permission(self, request, view):
+          role = request.user.role_acces.nomRole
+          return HIERARCHIE.get(role, 0) >= HIERARCHIE['SECRETAIRE']
+
+  class IsPasteurOrPlus(BasePermission):
+      def has_permission(self, request, view):
+          role = request.user.role_acces.nomRole
+          return HIERARCHIE.get(role, 0) >= HIERARCHIE['PASTEUR']
+
+  class IsAdministrateur(BasePermission):
+      def has_permission(self, request, view):
+          return request.user.role_acces.nomRole == 'ADMINISTRATEUR'
+
+UTILISATION :
+  class MembreViewSet(ModelViewSet):
+      def get_permissions(self):
+          if self.action == 'destroy':           # «Supprimer un membre»
+              return [IsPasteurOrPlus()]
+          return [IsSecretaireOrPlus()]           # le reste, dès Secrétaire
+
+  class UtilisateurViewSet(ModelViewSet):
+      permission_classes = [IsAdministrateur]      # «Gerer les comptes utilisateurs»
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+I. SIGNALS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  accounts/signals.py
+    post_save(Utilisateur, created=True)   → email de bienvenue avec identifiant
+
+  members/signals.py
+    pre_save(Membre)         → détecte changement de 'statut'
+                                → crée automatiquement une HistoriqueStatut
+                                  si non créée explicitement par la vue
+
+  reports/signals.py
+    post_save(Rapport, created=True) → notifier le demandeur (email) une fois
+                                        le fichier généré (déclenché par la tâche)
+
+  vitrine/signals.py → voir PARTIE IV.B.7 (3 signals supplémentaires)
+
+TOTAL BACK-OFFICE : 3 signals   (+ 3 signals publics détaillés en PARTIE IV)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+J. TÂCHES CELERY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  reports/tasks.py
+    generer_rapport_pdf(rapport_id)
+      → applique CritereFiltrage (statut, periode) sur Membre/Evenement
+      → génère le PDF (ReportLab) et l'enregistre dans Rapport.fichier
+      → envoie un email de notification (rapport prêt)
+
+  accounts/tasks.py
+    send_welcome_email(utilisateur_id)
+    send_password_reset_email(utilisateur_id, token)
+
+  members/tasks.py
+    rappel_anniversaire_membres()        [périodique — tous les jours à 7h]
+    rappel_fonction_expiree()            [périodique — chaque semaine, dateFin atteinte]
+
+  vitrine/tasks.py → voir PARTIE IV.B.8 (3 tâches supplémentaires)
+
+TOTAL BACK-OFFICE : 5 tâches Celery   (+ 3 tâches publiques détaillées en PARTIE IV)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+K. SETTINGS — BASE / DEV / PROD
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+config/settings/base.py
+────────────────────────
+DJANGO_APPS = [
+    'django.contrib.admin', 'django.contrib.auth',
+    'django.contrib.contenttypes', 'django.contrib.sessions',
+    'django.contrib.messages', 'django.contrib.staticfiles',
+]
+
+THIRD_PARTY_APPS = [
+    'rest_framework', 'rest_framework_simplejwt',
+    'corsheaders', 'django_filters', 'drf_spectacular',
+    'celery', 'django_celery_beat', 'django_celery_results',
+]
+
+LOCAL_APPS = [
+    'apps.core', 'apps.accounts', 'apps.members',
+    'apps.events', 'apps.reports', 'apps.vitrine',
+]
+
+AUTH_USER_MODEL = 'accounts.Utilisateur'
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.IsAuthenticated'],
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+        'rest_framework.filters.SearchFilter',
+        'rest_framework.filters.OrderingFilter',
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 20,
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    # Ajout pour les endpoints publics de la vitrine (anti-abus) :
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.ScopedRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'public': '20/hour',        # formulaires publics (adhésion, contact, inscription)
+        'public-read': '120/hour',  # lecture (évenements publics, galerie)
+    },
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': True,
+}
+
+CELERY_BROKER_URL     = env('REDIS_URL', default='redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = env('REDIS_URL', default='redis://localhost:6379/0')
+CELERY_TIMEZONE       = 'America/Port-au-Prince'
+
+LANGUAGE_CODE = 'fr'
+TIME_ZONE     = 'America/Port-au-Prince'
+USE_TZ        = True
+
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:5173',        # back-office (dev)
+    'http://localhost:5174',        # site vitrine (dev)
+    'https://admin.sygmebec.org',   # back-office (prod)
+    'https://www.sygmebec.org',     # site vitrine (prod)
+]
+CORS_ALLOW_CREDENTIALS = True
+
+RECAPTCHA_SECRET_KEY = env('RECAPTCHA_SECRET_KEY', default='')  # vérification côté back
+                                                                   # des formulaires publics
+
+config/settings/development.py
+────────────────────────────────
+from .base import *
+DEBUG = True
+DATABASES = {'default': env.db('DATABASE_URL', default='postgres://...')}
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+config/settings/production.py
+───────────────────────────────
+from .base import *
+DEBUG = False
+DATABASES = {'default': env.db('DATABASE_URL')}
+SECURE_SSL_REDIRECT = True
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = env('EMAIL_HOST')
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+L. REQUIREMENTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+requirements/base.txt
+──────────────────────
+Django==4.2.13
+psycopg2-binary==2.9.9
+djangorestframework==3.15.1
+djangorestframework-simplejwt==5.3.1
+django-cors-headers==4.3.1
+django-filter==23.5
+drf-spectacular==0.27.2
+celery==5.3.6
+redis==5.0.3
+django-celery-beat==2.6.0
+reportlab==4.1.0
+python-decouple==3.8
+Pillow==10.3.0                 # gestion des images (galerie, événements)
+requests==2.31.0               # vérification reCAPTCHA côté serveur
+
+requirements/development.txt
+──────────────────────────────
+-r base.txt
+django-debug-toolbar==4.3.0
+ipython==8.22.2
+
+requirements/production.txt
+─────────────────────────────
+-r base.txt
+gunicorn==21.2.0
+sentry-sdk==1.40.6
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+M. FIXTURES & DONNÉES INITIALES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+fixtures/roles.json
+  → SECRETAIRE, PASTEUR, ADMINISTRATEUR
+
+fixtures/statuts.json
+  → Actif, Inactif, Suspendu, Visiteur, Nouveau converti
+
+fixtures/fonctions.json
+  → Diacre, Chorale, École du dimanche, Protocole, Trésorier
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+N. COMMANDES MANAGEMENT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  accounts/management/commands/create_roles.py
+    → crée RoleAcces SECRETAIRE / PASTEUR / ADMINISTRATEUR si absents
+
+  accounts/management/commands/create_admin.py
+    → crée un compte ADMINISTRATEUR initial (interactif, mot de passe sécurisé)
+
+TOTAL : 2 commandes
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+O. RÉCAPITULATIF BACK-END
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Applications Django      : 6 apps (core, accounts, members, events, reports, vitrine)
+  Modèles                  : 9 modèles métier (diagramme) + 4 modèles vitrine (PARTIE IV)
+  Serializers DRF          : 13 serializers back-office + 4 serializers publics
+  Vues API (ViewSets)      : 8 vues principales back-office + 5 vues publiques
+  URL patterns API         : 24 routes back-office + 8 routes publiques
+  Signals                  : 3 back-office + 3 vitrine
+  Tâches Celery            : 5 back-office + 3 vitrine
+  Commandes management     : 2
+
+  (Détail complet de la partie "vitrine" : voir PARTIE IV.B)
+
+
+================================================================================
+PARTIE III — FRONT-END REACT (BACK-OFFICE ADMINISTRATIF)
+================================================================================
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+A. ARBORESCENCE DU PROJET FRONT-END
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+sygmebec-frontend/
+│
+├── public/
+├── src/
+│   ├── api/
+│   │   ├── axiosClient.js          # instance axios + interceptors JWT
+│   │   ├── authApi.js
+│   │   ├── utilisateursApi.js
+│   │   ├── membresApi.js
+│   │   ├── evenementsApi.js
+│   │   └── rapportsApi.js
+│   │
+│   ├── store/
+│   │   ├── authStore.js            # Zustand : user, access token, rôle
+│   │   ├── uiStore.js              # sidebar, modals, toasts
+│   │   └── filtersStore.js         # filtres de recherche membres/événements
+│   │
+│   ├── hooks/
+│   │   ├── useAuth.js
+│   │   ├── useMembres.js           # useQuery/useMutation (membresApi)
+│   │   ├── useEvenements.js
+│   │   ├── useRapports.js
+│   │   └── useUtilisateurs.js
+│   │
+│   ├── components/
+│   │   ├── ui/                     # Button, Input, Modal, Table, Badge, Toast
+│   │   ├── layout/                 # Navbar, Sidebar, Footer
+│   │   ├── membres/                # MembreCard, MembreForm, StatutBadge,
+│   │   │                           # ChangerStatutModal, HistoriqueStatutList
+│   │   ├── evenements/              # EvenementCard, EvenementForm, EvenementCalendar
+│   │   ├── rapports/                # RapportForm, RapportCard, CritereFiltrageForm
+│   │   └── comptes/                 # UtilisateurForm, UtilisateurTable, RoleSelect
+│   │
+│   ├── pages/
+│   │   ├── auth/
+│   │   │   └── LoginPage.jsx
+│   │   ├── membres/
+│   │   │   ├── MembresListPage.jsx        # «Rechercher un membre»
+│   │   │   ├── MembreDetailPage.jsx        # «Consulter»
+│   │   │   ├── MembreCreatePage.jsx        # «Enregistrer un membre»
+│   │   │   └── MembreEditPage.jsx          # «Modifier un membre» / «Changer statut»
+│   │   ├── evenements/
+│   │   │   ├── EvenementsListPage.jsx      # «Consulter un evenement»
+│   │   │   ├── EvenementCreatePage.jsx     # «Creer un evenement»
+│   │   │   └── EvenementEditPage.jsx       # «Modifier un evenement»
+│   │   ├── rapports/
+│   │   │   ├── RapportsListPage.jsx
+│   │   │   └── RapportGenererPage.jsx      # «Generer rapport»
+│   │   ├── comptes/
+│   │   │   ├── ComptesListPage.jsx         # «Gerer les comptes utilisateurs»
+│   │   │   └── DemandesAdhesionPage.jsx    # NOUVEAU : validation des demandes
+│   │   │                                   # venues du site vitrine (Secrétaire+)
+│   │   └── DashboardPage.jsx
+│   │
+│   ├── layouts/
+│   │   ├── MainLayout.jsx          # Navbar + Sidebar + Outlet
+│   │   └── AuthLayout.jsx          # Centré, sans navigation
+│   │
+│   ├── router/
+│   │   ├── index.jsx
+│   │   ├── PrivateRoute.jsx
+│   │   └── RoleRoute.jsx           # vérifie HIERARCHIE des rôles
+│   │
+│   ├── utils/
+│   │   ├── roleHierarchy.js        # même logique que le back (SECRETAIRE<PASTEUR<ADMIN)
+│   │   └── formatDate.js
+│   │
+│   ├── App.jsx
+│   └── main.jsx
+│
+├── .env.example
+├── index.html
+├── package.json
+├── vite.config.js
+└── tailwind.config.js
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+B. COUCHE API (AXIOS)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+src/api/axiosClient.js :
+  const api = axios.create({
+      baseURL: import.meta.env.VITE_API_URL,
+      withCredentials: true,          // pour le cookie refresh httpOnly
+  });
+
+  api.interceptors.request.use((config) => {
+      const token = useAuthStore.getState().accessToken;
+      if (token) config.headers.Authorization = `Bearer ${token}`;
+      return config;
+  });
+
+  api.interceptors.response.use(
+      (res) => res,
+      async (error) => {
+          if (error.response?.status === 401) {
+              const { data } = await api.post('/auth/token/refresh/');
+              useAuthStore.getState().setAccessToken(data.access);
+              return api(error.config);   // relance la requête originale
+          }
+          return Promise.reject(error);
+      }
+  );
+
+src/api/membresApi.js :
+  export const getMembres   = (params) => api.get('/membres/', { params });
+  export const getMembre    = (id)     => api.get(`/membres/${id}/`);
+  export const createMembre = (data)   => api.post('/membres/', data);
+  export const updateMembre = (id, d)  => api.patch(`/membres/${id}/`, d);
+  export const deleteMembre = (id)     => api.delete(`/membres/${id}/`);
+  export const changerStatut = (id, d) => api.post(`/membres/${id}/changer-statut/`, d);
+
+  (modules similaires pour evenementsApi.js, rapportsApi.js, utilisateursApi.js)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+C. ZUSTAND STORES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  authStore.js :
+    state    : { user, accessToken, role, isAuthenticated }
+    actions  : login(), logout(), setAccessToken(), setUser()
+
+  uiStore.js :
+    state    : { sidebarOpen, activeModal }
+    actions  : toggleSidebar(), openModal(), closeModal()
+
+  filtersStore.js :
+    state    : { recherche, statutFiltre, fonctionFiltre, dateRange }
+    actions  : setFiltre(), resetFiltres()
+
+TOTAL : 3 stores
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+D. CUSTOM HOOKS (TANSTACK QUERY)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  useMembres.js
+    useMembresQuery(filtres)         → liste paginée + recherche
+    useMembreQuery(id)               → détail
+    useCreateMembreMutation()
+    useUpdateMembreMutation()
+    useDeleteMembreMutation()
+    useChangerStatutMutation()
+
+  useEvenements.js
+    useEvenementsQuery(filtres)
+    useEvenementQuery(id)
+    useCreateEvenementMutation()
+    useUpdateEvenementMutation()
+    useDeleteEvenementMutation()
+
+  useRapports.js
+    useRapportsQuery()
+    useGenererRapportMutation()
+    useTelechargerRapport(id)
+
+  useUtilisateurs.js
+    useUtilisateursQuery()
+    useCreateUtilisateurMutation()
+    useResetPasswordMutation()
+    useDesactiverMutation()
+
+  useAuth.js
+    useLoginMutation(), useLogoutMutation(), useCurrentUser()
+
+TOTAL : 5 fichiers de hooks
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+E. COMPOSANTS RÉUTILISABLES — RÉSUMÉ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ui/           → 8 composants (Button, Input, Select, Modal, Table, Badge,
+                   Toast, Pagination)
+  layout/       → 3 composants (Navbar, Sidebar, Footer)
+  membres/      → 5 composants (MembreCard, MembreForm, StatutBadge,
+                   ChangerStatutModal, HistoriqueStatutList)
+  evenements/   → 3 composants (EvenementCard, EvenementForm, EvenementCalendar)
+  rapports/     → 3 composants (RapportForm, RapportCard, CritereFiltrageForm)
+  comptes/      → 3 composants (UtilisateurForm, UtilisateurTable, RoleSelect)
+
+TOTAL : 25 composants
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+F. PAGES (ROUTES) — FIDÈLES AUX CAS D'UTILISATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  auth/         → 1 page  (LoginPage)
+  dashboard/    → 1 page  (DashboardPage — KPIs : nb membres, événements à venir,
+                            demandes d'adhésion en attente)
+  membres/      → 4 pages (Liste/Recherche, Détail, Création, Édition+Statut)
+  evenements/   → 3 pages (Liste/Consultation, Création, Édition)
+  rapports/     → 2 pages (Liste, Génération)
+  comptes/      → 2 pages (Gestion des comptes — Administrateur ;
+                            Validation des demandes d'adhésion — Secrétaire+)
+
+TOTAL : 13 pages
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+G. LAYOUTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  MainLayout  → Navbar + Sidebar (liens visibles selon rôle) + Outlet
+  AuthLayout  → Centré, fond neutre, sans navigation
+
+TOTAL : 2 layouts
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+H. ROUTER & PROTECTION DES ROUTES (PAR RÔLE)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+src/router/index.jsx :
+  Route publique (AuthLayout) :
+    /login                  → LoginPage
+
+  Routes privées (PrivateRoute + MainLayout) :
+    /                       → DashboardPage              (tous rôles connectés)
+
+    /membres                → MembresListPage             (Secrétaire+)
+    /membres/nouveau         → MembreCreatePage            (Secrétaire+)
+    /membres/:id             → MembreDetailPage            (Secrétaire+)
+    /membres/:id/modifier    → MembreEditPage              (Secrétaire+)
+
+    /evenements              → EvenementsListPage          (Secrétaire+)
+    /evenements/nouveau      → EvenementCreatePage         (Secrétaire+)
+    /evenements/:id/modifier → EvenementEditPage           (Secrétaire+)
+
+    /rapports                → RapportsListPage            (Secrétaire+)
+    /rapports/generer        → RapportGenererPage          (Secrétaire+)
+
+    /comptes                 → ComptesListPage             (RoleRoute ['ADMINISTRATEUR'])
+    /demandes-adhesion       → DemandesAdhesionPage        (Secrétaire+)
+
+src/router/RoleRoute.jsx :
+  → traduit la hiérarchie du diagramme : compare HIERARCHIE[user.role]
+    au niveau minimum requis pour la route ; redirige vers "/" si insuffisant.
+
+  • Suppression d'un membre/événement (boutons "Supprimer") :
+    affichés conditionnellement dans l'UI uniquement si
+    HIERARCHIE[user.role] >= HIERARCHIE['PASTEUR']
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+I. VARIABLES D'ENVIRONNEMENT FRONT-END
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+.env.example :
+  VITE_API_URL=http://localhost:8000/api/v1
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+J. RÉCAPITULATIF FRONT-END BACK-OFFICE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Pages React              : 13 pages
+  Composants réutilisables : 25 composants
+  Layouts                  : 2
+  Zustand stores           : 3
+  Custom hooks             : 5 fichiers
+  Modules API axios        : 5
+  Groupes de routes protégées : 2 (rôles cumulatifs + route ADMINISTRATEUR seule)
+
+
+================================================================================
+PARTIE IV — SITE VITRINE PUBLIC
+================================================================================
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+A. OBJECTIF, PÉRIMÈTRE ET JUSTIFICATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+OBJECTIF :
+  Donner à l'église une présence publique sur le web, indépendante du
+  back-office, permettant à tout visiteur de :
+    1. Découvrir l'organisation (mission, valeurs, équipe, historique)
+    2. Consulter les événements publics à venir et passés
+    3. S'inscrire en ligne à un événement
+    4. Soumettre une demande d'adhésion en ligne
+    5. Consulter une galerie photo
+    6. Contacter l'église via un formulaire
+    7. (si compte lié) se connecter à un espace membre pour consulter son
+       profil et l'historique de ses inscriptions
+
+PÉRIMÈTRE TECHNIQUE :
+  • Projet front-end INDÉPENDANT ("gestmembres-vitrine"), build et déploiement
+    séparés du back-office (domaines distincts, ex. www.sygmebec.org vs
+    admin.sygmebec.org)
+  • Consomme la MÊME API Django, sur des routes dédiées préfixées /public/
+    (lecture/écriture anonyme, throttlées) et /membre/ (authentifié, lecture
+    seule pour un Membre connecté)
+  • Ne modifie AUCUN modèle du diagramme de classes fourni : les demandes
+    publiques transitent par des modèles "tampon" (DemandeAdhesion,
+    InscriptionEvenement, MessageContact) validés manuellement par le
+    personnel (Secrétaire+) avant de devenir des données métier définitives
+    (ex. Membre)
+
+PRINCIPE DE VALIDATION HUMAINE (garde-fou métier) :
+  Visiteur → DemandeAdhesion (statut EN_ATTENTE)
+           → Secrétaire consulte /demandes-adhesion (back-office, PARTIE III.F)
+           → Secrétaire clique "Valider" → crée un Membre réel (Statut =
+             "Nouveau converti" par défaut) + DemandeAdhesion.statut = VALIDEE
+           → ou "Rejeter" → DemandeAdhesion.statut = REJETEE (avec motif)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+B. BACK-END ADDITIONNEL — APPLICATION "vitrine"
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+──────────────────────────────────────────────
+B.1 MODÈLES — vitrine/models.py
+──────────────────────────────────────────────
+  class DemandeAdhesion(TimeStampedModel):
+      """ Formulaire public d'adhésion — alimente Membre après validation """
+      nom            = models.CharField(max_length=150)
+      prenom         = models.CharField(max_length=150)
+      email          = models.EmailField()
+      telephone      = models.CharField(max_length=30, blank=True)
+      dateNaissance  = models.DateField(null=True, blank=True)
+      message        = models.TextField(blank=True)
+      dateDemande    = models.DateTimeField(auto_now_add=True)
+      statut         = models.CharField(max_length=20, default='EN_ATTENTE',
+                          choices=[('EN_ATTENTE', 'En attente'),
+                                   ('VALIDEE', 'Validée'),
+                                   ('REJETEE', 'Rejetée')])
+      motif_rejet    = models.CharField(max_length=255, blank=True)
+      membre_cree    = models.OneToOneField(
+          'members.Membre', on_delete=models.SET_NULL,
+          null=True, blank=True, related_name='demande_origine')
+      traite_par     = models.ForeignKey(
+          'accounts.Utilisateur', on_delete=models.SET_NULL, null=True, blank=True)
+
+      def __str__(self):
+          return f"{self.nom} {self.prenom} ({self.statut})"
+
+  class InscriptionEvenement(TimeStampedModel):
+      """ Inscription publique à un événement (avec ou sans compte) """
+      evenement   = models.ForeignKey(
+          'events.Evenement', on_delete=models.CASCADE, related_name='inscriptions')
+      nom         = models.CharField(max_length=150)
+      prenom      = models.CharField(max_length=150)
+      email       = models.EmailField()
+      telephone   = models.CharField(max_length=30, blank=True)
+      nombrePlaces = models.PositiveIntegerField(default=1)
+      dateInscription = models.DateTimeField(auto_now_add=True)
+      membre      = models.ForeignKey(                  # rempli si visiteur connecté
+          'members.Membre', on_delete=models.SET_NULL, null=True, blank=True)
+
+      class Meta:
+          ordering = ['-dateInscription']
+
+  class MessageContact(TimeStampedModel):
+      """ Formulaire de contact public """
+      nom      = models.CharField(max_length=150)
+      email    = models.EmailField()
+      sujet    = models.CharField(max_length=200)
+      message  = models.TextField()
+      dateEnvoi = models.DateTimeField(auto_now_add=True)
+      traite   = models.BooleanField(default=False)
+
+  class ImageGalerie(TimeStampedModel):
+      """ Photo affichée sur la page Galerie du site vitrine """
+      titre      = models.CharField(max_length=150, blank=True)
+      image      = models.ImageField(upload_to='galerie/')
+      evenement  = models.ForeignKey(
+          'events.Evenement', on_delete=models.SET_NULL, null=True, blank=True,
+          related_name='photos')
+      ordre      = models.PositiveIntegerField(default=0)
+      dateAjout  = models.DateTimeField(auto_now_add=True)
+
+      class Meta:
+          ordering = ['ordre', '-dateAjout']
+
+──────────────────────────────────────────────
+B.2 CHAMPS ADDITIONNELS SUR Evenement (events/models.py)
+──────────────────────────────────────────────
+  Déjà intégrés dans le modèle Evenement (voir PARTIE II.C) :
+    est_public : bool   → détermine l'affichage sur la vitrine
+    image      : ImageField → visuel de la carte événement côté vitrine
+    capacite   : int nullable → permet de calculer les places restantes
+                 (capacite - somme(InscriptionEvenement.nombrePlaces))
+
+──────────────────────────────────────────────
+B.3 SERIALIZERS PUBLICS — vitrine/serializers.py
+──────────────────────────────────────────────
+  class EvenementPublicSerializer(ModelSerializer):
+      """ Champs limités — pas de données internes (responsable interne,
+          historique, etc.) """
+      places_restantes = SerializerMethodField()
+      class Meta:
+          model = Evenement
+          fields = ['id', 'titre', 'date', 'lieu', 'description', 'image',
+                     'capacite', 'places_restantes']
+
+      def get_places_restantes(self, obj):
+          if obj.capacite is None:
+              return None
+          inscrits = obj.inscriptions.aggregate(t=Sum('nombrePlaces'))['t'] or 0
+          return max(obj.capacite - inscrits, 0)
+
+  class DemandeAdhesionCreateSerializer(ModelSerializer):
+      honeypot = CharField(required=False, allow_blank=True, write_only=True)
+      class Meta:
+          model = DemandeAdhesion
+          fields = ['nom', 'prenom', 'email', 'telephone', 'dateNaissance',
+                     'message', 'honeypot']
+
+      def validate_honeypot(self, value):
+          if value:                       # champ piège rempli → probable bot
+              raise ValidationError("Requête invalide.")
+          return value
+
+  class InscriptionEvenementCreateSerializer(ModelSerializer):
+      class Meta:
+          model = InscriptionEvenement
+          fields = ['evenement', 'nom', 'prenom', 'email', 'telephone', 'nombrePlaces']
+
+      def validate(self, data):
+          evenement = data['evenement']
+          if evenement.capacite is not None:
+              inscrits = evenement.inscriptions.aggregate(
+                  t=Sum('nombrePlaces'))['t'] or 0
+              if inscrits + data['nombrePlaces'] > evenement.capacite:
+                  raise ValidationError("Plus assez de places disponibles.")
+          return data
+
+  class MessageContactCreateSerializer(ModelSerializer):
+      class Meta:
+          model = MessageContact
+          fields = ['nom', 'email', 'sujet', 'message']
+
+  class ImageGalerieSerializer(ModelSerializer):
+      class Meta:
+          model = ImageGalerie
+          fields = ['id', 'titre', 'image', 'evenement', 'dateAjout']
+
+──────────────────────────────────────────────
+B.4 VUES API PUBLIQUES — vitrine/views.py
+──────────────────────────────────────────────
+  class EvenementPublicListView(ListAPIView):
+      # GET /public/evenements/  — «Consulter un evenement» côté public
+      queryset = Evenement.objects.filter(est_public=True).order_by('date')
+      serializer_class = EvenementPublicSerializer
+      permission_classes = [AllowAny]
+      throttle_scope = 'public-read'
+      filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+      search_fields = ['titre', 'lieu', 'description']
+      filterset_fields = ['lieu']
+
+  class EvenementPublicDetailView(RetrieveAPIView):
+      # GET /public/evenements/{id}/
+      queryset = Evenement.objects.filter(est_public=True)
+      serializer_class = EvenementPublicSerializer
+      permission_classes = [AllowAny]
+      throttle_scope = 'public-read'
+
+  class InscriptionEvenementCreateView(CreateAPIView):
+      # POST /public/evenements/{id}/inscription/
+      serializer_class = InscriptionEvenementCreateSerializer
+      permission_classes = [AllowAny]
+      throttle_scope = 'public'
+
+      def perform_create(self, serializer):
+          inscription = serializer.save(evenement_id=self.kwargs['id'])
+          send_inscription_confirmation.delay(inscription.id)  # Celery
+
+  class DemandeAdhesionCreateView(CreateAPIView):
+      # POST /public/adhesion/
+      serializer_class = DemandeAdhesionCreateSerializer
+      permission_classes = [AllowAny]
+      throttle_scope = 'public'
+
+      def perform_create(self, serializer):
+          demande = serializer.save()
+          notifier_nouvelle_demande_adhesion.delay(demande.id)  # Celery
+
+  class MessageContactCreateView(CreateAPIView):
+      # POST /public/contact/
+      serializer_class = MessageContactCreateSerializer
+      permission_classes = [AllowAny]
+      throttle_scope = 'public'
+
+      def perform_create(self, serializer):
+          message = serializer.save()
+          notifier_nouveau_message_contact.delay(message.id)   # Celery
+
+  class ImageGalerieListView(ListAPIView):
+      # GET /public/galerie/
+      queryset = ImageGalerie.objects.all()
+      serializer_class = ImageGalerieSerializer
+      permission_classes = [AllowAny]
+      throttle_scope = 'public-read'
+
+  class MonProfilMembreView(RetrieveUpdateAPIView):
+      # GET/PATCH /membre/mon-profil/  (Membre connecté uniquement)
+      serializer_class = MembreDetailSerializer
+      permission_classes = [IsAuthenticated]
+
+      def get_object(self):
+          if not self.request.user.membre_id:
+              raise PermissionDenied("Aucun profil membre lié à ce compte.")
+          return self.request.user.membre
+
+  class MesInscriptionsListView(ListAPIView):
+      # GET /membre/mes-inscriptions/  (Membre connecté uniquement)
+      serializer_class = InscriptionEvenementCreateSerializer
+      permission_classes = [IsAuthenticated]
+
+      def get_queryset(self):
+          return InscriptionEvenement.objects.filter(
+              membre=self.request.user.membre)
+
+──────────────────────────────────────────────
+B.5 URLS PUBLIQUES — vitrine/urls.py
+──────────────────────────────────────────────
+  urlpatterns = [
+      path('evenements/', EvenementPublicListView.as_view()),
+      path('evenements/<int:id>/', EvenementPublicDetailView.as_view()),
+      path('evenements/<int:id>/inscription/', InscriptionEvenementCreateView.as_view()),
+      path('adhesion/', DemandeAdhesionCreateView.as_view()),
+      path('contact/', MessageContactCreateView.as_view()),
+      path('galerie/', ImageGalerieListView.as_view()),
+  ]
+  # Inclus dans config/api_urls.py sous le préfixe /public/
+  # + routes /membre/mon-profil/ et /membre/mes-inscriptions/ (même app, section
+  #   distincte car authentifiées)
+
+──────────────────────────────────────────────
+B.6 PERMISSIONS, ANTI-SPAM ET RATE-LIMITING
+──────────────────────────────────────────────
+  • Toutes les vues d'écriture publique (adhésion, inscription, contact) :
+      permission_classes = [AllowAny]
+      throttle_scope = 'public'          → 20 requêtes / heure / IP (base.py)
+  • Champ honeypot invisible (CSS) dans les formulaires — tout robot qui le
+    remplit est automatiquement rejeté par validate_honeypot()
+  • Vérification Google reCAPTCHA v3 côté serveur (score minimal 0.5) sur les
+    3 formulaires publics, via un champ `recaptcha_token` supplémentaire
+    validé dans `validate()` du serializer (appel à l'API Google avec
+    RECAPTCHA_SECRET_KEY)
+  • Les vues de lecture (événements publics, galerie) restent AllowAny mais
+    throttlées à un niveau plus permissif ('public-read': 120/hour)
+
+──────────────────────────────────────────────
+B.7 SIGNALS — vitrine/signals.py
+──────────────────────────────────────────────
+  post_save(DemandeAdhesion, created=True)
+    → déclenche notifier_nouvelle_demande_adhesion.delay() (email Secrétaire)
+
+  post_save(InscriptionEvenement, created=True)
+    → déclenche send_inscription_confirmation.delay() (email visiteur)
+
+  post_save(MessageContact, created=True)
+    → déclenche notifier_nouveau_message_contact.delay() (email Secrétaire)
+
+TOTAL : 3 signals
+
+──────────────────────────────────────────────
+B.8 TÂCHES CELERY — vitrine/tasks.py
+──────────────────────────────────────────────
+  notifier_nouvelle_demande_adhesion(demande_id)
+    → email au(x) Secrétaire(s) avec lien direct vers /demandes-adhesion
+
+  send_inscription_confirmation(inscription_id)
+    → email de confirmation au visiteur inscrit (détails événement, lieu, date)
+
+  notifier_nouveau_message_contact(message_id)
+    → email au(x) Secrétaire(s)/Pasteur avec le contenu du message
+
+TOTAL : 3 tâches Celery
+
+──────────────────────────────────────────────
+B.9 ADMIN DJANGO — vitrine/admin.py
+──────────────────────────────────────────────
+  @admin.register(DemandeAdhesion)
+  class DemandeAdhesionAdmin(admin.ModelAdmin):
+      list_display = ['nom', 'prenom', 'email', 'statut', 'dateDemande']
+      list_filter = ['statut']
+      actions = ['valider_et_creer_membre', 'rejeter']
+
+      @admin.action(description="Valider et créer le Membre correspondant")
+      def valider_et_creer_membre(self, request, queryset):
+          for demande in queryset.filter(statut='EN_ATTENTE'):
+              statut_defaut = Statut.objects.get(libelle='Nouveau converti')
+              membre = Membre.objects.create(
+                  nom=demande.nom, prenom=demande.prenom, email=demande.email,
+                  telephone=demande.telephone, statut=statut_defaut)
+              demande.statut = 'VALIDEE'
+              demande.membre_cree = membre
+              demande.traite_par = request.user
+              demande.save()
+
+  @admin.register(MessageContact)
+  class MessageContactAdmin(admin.ModelAdmin):
+      list_display = ['nom', 'sujet', 'dateEnvoi', 'traite']
+      list_filter = ['traite']
+      actions = ['marquer_traite']
+
+  # Note : cette même action "Valider et créer le Membre" est aussi exposée
+  # dans le BACK-OFFICE React via la page DemandesAdhesionPage.jsx
+  # (PARTIE III.F) qui appelle un endpoint dédié plutôt que l'admin Django,
+  # pour un usage quotidien par le Secrétaire.
+
+──────────────────────────────────────────────
+B.10 SETTINGS ADDITIONNELS
+──────────────────────────────────────────────
+  → voir PARTIE II.K (LOCAL_APPS, DEFAULT_THROTTLE_RATES, CORS_ALLOWED_ORIGINS,
+    RECAPTCHA_SECRET_KEY déjà intégrés dans config/settings/base.py)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+C. FRONT-END — ARBORESCENCE COMPLÈTE DU SITE VITRINE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+sygmebec-vitrine/
+├── public/
+│   ├── favicon.ico
+│   ├── robots.txt
+│   └── sitemap.xml
+│
+├── src/
+│   ├── main.jsx
+│   ├── App.jsx
+│   ├── index.css
+│   │
+│   ├── router/
+│   │   └── index.jsx
+│   │
+│   ├── layouts/
+│   │   ├── PublicLayout.jsx
+│   │   └── components/
+│   │       ├── Header.jsx
+│   │       ├── Footer.jsx
+│   │       ├── NavBar.jsx
+│   │       └── MobileMenu.jsx
+│   │
+│   ├── pages/
+│   │   ├── Accueil.jsx
+│   │   ├── APropos.jsx
+│   │   ├── Evenements.jsx
+│   │   ├── EvenementDetail.jsx
+│   │   ├── Galerie.jsx
+│   │   ├── Adhesion.jsx                 (demande d'adhésion en ligne)
+│   │   ├── Contact.jsx
+│   │   ├── MentionsLegales.jsx
+│   │   ├── Confidentialite.jsx
+│   │   ├── NotFound.jsx
+│   │   │
+│   │   └── espace-membre/
+│   │       ├── Connexion.jsx
+│   │       ├── MotDePasseOublie.jsx
+│   │       ├── MonProfil.jsx
+│   │       └── MesInscriptions.jsx
+│   │
+│   ├── components/
+│   │   ├── home/
+│   │   │   ├── Hero.jsx
+│   │   │   ├── PresentationSection.jsx
+│   │   │   ├── EvenementsAVenir.jsx
+│   │   │   ├── GaleriePreview.jsx
+│   │   │   ├── Temoignages.jsx
+│   │   │   └── AppelAdhesion.jsx
+│   │   │
+│   │   ├── evenements/
+│   │   │   ├── EvenementCard.jsx
+│   │   │   ├── EvenementCalendrier.jsx
+│   │   │   ├── FormulaireInscription.jsx
+│   │   │   └── FiltresEvenements.jsx
+│   │   │
+│   │   ├── adhesion/
+│   │   │   └── FormulaireAdhesion.jsx
+│   │   │
+│   │   ├── galerie/
+│   │   │   ├── GalerieGrid.jsx
+│   │   │   └── ImageViewer.jsx
+│   │   │
+│   │   ├── contact/
+│   │   │   ├── ContactForm.jsx
+│   │   │   ├── Carte.jsx
+│   │   │   └── ReseauxSociaux.jsx
+│   │   │
+│   │   └── common/
+│   │       ├── Bouton.jsx
+│   │       ├── Modal.jsx
+│   │       ├── Loader.jsx
+│   │       ├── Toast.jsx
+│   │       ├── Honeypot.jsx           # champ piège anti-bot invisible
+│   │       └── SEO.jsx                # <title>/<meta> par page (react-helmet-async)
+│   │
+│   ├── store/
+│   │   ├── index.js
+│   │   └── slices/
+│   │       ├── authMembreSlice.js
+│   │       └── uiSlice.js
+│   │
+│   ├── services/
+│   │   ├── api.js
+│   │   ├── evenementService.js
+│   │   ├── adhesionService.js
+│   │   ├── authMembreService.js
+│   │   ├── contactService.js
+│   │   └── galerieService.js
+│   │
+│   ├── hooks/
+│   │   ├── useAuthMembre.js
+│   │   ├── useEvenementsPublics.js
+│   │   ├── useDisponibilitesEvenement.js
+│   │   ├── useAdhesion.js
+│   │   └── useContact.js
+│   │
+│   ├── utils/
+│   │   ├── formatters.js
+│   │   └── validators.js
+│   │
+│   ├── styles/
+│   │   └── tailwind.config.js
+│   │
+│   └── assets/
+│       └── images/
+│           ├── home/
+│           ├── evenements/
+│           ├── galerie/
+│           └── backgrounds/
+│
+├── index.html
+├── vite.config.js
+├── tailwind.config.js
+└── package.json
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+D. PAGES PUBLIQUES DÉTAILLÉES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  1. Accueil (/)
+       Héro plein écran (image/vidéo), présentation courte de l'organisation,
+       aperçu des 3 prochains événements publics (GET /public/evenements/),
+       aperçu de la galerie (3-6 photos), témoignages, appel à l'adhésion.
+
+  2. À propos (/a-propos)
+       Mission, valeurs, historique, équipe/responsables mis en avant
+       (contenu statique ou géré en CMS léger — hors périmètre API).
+
+  3. Événements (/evenements)
+       Liste filtrable (à venir / passés), recherche par mot-clé, lieu ;
+       consomme GET /public/evenements/?search=&lieu=&ordering=date ;
+       chaque carte affiche titre, lieu, date/heure, image, places restantes.
+
+  4. Détail événement (/evenements/:id)
+       GET /public/evenements/{id}/ — description complète, informations
+       pratiques, FormulaireInscription (POST /public/evenements/{id}/
+       inscription/), nombre de places restantes si capacité définie,
+       désactivation automatique du formulaire si complet.
+
+  5. Galerie (/galerie)
+       GET /public/galerie/ — grille de photos, filtrable par événement,
+       visionneuse plein écran (ImageViewer).
+
+  6. Adhésion (/adhesion)
+       FormulaireAdhesion → POST /public/adhesion/ (+ honeypot + reCAPTCHA) ;
+       message de confirmation "Votre demande sera examinée par notre équipe".
+
+  7. Contact (/contact)
+       ContactForm → POST /public/contact/ (+ honeypot + reCAPTCHA), carte de
+       localisation (Carte.jsx), coordonnées, réseaux sociaux.
+
+  8. Mentions légales / Confidentialité
+       Pages statiques (texte juridique, politique de traitement des données
+       collectées via les formulaires publics — RGPD/loi locale applicable).
+
+  9. Espace membre (/espace-membre/...)
+       Connexion (réutilise /auth/login/ du back-end, restreint aux comptes
+       Utilisateur liés à un Membre), Mot de passe oublié, Mon Profil
+       (GET/PATCH /membre/mon-profil/), Mes Inscriptions
+       (GET /membre/mes-inscriptions/) — voir PARTIE IV.K.
+
+  10. 404 (*) — NotFound.jsx
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+E. COMPOSANTS PAR SECTION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  home/         → 6 composants (Hero, PresentationSection, EvenementsAVenir,
+                   GaleriePreview, Temoignages, AppelAdhesion)
+  evenements/   → 4 composants (EvenementCard, EvenementCalendrier,
+                   FormulaireInscription, FiltresEvenements)
+  adhesion/     → 1 composant  (FormulaireAdhesion)
+  galerie/      → 2 composants (GalerieGrid, ImageViewer)
+  contact/      → 3 composants (ContactForm, Carte, ReseauxSociaux)
+  common/       → 6 composants (Bouton, Modal, Loader, Toast, Honeypot, SEO)
+
+TOTAL : 22 composants
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+F. COUCHE SERVICES (AXIOS)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+src/services/api.js :
+  const api = axios.create({
+      baseURL: import.meta.env.VITE_API_URL,   // ex. https://api.sygmebec.org/api/v1
+      withCredentials: true,
+  });
+  // Interceptor Authorization: Bearer <token> uniquement pour les appels
+  // /membre/... (espace membre) ; les appels /public/... n'exigent aucun token.
+
+src/services/evenementService.js :
+  export const getEvenementsPublics = (params) =>
+      api.get('/public/evenements/', { params });
+  export const getEvenementPublicDetail = (id) =>
+      api.get(`/public/evenements/${id}/`);
+  export const sinscrireEvenement = (id, data) =>
+      api.post(`/public/evenements/${id}/inscription/`, data);
+
+src/services/adhesionService.js :
+  export const soumettreDemandeAdhesion = (data) =>
+      api.post('/public/adhesion/', data);
+
+src/services/contactService.js :
+  export const envoyerMessageContact = (data) =>
+      api.post('/public/contact/', data);
+
+src/services/galerieService.js :
+  export const getGalerie = (params) => api.get('/public/galerie/', { params });
+
+src/services/authMembreService.js :
+  export const loginMembre       = (creds) => api.post('/auth/login/', creds);
+  export const logoutMembre      = ()      => api.post('/auth/logout/');
+  export const getMonProfil      = ()      => api.get('/membre/mon-profil/');
+  export const updateMonProfil   = (data)  => api.patch('/membre/mon-profil/', data);
+  export const getMesInscriptions = ()     => api.get('/membre/mes-inscriptions/');
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+G. STATE MANAGEMENT (ZUSTAND)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  authMembreSlice.js :
+    state    : { membre, accessToken, isAuthenticated }
+    actions  : login(), logout(), setAccessToken()
+    persistance : token en mémoire uniquement (jamais localStorage) ;
+                  refresh via cookie httpOnly comme le back-office
+
+  uiSlice.js :
+    state    : { mobileMenuOpen, activeModal, toasts }
+    actions  : toggleMobileMenu(), openModal(), closeModal(), pushToast()
+
+TOTAL : 2 slices
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+H. HOOKS PERSONNALISÉS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  useEvenementsPublics.js
+    useEvenementsPublicsQuery(filtres)
+    useEvenementPublicQuery(id)
+
+  useDisponibilitesEvenement.js
+    → calcule/rafraîchit les places restantes après une inscription réussie
+      (invalide le cache TanStack Query de l'événement concerné)
+
+  useAdhesion.js
+    useSoumettreAdhesionMutation()
+
+  useContact.js
+    useEnvoyerMessageMutation()
+
+  useAuthMembre.js
+    useLoginMembreMutation(), useLogoutMembreMutation(),
+    useMonProfilQuery(), useUpdateProfilMutation(), useMesInscriptionsQuery()
+
+TOTAL : 5 fichiers de hooks
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+I. ROUTER, SEO & ACCESSIBILITÉ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+src/router/index.jsx :
+  Routes publiques (PublicLayout) :
+    /                          → Accueil
+    /a-propos                  → APropos
+    /evenements                → Evenements
+    /evenements/:id            → EvenementDetail
+    /galerie                   → Galerie
+    /adhesion                  → Adhesion
+    /contact                   → Contact
+    /mentions-legales          → MentionsLegales
+    /confidentialite           → Confidentialite
+    /espace-membre/connexion            → Connexion
+    /espace-membre/mot-de-passe-oublie  → MotDePasseOublie
+
+  Routes protégées (RequireMembreAuth + PublicLayout) :
+    /espace-membre/profil              → MonProfil
+    /espace-membre/mes-inscriptions    → MesInscriptions
+
+    *                          → NotFound
+
+SEO (components/common/SEO.jsx) :
+  → react-helmet-async : <title>, <meta description>, Open Graph (og:title,
+    og:image, og:description) définis par page pour un bon référencement et
+    un aperçu correct lors du partage sur les réseaux sociaux.
+
+ACCESSIBILITÉ :
+  → attributs aria-* sur les formulaires, contrastes conformes WCAG AA,
+    navigation clavier complète (menu mobile, modales), alt text obligatoire
+    sur toutes les images (galerie, événements).
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+J. FORMULAIRES PUBLICS & PROTECTION ANTI-SPAM
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Les 3 formulaires publics (Adhésion, Inscription à un événement, Contact)
+partagent la même stratégie de protection :
+
+  1. Validation front (react-hook-form + zod ou yup) : champs requis, format
+     email/téléphone, longueur minimale du message.
+  2. Champ Honeypot.jsx : input caché via CSS (jamais display:none, plutôt
+     positionné hors écran) que seul un bot renseignera → rejeté côté back
+     (validate_honeypot, PARTIE IV.B.3).
+  3. Google reCAPTCHA v3 (invisible) : génère un `recaptcha_token` envoyé
+     avec chaque soumission, vérifié côté serveur (score ≥ 0.5).
+  4. Throttling serveur : 20 requêtes/heure/IP sur les endpoints d'écriture
+     publics (scope 'public', PARTIE II.K).
+  5. Message de confirmation clair après soumission + email de confirmation
+     automatique au visiteur (inscription à un événement) via Celery.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+K. ESPACE MEMBRE (MINI-PORTAIL AUTHENTIFIÉ)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+CONDITIONS D'ACCÈS :
+  Un visiteur ne peut se connecter à l'espace membre QUE s'il possède déjà
+  un compte Utilisateur créé par le personnel (back-office) ET lié à sa
+  fiche Membre (Utilisateur.membre — cardinalité 0..1 du diagramme). Le
+  site vitrine ne permet PAS l'auto-inscription d'un compte : seule la
+  DemandeAdhesion (PARTIE IV.B.1) déclenche, après validation, la création
+  d'un Membre — la création éventuelle d'un compte Utilisateur associé
+  reste une action manuelle du Secrétaire/Administrateur dans le back-office.
+
+FONCTIONNALITÉS :
+  • Connexion (réutilise POST /auth/login/, mêmes tokens JWT que le
+    back-office, mais stockage isolé dans le store de la vitrine)
+  • Mon Profil : consultation et mise à jour des coordonnées personnelles
+    (téléphone, adresse, email) via GET/PATCH /membre/mon-profil/
+  • Mes Inscriptions : historique des événements auxquels le membre s'est
+    inscrit via le site vitrine (GET /membre/mes-inscriptions/)
+  • Déconnexion : invalide le token côté client (le cookie refresh httpOnly
+    expire naturellement après 7 jours ou peut être révoqué côté back)
+
+SÉCURITÉ :
+  • Un Membre connecté ne peut voir/modifier QUE ses propres données
+    (get_object() de MonProfilMembreView restreint à request.user.membre)
+  • Aucun droit d'écriture sur les données métier (Statut, HistoriqueStatut,
+    Fonction) depuis l'espace membre — lecture seule et coordonnées propres
+    uniquement
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+L. VARIABLES D'ENVIRONNEMENT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+.env.example (gestmembres-vitrine) :
+  VITE_API_URL=http://localhost:8000/api/v1
+  VITE_RECAPTCHA_SITE_KEY=...
+  VITE_SITE_NAME="SYGMEBEC"
+  VITE_GOOGLE_MAPS_KEY=...              # pour le composant Carte.jsx
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+M. RÉCAPITULATIF SITE VITRINE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ── Back-end additionnel (app "vitrine") ──────────────────────────────────
+  Modèles              : 4 (DemandeAdhesion, InscriptionEvenement,
+                             MessageContact, ImageGalerie)
+  Champs additionnels   : 3 sur Evenement (est_public, image, capacite)
+  Serializers           : 4 publics (+ 1 réutilisé : MembreDetailSerializer)
+  Vues API               : 5 publiques (AllowAny) + 2 authentifiées (membre)
+  Routes API              : 6 publiques + 2 espace-membre = 8 routes
+  Signals                 : 3
+  Tâches Celery            : 3
+  Actions admin Django      : 2 (valider_et_creer_membre, marquer_traite)
+
+  ── Front-end (gestmembres-vitrine) ────────────────────────────────────────
+  Pages                     : 14 pages (10 publiques + 4 espace membre)
+  Composants réutilisables  : 22 composants
+  Layouts                    : 1 (PublicLayout)
+  Zustand slices               : 2
+  Custom hooks                  : 5 fichiers
+  Modules services axios         : 6
+  Protection anti-spam            : Honeypot + reCAPTCHA v3 + Throttling DRF
+
+
+================================================================================
+PARTIE V — INTÉGRATION & DÉPLOIEMENT
+================================================================================
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+A. COMMUNICATION FRONT ↔ BACK (2 SPA ↔ 1 API)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  React Back-Office (5173) ──HTTPS/JSON──▶ Django (8000) /api/v1/...
+  React Vitrine      (5174) ──HTTPS/JSON──▶ Django (8000) /api/v1/public/...
+                                                            /api/v1/membre/...
+  Django             ──TCP────────▶ PostgreSQL
+  Django             ──TCP────────▶ Redis (Celery broker)
+  Django             ──SMTP───────▶ Serveur de messagerie (notifications)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+B. CONFIGURATION CORS (MULTI-ORIGINE)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  INSTALLED_APPS += ['corsheaders']
+  MIDDLEWARE.insert(0, 'corsheaders.middleware.CorsMiddleware')
+
+  CORS_ALLOWED_ORIGINS = [
+      'http://localhost:5173',        # back-office (dev)
+      'http://localhost:5174',        # vitrine (dev)
+      'https://admin.sygmebec.org',   # back-office (prod)
+      'https://www.sygmebec.org',     # vitrine (prod)
+  ]
+  CORS_ALLOW_CREDENTIALS = True
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+C. DOCKER — SERVICES (BACK-OFFICE + VITRINE)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+docker-compose.yml (dev) — services :
+  db                → postgres:15
+  redis             → redis:7-alpine
+  backend           → Django (gunicorn)
+  celery            → worker Celery
+  celery-beat       → scheduler Celery Beat
+  frontend-admin    → Node 20 + Vite dev server (sygmebec-frontend, port 5173)
+  frontend-vitrine  → Node 20 + Vite dev server (gestmembres-vitrine, port 5174)
+
+docker-compose.prod.yml — ajout :
+  nginx             → reverse proxy servant les 2 builds statiques
+                       (admin.sygmebec.org → frontend-admin/dist,
+                        www.sygmebec.org   → gestmembres-vitrine/dist,
+                        api.sygmebec.org   → backend via gunicorn)
+
+COMMANDES UTILES :
+  docker compose up -d
+  docker compose exec backend python manage.py migrate
+  docker compose exec backend python manage.py create_roles
+  docker compose exec backend python manage.py create_admin
+  docker compose exec backend python manage.py loaddata fixtures/statuts.json
+  docker compose exec backend python manage.py loaddata fixtures/fonctions.json
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+D. VARIABLES D'ENVIRONNEMENT GLOBALES (.env.example)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# Django
+SECRET_KEY=...
+DEBUG=True
+DATABASE_URL=postgres://sygmebec:password@db:5432/sygmebec
+REDIS_URL=redis://redis:6379/0
+ALLOWED_HOSTS=localhost,127.0.0.1,admin.sygmebec.org,www.sygmebec.org,api.sygmebec.org
+
+# Email
+EMAIL_HOST=smtp.example.com
+EMAIL_PORT=587
+EMAIL_HOST_USER=...
+EMAIL_HOST_PASSWORD=...
+
+# reCAPTCHA (site vitrine)
+RECAPTCHA_SECRET_KEY=...
+
+# React — Back-Office (Vite)
+VITE_API_URL=http://localhost:8000/api/v1
+
+# React — Site Vitrine (Vite)
+VITE_API_URL=http://localhost:8000/api/v1
+VITE_RECAPTCHA_SITE_KEY=...
+VITE_SITE_NAME="SYGMEBEC"
+VITE_GOOGLE_MAPS_KEY=...
+
+
+================================================================================
+RÉCAPITULATIF GLOBAL DU PROJET
+================================================================================
+
+  ── BACK-END ───────────────────────────────────────────────────────────────
+  Applications Django      : 6 apps (core, accounts, members, events, reports, vitrine)
+  Modèles                  : 9 modèles métier (diagramme) + 4 modèles vitrine = 13
+  Serializers DRF          : 13 back-office + 4 publics = 17
+  Vues API (ViewSets)      : 8 principales back-office + 7 vitrine (5 publiques
+                              + 2 espace-membre) = 15
+  URL patterns API         : 24 back-office + 8 vitrine = 32 routes
+  Signals                  : 3 back-office + 3 vitrine = 6
+  Tâches Celery            : 5 back-office + 3 vitrine = 8
+  Commandes management     : 2
+
+  ── FRONT-END ──────────────────────────────────────────────────────────────
+  Projets React               : 2 (sygmebec-frontend / back-office,
+                                    gestmembres-vitrine / site public)
+  Pages React                  : 13 (back-office) + 14 (vitrine) = 27
+  Composants réutilisables     : 25 (back-office) + 22 (vitrine) = 47
+  Layouts                       : 2 (back-office) + 1 (vitrine) = 3
+  Zustand stores/slices          : 3 (back-office) + 2 (vitrine) = 5
+  Custom hooks                    : 5 fichiers (back-office) + 5 (vitrine) = 10
+  Modules API/services axios       : 5 (back-office) + 6 (vitrine) = 11
+  Groupes de routes protégées       : 2 (back-office, rôles cumulatifs) +
+                                       1 (vitrine, espace membre)
+
+  ── INFRASTRUCTURE ─────────────────────────────────────────────────────────
+  Base de données          : PostgreSQL 15
+  Cache / Broker            : Redis 7
+  Conteneurs Docker          : 7 services (dev) + Nginx en prod
+  Génération de rapports       : ReportLab (PDF) via Celery
+  Documentation API              : drf-spectacular (OpenAPI / Swagger)
+  Anti-spam vitrine                : Honeypot + reCAPTCHA v3 + throttling DRF
+
+  ── FIDÉLITÉ AUX DIAGRAMMES FOURNIS ────────────────────────────────────────
+  ✓ 9 classes du diagramme de classes → 9 modèles Django (attributs identiques)
+  ✓ 3 acteurs hiérarchisés → système de rôles cumulatifs (SECRETAIRE < PASTEUR < ADMINISTRATEUR)
+  ✓ 10 cas d'utilisation → 10 actions API/Front correspondantes
+  ✓ 2 cas d'utilisation «include» (Rechercher un membre, Consulter un evenement)
+    → implémentés comme fonctionnalités transverses (search_fields / retrieve())
+    réutilisées par toutes les actions qui les incluent dans le diagramme
+  ✓ Site vitrine (PARTIE IV) → extension métier documentée et justifiée
+    (PARTIE 0.3), n'altère aucun modèle ni cas d'utilisation d'origine,
+    alimente le système existant via validation humaine obligatoire
+
+================================================================================
+FIN DU PLAN COMPLET — SYGMEBEC Django + React (Back-Office + Site Vitrine)
+================================================================================

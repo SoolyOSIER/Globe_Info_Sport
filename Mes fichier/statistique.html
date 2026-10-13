@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Statistiques · SYGMEBEC</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+
+    :root{
+      --navy-1:#131f3d; --navy-2:#0e1830;
+      --gold-1:#d9b876; --gold-2:#b6903f;
+      --cream:#f7f5f0; --cream-2:#f2ead8; --cream-3:#f7f1e3;
+      --ink:#211f1a;
+      --muted:#78746a; --muted-2:#a39e91;
+      --border:#eae5d8;
+      --blue:#3768d6; --blue-tint:#dfe8fb;
+      --green:#1fa060; --green-tint:#dcf4e6;
+      --amber:#c17f18; --amber-tint:#faecd2;
+      --purple:#7c50d1; --purple-tint:#ece2fb;
+      --red:#c94f43; --red-tint:#f8e1de;
+      --ease:cubic-bezier(.22,1,.36,1);
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--cream);
+      color: var(--ink);
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+    }
+    ::selection { background: rgba(182,144,63,0.22); color: var(--gold-2); }
+
+    /* ---------- Top gold shimmer ---------- */
+    .shimmer-bar{
+      position:fixed; top:0; left:0; right:0; height:3px; z-index:60;
+      background:linear-gradient(90deg, transparent, var(--gold-1) 20%, #fff5de 50%, var(--gold-1) 80%, transparent);
+      background-size:200% 100%;
+      animation: shimmer 5s linear infinite;
+    }
+    @keyframes shimmer{ 0%{ background-position:200% 0; } 100%{ background-position:-200% 0; } }
+
+    .app {
+      display: grid;
+      grid-template-columns: 264px 1fr;
+      min-height: 100vh;
+    }
+
+    /* ---------- SIDEBAR ---------- */
+    .sidebar {
+      background: linear-gradient(190deg, var(--navy-1), var(--navy-2) 60%);
+      color: #fff;
+      padding: 22px 16px;
+      display: flex;
+      flex-direction: column;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      border-right: 1px solid rgba(0,0,0,0.2);
+    }
+    .brand { display:flex; align-items:center; gap:12px; padding:6px 8px 8px; }
+    .brand-mark {
+      width:42px; height:42px; border-radius:50%; flex-shrink:0;
+      background: radial-gradient(circle at 32% 28%, var(--gold-1), var(--gold-2) 70%);
+      display:flex; align-items:center; justify-content:center;
+      font-family:'Fraunces', serif; font-weight:700; font-size:15.5px; color:#241a05;
+      box-shadow: 0 6px 16px -4px rgba(182,144,63,0.55), inset 0 1px 1px rgba(255,255,255,0.4);
+      position:relative;
+    }
+    .brand-mark::after { content:''; position:absolute; inset:-3px; border-radius:50%; border:1px solid rgba(217,184,118,0.35); animation: rotate-ring 12s linear infinite; }
+    .brand-mark::before { content:''; position:absolute; inset:-6px; border-radius:50%; border:1px dashed rgba(217,184,118,0.18); }
+    @keyframes rotate-ring{ to{ transform:rotate(360deg); } }
+    .brand-name { font-weight:800; font-size:15.5px; letter-spacing:0.4px; line-height:1.1; }
+    .brand-sub-row{ display:flex; align-items:center; gap:6px; margin-top:3px; }
+    .brand-sub { font-size:10px; color:#8891ab; letter-spacing:1.6px; font-weight:600; }
+    .live-dot{ width:6px; height:6px; border-radius:50%; background:#3fd67a; box-shadow:0 0 0 0 rgba(63,214,122,0.6); animation: pulse-dot 2s ease-out infinite; flex-shrink:0; }
+    @keyframes pulse-dot{ 0%{ box-shadow:0 0 0 0 rgba(63,214,122,0.55);} 70%{ box-shadow:0 0 0 6px rgba(63,214,122,0);} 100%{ box-shadow:0 0 0 0 rgba(63,214,122,0);} }
+
+    .navwrap { margin-top:14px; }
+    .navlist { list-style:none; display:flex; flex-direction:column; gap:2px; }
+    .navitem {
+      display:flex; align-items:center; gap:12px;
+      padding:11px 14px; border-radius:11px;
+      font-size:13.6px; font-weight:500; color:#9aa3bd;
+      cursor:pointer; transition: all .25s var(--ease);
+      position:relative; overflow:hidden;
+    }
+    .navitem svg { width:17px; height:17px; opacity:0.8; flex-shrink:0; transition: transform .3s var(--ease); }
+    .navitem .badge-mini {
+      margin-left:auto; font-size:10px; font-weight:700; background:rgba(182,144,63,0.18); color:var(--gold-1);
+      padding:1px 7px; border-radius:20px;
+    }
+    .navitem:hover { color:#fff; background:rgba(255,255,255,0.045); transform:translateX(2px); }
+    .navitem:hover svg{ transform:scale(1.08); }
+    .navitem.active {
+      color:#fff; background: linear-gradient(90deg, rgba(182,144,63,0.22), rgba(182,144,63,0.02));
+      border:1px solid rgba(182,144,63,0.3); font-weight:600;
+    }
+    .navitem.active svg { opacity:1; color:var(--gold-1); }
+    .navitem.active::before {
+      content:''; position:absolute; left:-16px; top:8px; bottom:8px; width:3px; border-radius:4px;
+      background:linear-gradient(180deg, var(--gold-1), var(--gold-2));
+    }
+    .nav-divider { height:1px; background:rgba(255,255,255,0.07); margin:16px 4px; }
+
+    .sidebar-foot { margin-top:auto; }
+    .foot-card {
+      background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07); border-radius:14px;
+      padding:14px; margin-bottom:10px; font-size:11.5px; color:#8891ab; position:relative; overflow:hidden;
+    }
+    .foot-card::after{ content:''; position:absolute; right:-14px; top:-14px; width:60px; height:60px; border-radius:50%; background:radial-gradient(circle, rgba(217,184,118,0.25), transparent 70%); }
+    .foot-card b { color:#fff; display:flex; align-items:center; gap:6px; font-size:12.5px; margin-bottom:2px; }
+    .logout-item { color:#e7a89c; }
+    .logout-item svg { color:#e7a89c; opacity:1; }
+    .logout-item:hover { background:rgba(201,79,67,0.15); color:var(--red); }
+    .logout-item:hover svg { color:var(--red); }
+
+    /* ---------- MAIN ---------- */
+    .main { min-width:0; display:flex; flex-direction:column; }
+
+    .topbar {
+      background: linear-gradient(120deg, var(--cream-3), var(--cream-2));
+      border-bottom:1px solid var(--border);
+      padding:16px 34px;
+      display:flex; align-items:center; gap:22px;
+      position:sticky; top:0; z-index:5;
+    }
+    .search-wrap { position:relative; flex:1; max-width:420px; }
+    .search-wrap input {
+      width:100%; font-family:inherit; font-size:13.5px; padding:11px 16px 11px 40px;
+      border-radius:30px; border:1px solid transparent; background:rgba(255,255,255,0.65);
+      color:var(--ink); transition: all .25s var(--ease);
+    }
+    .search-wrap input::placeholder { color:var(--muted-2); }
+    .search-wrap input:focus { outline:none; background:#fff; border-color:var(--gold-1); box-shadow:0 0 0 4px rgba(182,144,63,0.12); }
+    .search-wrap svg {
+      position:absolute; left:15px; top:50%; transform:translateY(-50%);
+      width:16px; height:16px; color:var(--muted-2); transition:color .25s;
+    }
+    .search-wrap:has(input:focus) svg { color:var(--gold-2); }
+
+    .live-pill{
+      display:flex; align-items:center; gap:7px; font-size:11.5px; font-weight:700; color:var(--green);
+      background:var(--green-tint); padding:7px 13px 7px 10px; border-radius:20px; white-space:nowrap;
+    }
+    .live-pill .dot{ width:6px; height:6px; border-radius:50%; background:var(--green); animation: pulse-dot2 1.8s ease-out infinite; }
+    @keyframes pulse-dot2{ 0%{ box-shadow:0 0 0 0 rgba(31,160,96,0.5);} 70%{ box-shadow:0 0 0 5px rgba(31,160,96,0);} 100%{ box-shadow:0 0 0 0 rgba(31,160,96,0);} }
+
+    .top-actions { display:flex; align-items:center; gap:16px; margin-left:auto; }
+    .icon-circle {
+      width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+      background:rgba(255,255,255,0.55); border:1px solid rgba(0,0,0,0.04); cursor:pointer;
+      transition: all .25s var(--ease); color:#78746a; position:relative;
+    }
+    .icon-circle:hover { background:#fff; transform:translateY(-1px); box-shadow:0 6px 14px -6px rgba(0,0,0,0.15); color:var(--gold-2); }
+    .icon-circle svg { width:17px; height:17px; }
+    .icon-badge{
+      position:absolute; top:-2px; right:-2px; width:15px; height:15px; border-radius:50%;
+      background:var(--red); color:#fff; font-size:8.5px; font-weight:800; display:flex; align-items:center; justify-content:center;
+      border:2px solid var(--cream-3);
+    }
+
+    .profile-chip { display:flex; align-items:center; gap:10px; cursor:pointer; padding:4px 8px 4px 4px; border-radius:30px; transition:background .25s; }
+    .profile-chip:hover { background:rgba(255,255,255,0.6); }
+    .profile-avatar {
+      width:36px; height:36px; border-radius:50%; overflow:hidden; flex-shrink:0; position:relative;
+      background:linear-gradient(160deg,#dcd3bd,#c8bb98);
+      display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; color:#5a4d2c;
+      border:2px solid #fff; box-shadow:0 2px 8px rgba(0,0,0,0.08);
+    }
+    .profile-avatar::after{ content:''; position:absolute; bottom:-1px; right:-1px; width:9px; height:9px; border-radius:50%; background:#3fd67a; border:2px solid #fff; }
+    .profile-name { font-size:13px; font-weight:700; line-height:1.2; }
+    .profile-role { font-size:10.5px; color:var(--muted-2); font-weight:500; }
+
+    /* ---------- CONTENT ---------- */
+    .content { padding:32px 34px 70px; flex:1; }
+
+    .page-head {
+      position:relative; display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:28px; gap:20px; flex-wrap:wrap;
+      opacity:0; animation: rise .6s var(--ease) forwards; padding:6px 4px 18px; overflow:hidden;
+    }
+    .page-head::before{
+      content:''; position:absolute; left:-60px; top:-90px; width:320px; height:320px; z-index:0;
+      background:radial-gradient(circle, rgba(182,144,63,0.13), transparent 68%); pointer-events:none;
+    }
+    .page-head > * { position:relative; z-index:1; }
+    .eyebrow-row{ display:flex; align-items:center; gap:8px; margin-bottom:9px; }
+    .eyebrow-row svg{ width:12px; height:12px; color:var(--gold-2); }
+    .eyebrow { font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--gold-2); font-weight:700; }
+    h1 { font-family:'Fraunces', serif; font-size:32px; font-weight:600; letter-spacing:-0.3px; }
+    .page-head p.sub { color:var(--muted); font-size:13.5px; margin-top:7px; max-width:480px; }
+    .head-actions{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+
+    .btn{
+      font-family:inherit; font-size:13px; font-weight:600; padding:10px 18px; border-radius:11px; cursor:pointer;
+      display:flex; align-items:center; gap:8px; transition: all .25s var(--ease); border:1px solid var(--border); background:#fff;
+    }
+    .btn svg{ width:15px; height:15px; }
+    .btn:hover{ transform:translateY(-1px); box-shadow:0 8px 18px -10px rgba(30,25,10,0.25); }
+    .btn-primary{ border:none; background:linear-gradient(155deg,var(--gold-1),var(--gold-2)); color:#241a05; box-shadow:0 6px 16px -8px rgba(182,144,63,0.6); }
+    .btn-primary svg{ transition: transform .5s var(--ease); }
+    .btn-primary.spinning svg{ transform:rotate(360deg); }
+    .btn-primary:hover{ box-shadow:0 10px 22px -8px rgba(182,144,63,0.7); }
+
+    @keyframes rise { to { opacity:1; transform:translateY(0); } }
+
+    /* ---------- STATS CARDS ---------- */
+    .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:22px; }
+    .stat-card {
+      background:#fff; border:1px solid var(--border); border-radius:20px;
+      padding:22px; box-shadow: 0 1px 0 rgba(255,255,255,0.6) inset, 0 18px 40px -26px rgba(30,25,10,0.18);
+      position:relative; overflow:hidden;
+      opacity:0; transform:translateY(16px); animation: rise .6s var(--ease) forwards;
+      transition: transform .35s var(--ease), box-shadow .35s;
+      will-change: transform;
+    }
+    .stat-card:nth-child(1) { animation-delay:.08s; }
+    .stat-card:nth-child(2) { animation-delay:.14s; }
+    .stat-card:nth-child(3) { animation-delay:.20s; }
+    .stat-card:nth-child(4) { animation-delay:.26s; }
+    .stat-card:hover { box-shadow:0 22px 40px -22px rgba(30,25,10,0.28); }
+    .stat-card::before {
+      content:''; position:absolute; right:-30px; top:-30px; width:110px; height:110px; border-radius:50%;
+      background:var(--tint, rgba(182,144,63,0.12)); opacity:0.5; filter:blur(4px);
+    }
+    .stat-top{ display:flex; align-items:flex-start; justify-content:space-between; }
+    .stat-icon {
+      width:44px; height:44px; border-radius:13px; display:flex; align-items:center; justify-content:center;
+      background:var(--tint); color:var(--tint-color); margin-bottom:16px; position:relative;
+    }
+    .stat-icon svg { width:21px; height:21px; }
+    .stat-num { font-family:'Fraunces', serif; font-size:33px; font-weight:600; letter-spacing:-0.5px; }
+    .stat-label { font-size:12.5px; color:var(--muted); margin-top:4px; font-weight:500; }
+    .stat-trend { font-size:11px; font-weight:700; margin-top:10px; display:flex; align-items:center; gap:4px; }
+    .stat-trend svg{ width:11px; height:11px; }
+    .trend-up { color:var(--green); }
+    .trend-flat { color:var(--muted-2); }
+    .trend-info{ color:var(--blue); }
+
+    .stat-card.c-blue { --tint:#dfe8fb; --tint-color:#3768d6; }
+    .stat-card.c-green { --tint:#dcf4e6; --tint-color:#1fa060; }
+    .stat-card.c-amber { --tint:#faecd2; --tint-color:#c17f18; }
+    .stat-card.c-purple { --tint:#ece2fb; --tint-color:#7c50d1; }
+
+    .sparkline{ width:100%; height:34px; margin-top:14px; display:block; }
+    .sparkline-path{ fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+    .sparkline-fill{ opacity:.55; }
+
+    /* ---------- CHART ROW ---------- */
+    .chart-row { display:grid; grid-template-columns: 1.8fr 1fr; gap:16px; margin-bottom:16px; }
+    .panel {
+      background:#fff; border:1px solid var(--border); border-radius:20px; box-shadow: 0 1px 0 rgba(255,255,255,0.6) inset, 0 18px 40px -26px rgba(30,25,10,0.18);
+      opacity:0; transform:translateY(16px); animation: rise .6s var(--ease) forwards;
+      transition: box-shadow .3s, transform .3s;
+    }
+    .panel:hover { box-shadow:0 22px 42px -24px rgba(30,25,10,0.26); }
+    .panel-head { padding:22px 24px 14px; display:flex; align-items:flex-start; justify-content:space-between; gap:14px; }
+    .panel-head h3 { font-family:'Fraunces', serif; font-size:16.5px; font-weight:600; }
+    .panel-head p { font-size:12px; color:var(--muted-2); margin-top:4px; }
+    .panel-tag { font-size:10.5px; font-weight:700; letter-spacing:.4px; padding:5px 11px; border-radius:20px; background:rgba(182,144,63,0.12); color:var(--gold-2); white-space:nowrap; }
+
+    /* Combo chart */
+    .chart-body { padding:6px 24px 26px; }
+    .chart-combo{ position:relative; height:150px; margin-bottom:8px; }
+    .chart-bars { position:relative; z-index:1; display:flex; align-items:flex-end; justify-content:space-between; height:140px; gap:12px; }
+    .bar-group { display:flex; flex-direction:column; align-items:center; flex:1; gap:6px; }
+    .bar-group .bars { display:flex; align-items:flex-end; gap:6px; height:120px; width:100%; justify-content:center; }
+    .bar { width:22px; border-radius:6px 6px 2px 2px; background:var(--blue-tint); position:relative; transition: height 1s var(--ease), background .3s, transform .25s; min-height:6px; cursor:default; }
+    .bar:hover{ filter:brightness(1.08); transform:scaleY(1.02); }
+    .bar.member { background:var(--blue); }
+    .bar.event { background:var(--gold-2); }
+    .bar-label { font-size:10px; color:var(--muted-2); font-weight:600; margin-top:4px; }
+    .growth-overlay{ position:absolute; left:0; top:0; width:100%; height:120px; z-index:2; pointer-events:none; overflow:visible; }
+    .growth-line{ fill:none; stroke:url(#goldLineGrad); stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; }
+    .growth-area{ opacity:0; transition:opacity .8s var(--ease) .6s; }
+    .growth-dot{ fill:#fff; stroke:var(--gold-2); stroke-width:2.5; }
+    .growth-dot.last{ animation: dot-pulse 1.8s ease-out infinite; }
+    @keyframes dot-pulse{ 0%{ r:3.5; } 50%{ r:5.2; } 100%{ r:3.5; } }
+
+    .legend-h { display:flex; justify-content:center; gap:24px; margin-top:14px; flex-wrap:wrap; }
+    .legend-h span { display:flex; align-items:center; gap:6px; font-size:11.5px; font-weight:600; color:var(--muted); }
+    .legend-h i { display:inline-block; width:10px; height:10px; border-radius:4px; }
+    .legend-h i.line{ width:14px; height:2.5px; border-radius:2px; background:var(--gold-2); }
+
+    /* Donut statut */
+    .donut-body { display:flex; align-items:center; gap:20px; padding:6px 24px 26px; flex-wrap:wrap; }
+    .donut-wrap { position:relative; width:140px; height:140px; flex-shrink:0; }
+    .donut-wrap svg { width:100%; height:100%; transform:rotate(-90deg); }
+    .donut-wrap circle { fill:none; stroke-width:14; }
+    .donut-center { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+    .donut-center .big { font-family:'Fraunces', serif; font-size:24px; font-weight:600; }
+    .donut-center .small { font-size:10px; color:var(--muted-2); font-weight:600; margin-top:1px; }
+    .donut-seg { stroke-dasharray: 0 1000; transition: stroke-dasharray 1.2s var(--ease), stroke-width .25s; cursor:default; }
+    .donut-seg:hover{ stroke-width:16; }
+    .legend { display:flex; flex-direction:column; gap:12px; flex:1; min-width:140px; }
+    .legend-row { display:flex; align-items:center; gap:10px; font-size:12.8px; }
+    .legend-dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+    .legend-label { color:var(--muted); flex:1; }
+    .legend-val { font-weight:700; }
+    .legend-pct{ font-size:11px; color:var(--muted-2); font-weight:600; margin-left:2px; }
+
+    /* ---------- KPI rings ---------- */
+    .kpi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:8px; }
+    .kpi-card {
+      background:#fff; border:1px solid var(--border); border-radius:14px; box-shadow:0 1px 0 rgba(255,255,255,0.6) inset, 0 18px 40px -26px rgba(30,25,10,0.18);
+      padding:18px 20px; display:flex; align-items:center; gap:14px;
+      opacity:0; transform:translateY(14px); animation: rise .55s var(--ease) forwards;
+      transition: transform .28s, box-shadow .28s;
+    }
+    .kpi-card:hover { transform:translateY(-3px); box-shadow:0 18px 34px -22px rgba(30,25,10,0.26); }
+    .kpi-card:nth-child(1) { animation-delay:.48s; }
+    .kpi-card:nth-child(2) { animation-delay:.54s; }
+    .kpi-card:nth-child(3) { animation-delay:.60s; }
+    .kpi-card:nth-child(4) { animation-delay:.66s; }
+    .kpi-ring { position:relative; width:46px; height:46px; flex-shrink:0; }
+    .kpi-ring svg { width:100%; height:100%; transform:rotate(-90deg); }
+    .kpi-ring circle { fill:none; stroke-width:5; }
+    .kpi-ring .track { stroke:var(--border); }
+    .kpi-ring .val { stroke-linecap:round; stroke-dasharray:0 1000; transition:stroke-dasharray 1.2s var(--ease) .3s; }
+    .kpi-ring-label { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; }
+    .kpi-info .num { font-family:'Fraunces', serif; font-size:19px; font-weight:600; line-height:1.1; }
+    .kpi-info .lab { font-size:11.5px; color:var(--muted-2); margin-top:3px; font-weight:500; }
+
+    /* ---------- Section divider (flourish) ---------- */
+    .section-divider{ display:flex; align-items:center; gap:16px; margin:34px 4px 22px; opacity:0; animation: rise .6s var(--ease) .3s forwards; }
+    .section-divider .line{ flex:1; height:1px; background:linear-gradient(90deg, transparent, var(--border) 20%, var(--border) 80%, transparent); }
+    .section-divider .flourish{ width:26px; height:14px; color:var(--gold-2); flex-shrink:0; }
+    .section-label{ font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--gold-2); font-weight:700; white-space:nowrap; }
+
+    /* ---------- Member table ---------- */
+    .table-panel{
+      background:#fff; border:1px solid var(--border); border-radius:20px; box-shadow: 0 1px 0 rgba(255,255,255,0.6) inset, 0 18px 40px -26px rgba(30,25,10,0.18);
+      margin-bottom:16px; opacity:0; transform:translateY(16px); animation: rise .6s var(--ease) .1s forwards;
+    }
+    .table-scroll{ overflow-x:auto; }
+    table.members{ width:100%; border-collapse:collapse; min-width:640px; }
+    table.members thead th{
+      text-align:left; font-size:10.5px; letter-spacing:1px; text-transform:uppercase; color:var(--muted-2);
+      font-weight:700; padding:0 24px 12px; border-bottom:1px solid var(--border);
+    }
+    table.members tbody td{ padding:14px 24px; border-bottom:1px dashed var(--border); font-size:13px; vertical-align:middle; }
+    table.members tbody tr:last-child td{ border-bottom:none; }
+    table.members tbody tr{ opacity:0; transform:translateY(8px); animation: rise .5s var(--ease) forwards; transition:background .2s; }
+    table.members tbody tr:hover{ background:var(--cream); }
+    table.members tbody tr:nth-child(1){ animation-delay:.42s; }
+    table.members tbody tr:nth-child(2){ animation-delay:.5s; }
+    table.members tbody tr:nth-child(3){ animation-delay:.58s; }
+    .member-cell{ display:flex; align-items:center; gap:12px; }
+    .m-avatar{
+      width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+      font-weight:700; font-size:12.5px; color:#fff; flex-shrink:0;
+    }
+    .m-name{ font-weight:700; font-size:13px; }
+    .m-role{ font-size:11.5px; color:var(--muted-2); margin-top:1px; }
+    .pill{ display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:700; padding:5px 11px; border-radius:20px; }
+    .pill.actif{ background:var(--green-tint); color:var(--green); }
+    .pill.nouveau{ background:var(--amber-tint); color:var(--amber); }
+    .pill .pdot{ width:6px; height:6px; border-radius:50%; background:currentColor; }
+    .eng-wrap{ display:flex; align-items:center; gap:10px; min-width:130px; }
+    .eng-track{ flex:1; height:6px; border-radius:4px; background:var(--border); overflow:hidden; }
+    .eng-fill{ height:100%; border-radius:4px; width:0%; background:linear-gradient(90deg, var(--gold-1), var(--gold-2)); transition:width 1.1s var(--ease) .7s; }
+    .eng-pct{ font-size:11.5px; font-weight:700; color:var(--muted); width:32px; text-align:right; }
+    .muted-cell{ color:var(--muted); }
+
+    /* ---------- Extra 3-col grid ---------- */
+    .extra-grid{ display:grid; grid-template-columns:1.15fr 1fr 1fr; gap:16px; margin-top:0; }
+    .side-panel{
+      background:#fff; border:1px solid var(--border); border-radius:20px; box-shadow:0 1px 0 rgba(255,255,255,0.6) inset, 0 18px 40px -26px rgba(30,25,10,0.18);
+      padding:22px 24px; opacity:0; transform:translateY(16px); animation: rise .6s var(--ease) forwards;
+    }
+    .side-panel:nth-child(1){ animation-delay:.66s; }
+    .side-panel:nth-child(2){ animation-delay:.74s; }
+    .side-panel:nth-child(3){ animation-delay:.82s; }
+    .side-head{ display:flex; align-items:center; gap:10px; margin-bottom:16px; }
+    .side-icon{
+      width:32px; height:32px; border-radius:10px; display:flex; align-items:center; justify-content:center;
+      background:var(--amber-tint); color:var(--amber); flex-shrink:0;
+    }
+    .side-icon svg{ width:16px; height:16px; }
+    .side-head h4{ font-family:'Fraunces', serif; font-size:15.5px; font-weight:600; }
+
+    /* Timeline */
+    .timeline{ position:relative; padding-left:22px; }
+    .timeline::before{ content:''; position:absolute; left:5px; top:4px; bottom:4px; width:2px; background:linear-gradient(180deg, var(--gold-1), var(--border)); }
+    .t-item{ position:relative; padding-bottom:20px; }
+    .t-item:last-child{ padding-bottom:0; }
+    .t-item::before{ content:''; position:absolute; left:-22px; top:2px; width:11px; height:11px; border-radius:50%; background:#fff; border:2.5px solid var(--gold-2); }
+    .t-item.done::before{ background:var(--gold-2); }
+    .t-date{ font-size:10.5px; font-weight:700; color:var(--gold-2); letter-spacing:.4px; text-transform:uppercase; }
+    .t-title{ font-size:13.5px; font-weight:700; margin-top:3px; }
+    .t-desc{ font-size:12px; color:var(--muted); margin-top:3px; line-height:1.5; }
+    .t-status{ display:inline-block; margin-top:6px; font-size:10px; font-weight:700; padding:3px 9px; border-radius:12px; background:var(--green-tint); color:var(--green); }
+    .empty-state{ margin-top:4px; padding:14px; border:1px dashed var(--border); border-radius:14px; background:var(--cream); }
+    .empty-state .es-title{ font-size:12.5px; font-weight:700; color:var(--ink); display:flex; align-items:center; gap:7px; }
+    .empty-state .es-title svg{ width:14px; height:14px; color:var(--gold-2); }
+    .empty-state p{ font-size:11.5px; color:var(--muted); margin-top:5px; line-height:1.5; }
+
+    /* Notifications */
+    .notif-item { display:flex; align-items:center; gap:12px; padding:11px 0; border-bottom:1px dashed var(--border); opacity:0; animation: rise .45s var(--ease) forwards; }
+    .notif-item:nth-child(2){ animation-delay:.05s; }
+    .notif-item:nth-child(3){ animation-delay:.1s; }
+    .notif-item:nth-child(4){ animation-delay:.15s; }
+    .notif-item:nth-child(5){ animation-delay:.2s; }
+    .notif-item:last-child { border-bottom:none; }
+    .notif-dot-status { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+    .notif-item .msg { font-size:12.5px; flex:1; line-height:1.4; }
+    .notif-item .time { font-size:10.5px; color:var(--muted-2); white-space:nowrap; }
+
+    /* Quick breakdown */
+    .statut-mini { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .statut-mini .badge-stat { background:var(--cream); border-radius:12px; padding:12px 14px; display:flex; flex-direction:column; gap:4px; transition:transform .2s var(--ease); }
+    .statut-mini .badge-stat:hover{ transform:translateY(-2px); }
+    .badge-stat .lbl { font-size:11px; color:var(--muted); }
+    .badge-stat .val { font-weight:700; font-size:17px; font-family:'Fraunces', serif; }
+    .progress-block{ margin-top:16px; background:var(--cream); border-radius:14px; padding:14px; }
+    .progress-block .prow{ display:flex; justify-content:space-between; font-size:12px; color:var(--muted); }
+    .progress-block .prow b{ font-weight:700; color:var(--green); }
+    .progress-track{ height:6px; background:var(--border); border-radius:4px; margin-top:8px; overflow:hidden; }
+    .progress-fill{ height:100%; width:0%; background:linear-gradient(90deg, var(--gold-2), var(--gold-1)); border-radius:4px; transition:width 1.2s var(--ease) .8s; }
+
+    /* Footer */
+    .footer-note{ margin-top:34px; text-align:center; opacity:0; animation: rise .7s var(--ease) 1s forwards; }
+    .footer-note svg{ width:60px; height:16px; color:var(--gold-2); opacity:.7; margin-bottom:8px; }
+    .footer-note p{ font-size:11.5px; color:var(--muted-2); }
+    .footer-note p b{ color:var(--muted); }
+
+    /* Responsive */
+    @media (max-width: 1180px){
+      .extra-grid{ grid-template-columns:1fr 1fr; }
+      .side-panel:nth-child(1){ grid-column:1 / -1; }
+    }
+    @media (max-width: 1100px) {
+      .chart-row { grid-template-columns:1fr; }
+      .stats-grid { grid-template-columns:repeat(2,1fr); }
+      .kpi-grid { grid-template-columns:repeat(2,1fr); }
+    }
+    @media (max-width: 1000px) {
+      .app { grid-template-columns:1fr; }
+      .sidebar { display:none; }
+      .content { padding:24px 18px 60px; }
+      .extra-grid{ grid-template-columns:1fr; }
+      .side-panel:nth-child(1){ grid-column:auto; }
+    }
+    @media (prefers-reduced-motion:reduce) {
+      * { animation-duration:.001ms !important; transition-duration:.001ms !important; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="shimmer-bar"></div>
+
+<!-- Global gradients (utilisées par plusieurs SVG) -->
+<svg width="0" height="0" style="position:absolute;">
+  <defs>
+    <linearGradient id="goldLineGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#d9b876"/>
+      <stop offset="100%" stop-color="#b6903f"/>
+    </linearGradient>
+    <linearGradient id="goldAreaGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#d9b876" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#d9b876" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+</svg>
+
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">EB</div>
+      <div>
+        <div class="brand-name">SYGMEBEC</div>
+        <div class="brand-sub-row"><span class="live-dot"></span><span class="brand-sub">E.B.E.C.</span></div>
+      </div>
+    </div>
+    <div class="navwrap">
+      <ul class="navlist">
+        <li class="navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 11.5L12 4l8 7.5"/><path d="M6 10v9a1 1 0 001 1h10a1 1 0 001-1v-9"/></svg>Tableau de bord</li>
+        <li class="navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3"/><path d="M3.5 19c1-3.2 3-4.8 5.5-4.8s4.5 1.6 5.5 4.8"/><circle cx="17" cy="8.5" r="2.4"/><path d="M15 14.5c2 .1 3.4 1.4 4.2 3.8"/></svg>Membres</li>
+        <li class="navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10" cy="9" r="3"/><path d="M4.5 19c1-3 3-4.6 5.5-4.6" /><path d="M15 6l3 3-3 3"/></svg>Inscriptions en ligne</li>
+        <li class="navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/></svg>Événements</li>
+        <li class="navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="4.5" width="17" height="14" rx="2"/><circle cx="9" cy="10" r="1.8"/><path d="M20 15l-4.5-4-6 5.5"/></svg>Images vitrine</li>
+        <li class="navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 3.5h8l3.5 3.5V20a1 1 0 01-1 1H7a1 1 0 01-1-1V4.5a1 1 0 011-1z"/><path d="M9 12h6M9 15.5h6M9 8.5h3"/></svg>Rapports</li>
+        <li class="navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3.5 5.5l17 6-7 2.4-2.4 7z"/></svg>Lettres</li>
+        <li class="navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9.5" cy="8.5" r="3"/><path d="M4 19c1-3 3-4.6 5.5-4.6"/><path d="M16.5 6.5l3 3-3 3"/></svg>Comptes</li>
+        <li class="navitem active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20V11M10 20V6M16 20v-7M22 20H2"/></svg>Statistiques</li>
+      </ul>
+    </div>
+    <div class="sidebar-foot">
+      <div class="foot-card">
+        <b><span class="live-dot"></span>Synthèse en direct</b>
+        Données mises à jour automatiquement
+      </div>
+      <ul class="navlist">
+        <li class="navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 3.5v2M12 18.5v2M3.5 12h2M18.5 12h2M6 6l1.4 1.4M16.6 16.6L18 18M18 6l-1.4 1.4M7.4 16.6L6 18"/></svg>Paramètres</li>
+        <li class="navitem logout-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 4H6a1.5 1.5 0 00-1.5 1.5v13A1.5 1.5 0 006 20h3"/><path d="M15.5 16l4-4-4-4M19 12H9"/></svg>Déconnexion</li>
+      </ul>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div class="search-wrap">
+        <input type="text" placeholder="Rechercher dans les statistiques…">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      </div>
+      <div class="live-pill"><span class="dot"></span>Synchronisé à l'instant</div>
+      <div class="top-actions">
+        <div class="icon-circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 14.5A8.5 8.5 0 119.5 4a7 7 0 0010.5 10.5z"/></svg></div>
+        <div class="icon-circle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9.5a6 6 0 1112 0c0 4 1.4 5.6 2 6.4H4c.6-.8 2-2.4 2-6.4z"/><path d="M9.5 19.5a2.6 2.6 0 005 0"/></svg>
+          <span class="icon-badge">3</span>
+        </div>
+        <div class="profile-chip">
+          <div class="profile-avatar">OS</div>
+          <div>
+            <div class="profile-name">Osier Storly</div>
+            <div class="profile-role">Administrateur</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- HEADER -->
+      <div class="page-head">
+        <div>
+          <div class="eyebrow-row">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 6.6L20 10l-6.2 1.4L12 18l-1.8-6.6L4 10l6.2-1.4z"/></svg>
+            <span class="eyebrow">Statistiques générales</span>
+          </div>
+          <h1>Vue d'ensemble du programme</h1>
+          <p class="sub">Analyse de l'activité, des membres et des événements en temps réel — synthèse consolidée pour SYGMEBEC.</p>
+        </div>
+        <div class="head-actions">
+          <button class="btn" id="btnExport">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12M8 11l4 4 4-4"/><path d="M5 17v2.5A1.5 1.5 0 006.5 21h11a1.5 1.5 0 001.5-1.5V17"/></svg>
+            Exporter
+          </button>
+          <button class="btn btn-primary" id="btnRefresh">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 11A8 8 0 105.5 15.5M20 11V5M20 11h-6"/></svg>
+            <span id="refreshLabel">Actualiser</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- STATS CARD -->
+      <div class="stats-grid">
+        <div class="stat-card c-blue">
+          <div class="stat-top">
+            <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3"/><path d="M3.5 19c1-3.2 3-4.8 5.5-4.8s4.5 1.6 5.5 4.8"/><circle cx="17" cy="8.5" r="2.4"/><path d="M15 14.5c2 .1 3.4 1.4 4.2 3.8"/></svg></div>
+          </div>
+          <div class="stat-num" data-count="3">0</div>
+          <div class="stat-label">Membres total</div>
+          <div class="stat-trend trend-up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 16l6-6 4 4 6-8"/></svg>+2 ce mois</div>
+          <svg class="sparkline" viewBox="0 0 100 34" preserveAspectRatio="none">
+            <polyline class="sparkline-fill" points="0,30 16,26 33,28 50,20 66,16 83,10 100,6 100,34 0,34" fill="var(--blue-tint)"></polyline>
+            <polyline class="sparkline-path" data-points="0,30 16,26 33,28 50,20 66,16 83,10 100,6" points="" stroke="var(--blue)"></polyline>
+          </svg>
+        </div>
+        <div class="stat-card c-green">
+          <div class="stat-top">
+            <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v13"/><path d="M7 11l5 5 5-5"/><path d="M5 20h14"/></svg></div>
+          </div>
+          <div class="stat-num" data-count="2">0</div>
+          <div class="stat-label">Actifs</div>
+          <div class="stat-trend trend-flat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12h16"/></svg>Stable</div>
+          <svg class="sparkline" viewBox="0 0 100 34" preserveAspectRatio="none">
+            <polyline class="sparkline-fill" points="0,18 16,20 33,17 50,19 66,18 83,16 100,17 100,34 0,34" fill="var(--green-tint)"></polyline>
+            <polyline class="sparkline-path" data-points="0,18 16,20 33,17 50,19 66,18 83,16 100,17" points="" stroke="var(--green)"></polyline>
+          </svg>
+        </div>
+        <div class="stat-card c-amber">
+          <div class="stat-top">
+            <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/></svg></div>
+          </div>
+          <div class="stat-num" data-count="1">0</div>
+          <div class="stat-label">Événements</div>
+          <div class="stat-trend trend-info"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4 10-10"/></svg>1 terminé</div>
+          <svg class="sparkline" viewBox="0 0 100 34" preserveAspectRatio="none">
+            <polyline class="sparkline-fill" points="0,30 25,30 25,14 50,14 50,30 75,30 75,14 100,14 100,34 0,34" fill="var(--amber-tint)"></polyline>
+            <polyline class="sparkline-path" data-points="0,30 25,30 25,14 50,14 50,30 75,30 75,14 100,14" points="" stroke="var(--amber)"></polyline>
+          </svg>
+        </div>
+        <div class="stat-card c-purple">
+          <div class="stat-top">
+            <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20V11M10 20V6M16 20v-7M22 20H2"/></svg></div>
+          </div>
+          <div class="stat-num" data-count="0">0</div>
+          <div class="stat-label">À venir</div>
+          <div class="stat-trend trend-flat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12h16"/></svg>Aucun programmé</div>
+          <svg class="sparkline" viewBox="0 0 100 34" preserveAspectRatio="none">
+            <polyline class="sparkline-fill" points="0,32 100,32 100,34 0,34" fill="var(--purple-tint)"></polyline>
+            <polyline class="sparkline-path" data-points="0,32 100,32" points="" stroke="var(--purple)"></polyline>
+          </svg>
+        </div>
+      </div>
+
+      <!-- CHART ROW -->
+      <div class="chart-row">
+        <div class="panel" style="animation-delay:.32s;">
+          <div class="panel-head">
+            <div>
+              <h3>Évolution mensuelle</h3>
+              <p>Membres, événements et courbe de croissance — 6 derniers mois</p>
+            </div>
+            <span class="panel-tag">En temps réel</span>
+          </div>
+          <div class="chart-body">
+            <div class="chart-combo">
+              <svg class="growth-overlay" id="growthOverlay" viewBox="0 0 600 120" preserveAspectRatio="none"></svg>
+              <div class="chart-bars" id="chartBars"><!-- bars injectées par JS --></div>
+            </div>
+            <div class="legend-h">
+              <span><i style="background:var(--blue);"></i> membres</span>
+              <span><i style="background:var(--gold-2);"></i> événements</span>
+              <span><i class="line"></i> tendance</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- DONUT statut -->
+        <div class="panel" style="animation-delay:.38s;">
+          <div class="panel-head">
+            <div>
+              <h3>Répartition des statuts</h3>
+              <p>Distribution des profils du système</p>
+            </div>
+            <span class="panel-tag">3 membres</span>
+          </div>
+          <div class="donut-body">
+            <div class="donut-wrap">
+              <svg viewBox="0 0 140 140">
+                <circle cx="70" cy="70" r="56" stroke="#f0ece0"></circle>
+                <circle class="donut-seg" cx="70" cy="70" r="56" stroke="#1fa060" stroke-linecap="round" data-pct="67"></circle>
+                <circle class="donut-seg" cx="70" cy="70" r="56" stroke="#c17f18" stroke-linecap="round" data-pct="33" data-offset="67"></circle>
+              </svg>
+              <div class="donut-center">
+                <div class="big">3</div>
+                <div class="small">MEMBRES</div>
+              </div>
+            </div>
+            <div class="legend">
+              <div class="legend-row"><span class="legend-dot" style="background:#1fa060;"></span><span class="legend-label">Actif</span><span class="legend-val">2</span><span class="legend-pct">67%</span></div>
+              <div class="legend-row"><span class="legend-dot" style="background:#c17f18;"></span><span class="legend-label">Nouveau converti</span><span class="legend-val">1</span><span class="legend-pct">33%</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- KPI RINGS -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-ring">
+            <svg viewBox="0 0 46 46"><circle class="track" cx="23" cy="23" r="19"></circle><circle class="val" cx="23" cy="23" r="19" stroke="#1fa060" data-pct="78"></circle></svg>
+            <div class="kpi-ring-label">78%</div>
+          </div>
+          <div class="kpi-info"><div class="num">Taux d'activité</div><div class="lab">Membres actifs</div></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-ring">
+            <svg viewBox="0 0 46 46"><circle class="track" cx="23" cy="23" r="19"></circle><circle class="val" cx="23" cy="23" r="19" stroke="#3768d6" data-pct="45"></circle></svg>
+            <div class="kpi-ring-label">45%</div>
+          </div>
+          <div class="kpi-info"><div class="num">Engagement</div><div class="lab">Participation événements</div></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-ring">
+            <svg viewBox="0 0 46 46"><circle class="track" cx="23" cy="23" r="19"></circle><circle class="val" cx="23" cy="23" r="19" stroke="#b6903f" data-pct="92"></circle></svg>
+            <div class="kpi-ring-label">92%</div>
+          </div>
+          <div class="kpi-info"><div class="num">Rétention</div><div class="lab">Sur 12 mois</div></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-ring">
+            <svg viewBox="0 0 46 46"><circle class="track" cx="23" cy="23" r="19"></circle><circle class="val" cx="23" cy="23" r="19" stroke="#7c50d1" data-pct="100"></circle></svg>
+            <div class="kpi-ring-label">1</div>
+          </div>
+          <div class="kpi-info"><div class="num">Événements</div><div class="lab">Organisés cette année</div></div>
+        </div>
+      </div>
+
+      <!-- SECTION DIVIDER -->
+      <div class="section-divider">
+        <span class="line"></span>
+        <svg class="flourish" viewBox="0 0 60 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 12h18M40 12h18"/><circle cx="30" cy="12" r="5"/><path d="M27 12l2-2 2 2-2 2z" fill="currentColor" stroke="none"/></svg>
+        <span class="section-label">Détail du programme</span>
+        <span class="line"></span>
+      </div>
+
+      <!-- MEMBER TABLE -->
+      <div class="table-panel">
+        <div class="panel-head">
+          <div>
+            <h3>Membres du programme</h3>
+            <p>Statut, ancienneté et niveau d'engagement individuel</p>
+          </div>
+          <span class="panel-tag">3 profils</span>
+        </div>
+        <div class="table-scroll">
+          <table class="members">
+            <thead>
+              <tr>
+                <th>Membre</th>
+                <th>Statut</th>
+                <th>Membre depuis</th>
+                <th>Dernière activité</th>
+                <th>Engagement</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <div class="member-cell">
+                    <div class="m-avatar" style="background:linear-gradient(160deg,#4c7be0,#3768d6);">JB</div>
+                    <div><div class="m-name">Jean Baptiste</div><div class="m-role">Diacre</div></div>
+                  </div>
+                </td>
+                <td><span class="pill actif"><span class="pdot"></span>Actif</span></td>
+                <td class="muted-cell">Depuis 2019</td>
+                <td class="muted-cell">Aujourd'hui</td>
+                <td>
+                  <div class="eng-wrap"><div class="eng-track"><div class="eng-fill" data-pct="92"></div></div><div class="eng-pct">92%</div></div>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="member-cell">
+                    <div class="m-avatar" style="background:linear-gradient(160deg,#2fc07f,#1fa060);">SI</div>
+                    <div><div class="m-name">Sarah Innocent</div><div class="m-role">Chorale</div></div>
+                  </div>
+                </td>
+                <td><span class="pill actif"><span class="pdot"></span>Actif</span></td>
+                <td class="muted-cell">Depuis 2021</td>
+                <td class="muted-cell">Hier</td>
+                <td>
+                  <div class="eng-wrap"><div class="eng-track"><div class="eng-fill" data-pct="78"></div></div><div class="eng-pct">78%</div></div>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="member-cell">
+                    <div class="m-avatar" style="background:linear-gradient(160deg,#d9b876,#b6903f); color:#241a05;">MC</div>
+                    <div><div class="m-name">Marie Charles</div><div class="m-role">Nouveau converti</div></div>
+                  </div>
+                </td>
+                <td><span class="pill nouveau"><span class="pdot"></span>Nouveau</span></td>
+                <td class="muted-cell">12 juin 2026</td>
+                <td class="muted-cell">Il y a 3 jours</td>
+                <td>
+                  <div class="eng-wrap"><div class="eng-track"><div class="eng-fill" data-pct="45"></div></div><div class="eng-pct">45%</div></div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- EXTRA : Timeline + notifications + répartition rapide -->
+      <div class="extra-grid">
+
+        <div class="side-panel">
+          <div class="side-head">
+            <div class="side-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/></svg></div>
+            <h4>Événements</h4>
+          </div>
+          <div class="timeline">
+            <div class="t-item done">
+              <div class="t-date">14 mars 2026</div>
+              <div class="t-title">Synode 2026</div>
+              <div class="t-desc">Rassemblement général E.B.E.C. — bilan et orientations du programme.</div>
+              <span class="t-status">Terminé</span>
+            </div>
+            <div class="t-item">
+              <div class="empty-state">
+                <div class="es-title">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 8v8M8 12h8"/><circle cx="12" cy="12" r="9"/></svg>
+                  Aucun événement à venir
+                </div>
+                <p>Planifiez le prochain rassemblement pour le faire apparaître ici.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="side-panel">
+          <div class="side-head">
+            <div class="side-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9.5a6 6 0 1112 0c0 4 1.4 5.6 2 6.4H4c.6-.8 2-2.4 2-6.4z"/><path d="M9.5 19.5a2.6 2.6 0 005 0"/></svg></div>
+            <h4>Notifications</h4>
+          </div>
+          <div class="notif-item"><span class="notif-dot-status" style="background:#1fa060;"></span><span class="msg">Rapport mensuel généré</span><span class="time">il y a 2h</span></div>
+          <div class="notif-item"><span class="notif-dot-status" style="background:#b6903f;"></span><span class="msg">Nouvel événement : Synode 2026</span><span class="time">il y a 1j</span></div>
+          <div class="notif-item"><span class="notif-dot-status" style="background:#3768d6;"></span><span class="msg">Membre ajouté : Marie Charles</span><span class="time">il y a 3j</span></div>
+          <div class="notif-item"><span class="notif-dot-status" style="background:#c94f43;"></span><span class="msg">Échec de génération de rapport</span><span class="time">il y a 5j</span></div>
+        </div>
+
+        <div class="side-panel">
+          <div class="side-head">
+            <div class="side-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20V11M10 20V6M16 20v-7M22 20H2"/></svg></div>
+            <h4>Répartition rapide</h4>
+          </div>
+          <div class="statut-mini">
+            <div class="badge-stat"><span class="lbl">Membres actifs</span><span class="val">2</span></div>
+            <div class="badge-stat"><span class="lbl">Nouveaux convertis</span><span class="val">1</span></div>
+            <div class="badge-stat"><span class="lbl">Événements passés</span><span class="val">1</span></div>
+            <div class="badge-stat"><span class="lbl">À venir</span><span class="val">0</span></div>
+          </div>
+          <div class="progress-block">
+            <div class="prow"><span>Progression globale</span><b>+12%</b></div>
+            <div class="progress-track"><div class="progress-fill" data-pct="72"></div></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- FOOTER -->
+      <div class="footer-note">
+        <svg viewBox="0 0 60 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 12h18M40 12h18"/><circle cx="30" cy="12" r="5"/><path d="M27 12l2-2 2 2-2 2z" fill="currentColor" stroke="none"/></svg>
+        <p><b>Rapport généré automatiquement</b> · SYGMEBEC · <span id="footDate"></span></p>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------- Date pied de page ---------- */
+  document.getElementById('footDate').textContent = new Date().toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' });
+
+  /* ---------- Count-up des stats ---------- */
+  function runCountUp(){
+    document.querySelectorAll('.stat-num').forEach(el => {
+      const target = parseInt(el.dataset.count, 10);
+      const duration = 900;
+      const start = performance.now();
+      function tick(now){
+        const p = Math.min(1, (now - start) / duration);
+        const eased = 1 - Math.pow(1 - p, 3);
+        el.textContent = Math.round(eased * target);
+        if(p < 1) requestAnimationFrame(tick);
+      }
+      if (reduceMotion) { el.textContent = target; } else { requestAnimationFrame(tick); }
+    });
+  }
+  setTimeout(runCountUp, 350);
+
+  /* ---------- Bars chart + courbe de tendance ---------- */
+  const barData = [
+    { member: 2, event: 0 },
+    { member: 2, event: 1 },
+    { member: 3, event: 1 },
+    { member: 3, event: 1 },
+    { member: 3, event: 1 },
+    { member: 3, event: 1 }
+  ];
+  const months = ['Jan','Fév','Mar','Avr','Mai','Juin'];
+  const container = document.getElementById('chartBars');
+  const maxVal = 4;
+  container.innerHTML = barData.map((d, i) => {
+    const hM = (d.member / maxVal) * 100;
+    const hE = (d.event / maxVal) * 100;
+    return `<div class="bar-group">
+      <div class="bars">
+        <div class="bar member" style="height:${hM}%;" title="${months[i]} — Membres : ${d.member}"></div>
+        <div class="bar event" style="height:${hE}%;" title="${months[i]} — Événements : ${d.event}"></div>
+      </div>
+      <div class="bar-label">${months[i]}</div>
+    </div>`;
+  }).join('');
+
+  function drawGrowthLine(){
+    const svg = document.getElementById('growthOverlay');
+    const w = 600, h = 120, pad = 8;
+    const n = barData.length;
+    const step = w / n;
+    const pts = barData.map((d,i) => {
+      const x = step * i + step/2;
+      const y = h - pad - ((d.member / maxVal) * (h - pad*2));
+      return [x, y];
+    });
+    const linePath = pts.map((p,i) => (i===0 ? 'M' : 'L') + p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
+    const areaPath = linePath + ` L${pts[pts.length-1][0].toFixed(1)},${h} L${pts[0][0].toFixed(1)},${h} Z`;
+
+    let dotsMarkup = '';
+    pts.forEach((p,i) => {
+      const isLast = i === pts.length - 1;
+      dotsMarkup += `<circle class="growth-dot${isLast ? ' last' : ''}" cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3.5"></circle>`;
+    });
+
+    svg.innerHTML = `
+      <path class="growth-area" d="${areaPath}" fill="url(#goldAreaGrad)"></path>
+      <path class="growth-line" id="growthLinePath" d="${linePath}"></path>
+      ${dotsMarkup}
+    `;
+
+    const linePathEl = document.getElementById('growthLinePath');
+    const len = linePathEl.getTotalLength();
+    if (reduceMotion) {
+      linePathEl.style.strokeDasharray = 'none';
+      document.querySelector('.growth-area').style.opacity = 1;
+      return;
+    }
+    linePathEl.style.strokeDasharray = len;
+    linePathEl.style.strokeDashoffset = len;
+    linePathEl.style.transition = 'stroke-dashoffset 1.4s ' + 'cubic-bezier(.22,1,.36,1) .5s';
+    requestAnimationFrame(() => { linePathEl.style.strokeDashoffset = 0; });
+    setTimeout(() => { document.querySelector('.growth-area').style.opacity = 1; }, 900);
+  }
+  setTimeout(drawGrowthLine, 60);
+
+  /* ---------- Sparklines des stat-cards ---------- */
+  function drawSparklines(){
+    document.querySelectorAll('.sparkline-path').forEach((path, idx) => {
+      const pts = path.dataset.points;
+      path.setAttribute('points', pts);
+      const len = path.getTotalLength ? path.getTotalLength() : 120;
+      if (reduceMotion) return;
+      path.style.strokeDasharray = len;
+      path.style.strokeDashoffset = len;
+      path.style.transition = 'stroke-dashoffset 1s cubic-bezier(.22,1,.36,1) ' + (0.5 + idx * 0.12) + 's';
+      requestAnimationFrame(() => { path.style.strokeDashoffset = 0; });
+    });
+  }
+  setTimeout(drawSparklines, 200);
+
+  /* ---------- Donut segments ---------- */
+  const DONUT_R = 56;
+  const DONUT_C = 2 * Math.PI * DONUT_R;
+  function drawDonut(){
+    document.querySelectorAll('.donut-seg').forEach(seg => {
+      const pct = parseFloat(seg.dataset.pct) || 0;
+      const offset = parseFloat(seg.dataset.offset) || 0;
+      const len = (pct / 100) * DONUT_C;
+      seg.style.strokeDasharray = `${len} ${DONUT_C - len}`;
+      seg.style.strokeDashoffset = -(offset / 100) * DONUT_C;
+    });
+  }
+  setTimeout(drawDonut, 500);
+
+  /* ---------- KPI rings ---------- */
+  const KPI_R = 19;
+  const KPI_C = 2 * Math.PI * KPI_R;
+  function drawKpiRings(){
+    document.querySelectorAll('.kpi-ring .val').forEach(ring => {
+      const pct = parseFloat(ring.dataset.pct) || 0;
+      const len = (pct / 100) * KPI_C;
+      ring.style.strokeDasharray = `${len} ${KPI_C - len}`;
+    });
+  }
+  setTimeout(drawKpiRings, 600);
+
+  /* ---------- Barres d'engagement + progression globale ---------- */
+  function drawEngagementBars(){
+    document.querySelectorAll('.eng-fill').forEach(el => { el.style.width = (el.dataset.pct || 0) + '%'; });
+    document.querySelectorAll('.progress-fill').forEach(el => { el.style.width = (el.dataset.pct || 0) + '%'; });
+  }
+  setTimeout(drawEngagementBars, 500);
+
+  /* ---------- Inclinaison légère des cartes stats au survol ---------- */
+  if (!reduceMotion) {
+    document.querySelectorAll('.stat-card').forEach(card => {
+      card.addEventListener('mousemove', e => {
+        const r = card.getBoundingClientRect();
+        const px = (e.clientX - r.left) / r.width - 0.5;
+        const py = (e.clientY - r.top) / r.height - 0.5;
+        card.style.transform = `translateY(-4px) rotateX(${(-py*5).toFixed(2)}deg) rotateY(${(px*6).toFixed(2)}deg)`;
+      });
+      card.addEventListener('mouseleave', () => { card.style.transform = ''; });
+    });
+  }
+
+  /* ---------- Bouton Actualiser ---------- */
+  document.getElementById('btnRefresh').addEventListener('click', function(){
+    const btn = this;
+    const label = document.getElementById('refreshLabel');
+    if (btn.classList.contains('spinning')) return;
+    btn.classList.add('spinning');
+    label.textContent = 'Actualisation…';
+    setTimeout(() => {
+      runCountUp();
+      drawGrowthLine();
+      drawSparklines();
+      drawDonut();
+      drawKpiRings();
+      drawEngagementBars();
+      label.textContent = 'Actualisé ✓';
+      setTimeout(() => {
+        label.textContent = 'Actualiser';
+        btn.classList.remove('spinning');
+      }, 1100);
+    }, 500);
+  });
+
+  document.getElementById('btnExport').addEventListener('click', function(){
+    const label = this;
+    const original = label.innerHTML;
+    label.innerHTML = original.replace('Exporter', 'Préparation…');
+    setTimeout(() => { label.innerHTML = original; }, 1200);
+  });
+
+  /* ---------- Révélation au défilement pour les sections basses ---------- */
+  if (!reduceMotion && 'IntersectionObserver' in window) {
+    const revealEls = document.querySelectorAll('.table-panel, .side-panel');
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.animationPlayState = 'running';
+          io.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15 });
+    revealEls.forEach(el => io.observe(el));
+  }
+</script>
+</body>
+</html>

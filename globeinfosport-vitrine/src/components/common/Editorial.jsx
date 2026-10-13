@@ -14,7 +14,7 @@ export const nationalCategorySlugs = new Set([
 ]);
 
 export function formatDate(value, options = { dateStyle: "medium" }) {
-  if (!value) return "À paraître";
+  if (!value || Number.isNaN(new Date(value).getTime())) return "À paraître";
   return new Intl.DateTimeFormat("fr-HT", options).format(new Date(value));
 }
 
@@ -68,5 +68,6 @@ export function StoryCard({ article, featured = false, compact = false, priority
 }
 
 export function StoryMeta({ article, inverse = false }) {
-  return <div className={`flex flex-wrap items-center gap-x-4 gap-y-2 text-sm ${inverse ? "text-slate-300" : "text-slate-500"}`}><span className="inline-flex items-center gap-1.5"><CalendarDays className="h-4 w-4" />{formatDate(article.date_publication, { dateStyle: "long" })}</span><span className="inline-flex items-center gap-1.5"><Clock3 className="h-4 w-4" />Lecture éditoriale</span></div>;
+  const words = (article.contenu || article.chapo || "").replace(/<[^>]*>/g, " ").split(/\s+/).filter(Boolean).length;
+  return <div className={`flex flex-wrap items-center gap-x-4 gap-y-2 text-sm ${inverse ? "text-slate-300" : "text-slate-500"}`}><span className="inline-flex items-center gap-1.5"><CalendarDays className="h-4 w-4" />{formatDate(article.date_publication, { dateStyle: "long" })}</span><span className="inline-flex items-center gap-1.5"><Clock3 className="h-4 w-4" />{Math.max(1, Math.ceil(words / 200))} min de lecture</span></div>;
 }

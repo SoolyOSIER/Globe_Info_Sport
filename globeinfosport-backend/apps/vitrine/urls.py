@@ -16,6 +16,7 @@ from apps.competitions.views import (
     ClassementPublicView,
     ClubPublicListView,
     ClubPublicDetailView,
+    CompetitionPublicDetailView,
     CompetitionPublicListView,
     MatchPublicDetailView,
     MatchPublicListView,
@@ -34,7 +35,13 @@ from .views import (
     PublicPartenaireListView,
 )
 
+from apps.actualites.views import SportViewSet, PaysViewSet, SelectionViewSet
+
 urlpatterns = [
+    path("sports/", SportViewSet.as_view({"get": "list"})),
+    path("pays/", PaysViewSet.as_view({"get": "list"})),
+    path("selections/", SelectionViewSet.as_view({"get": "list"})),
+    path("selections/<int:pk>/", SelectionViewSet.as_view({"get": "retrieve"})),
     path("articles/", ArticlePublicListView.as_view()),
     path("fil-externe/", ActualiteSyndiqueePublicListView.as_view()),
     path("articles/<slug:slug>/", ArticlePublicDetailView.as_view()),
@@ -42,6 +49,7 @@ urlpatterns = [
     path("joueurs/", JoueurPublicListView.as_view()),
     path("legendes/", LegendePublicListView.as_view()),
     path("competitions/", CompetitionPublicListView.as_view()),
+    path("competitions/<int:pk>/", CompetitionPublicDetailView.as_view()),
     path("clubs/", ClubPublicListView.as_view()),
     path("clubs/<slug:slug>/", ClubPublicDetailView.as_view()),
     path("classement/<int:competition_id>/", ClassementPublicView.as_view()),

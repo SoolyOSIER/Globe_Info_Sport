@@ -1,0 +1,434 @@
+
+Apropos :
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>À propos — Église Baptiste de l'Espoir du Cap-Haïtien</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --nuit: #0E1B33;
+    --nuit-2: #16294a;
+    --nuit-3: #1f3459;
+    --aube: #D4A843;
+    --aube-clair: #F1CE7A;
+    --acajou: #7A2E2E;
+    --jour: #FBF6EC;
+    --jour-2: #F3ECDC;
+    --encre: #1B1B18;
+    --sourdine: #6b6656;
+    --ligne: rgba(27,27,24,0.12);
+    --ligne-nuit: rgba(241,206,122,0.18);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{font-family:'Work Sans', sans-serif; color:var(--encre); background:var(--jour); overflow-x:hidden;}
+  h1,h2,h3,.eyebrow{font-family:'Fraunces', serif;}
+  a{color:inherit; text-decoration:none;}
+  .container{max-width:1120px; margin:0 auto; padding:0 32px;}
+  ::selection{background:var(--aube); color:var(--nuit);}
+  @media (prefers-reduced-motion: reduce){ *{animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; scroll-behavior:auto !important;} }
+
+  .grain{position:fixed; inset:0; z-index:200; pointer-events:none; opacity:.035; mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
+  .progress{position:fixed; top:0; left:0; height:3px; background:linear-gradient(90deg, var(--acajou), var(--aube)); width:0%; z-index:300; transition:width .1s linear;}
+
+  /* NAV */
+  header{position:fixed; top:0; left:0; right:0; z-index:100; padding:24px 0; transition:background .4s ease, padding .4s ease, box-shadow .4s ease;}
+  header.scrolled{background:rgba(14,27,51,0.94); backdrop-filter:blur(10px); padding:14px 0; box-shadow:0 8px 24px rgba(0,0,0,.15);}
+  nav{display:flex; align-items:center; justify-content:space-between;}
+  .brand{display:flex; align-items:center; gap:12px; color:var(--jour);}
+  .brand .mark{width:36px; height:36px; border-radius:50%; background:radial-gradient(circle at 35% 30%, var(--aube-clair), var(--aube) 55%, var(--acajou) 100%); box-shadow:0 0 0 1px rgba(241,206,122,.25); flex-shrink:0;}
+  .brand-text{font-family:'Fraunces', serif; font-weight:600; font-size:16px; line-height:1.15;}
+  .brand-text span{display:block; font-family:'Work Sans',sans-serif; font-weight:400; font-size:11px; letter-spacing:1.5px; text-transform:uppercase; color:var(--aube-clair); opacity:.85; margin-top:2px;}
+  .nav-links{display:flex; gap:38px; list-style:none;}
+  .nav-links a{color:var(--jour); font-size:14px; font-weight:500; letter-spacing:.3px; position:relative; padding-bottom:4px; opacity:.78;}
+  .nav-links a::after{content:""; position:absolute; left:0; bottom:0; width:0; height:1px; background:var(--aube-clair); transition:width .3s ease;}
+  .nav-links a:hover, .nav-links a.active{opacity:1;}
+  .nav-links a:hover::after, .nav-links a.active::after{width:100%;}
+  .nav-toggle{display:none;}
+
+  /* PAGE HERO */
+  .pagehero{position:relative; padding:200px 0 130px; overflow:hidden; color:var(--jour);
+    background:linear-gradient(180deg, var(--nuit) 0%, var(--nuit-2) 55%, #2c3d63 100%);}
+  .pagehero-glow{position:absolute; left:50%; bottom:-40%; width:1200px; height:1200px; transform:translateX(-50%);
+    background:radial-gradient(circle, rgba(212,168,67,.5) 0%, rgba(212,168,67,.12) 34%, rgba(212,168,67,0) 62%); filter:blur(2px);}
+  .breadcrumb{display:flex; align-items:center; gap:10px; font-size:13px; letter-spacing:.5px; color:rgba(251,246,236,.6); position:relative; z-index:1; opacity:0; animation:fadeUp .8s ease .1s forwards;}
+  .breadcrumb a:hover{color:var(--aube-clair);}
+  .pagehero h1{font-size:clamp(38px,6vw,66px); font-weight:600; line-height:1.08; margin:22px 0 20px; max-width:760px; position:relative; z-index:1; opacity:0; animation:fadeUp .9s ease .3s forwards;}
+  .pagehero h1 em{font-style:italic; color:var(--aube-clair); font-weight:400;}
+  .pagehero p{font-size:18px; line-height:1.75; max-width:600px; color:rgba(251,246,236,.82); position:relative; z-index:1; opacity:0; animation:fadeUp .9s ease .5s forwards;}
+  @keyframes fadeUp{from{opacity:0; transform:translateY(18px);} to{opacity:1; transform:translateY(0);}}
+
+  section{padding:120px 0; position:relative;}
+  .section-head{max-width:660px; margin-bottom:64px;}
+  .eyebrow-dark{font-size:12px; letter-spacing:3px; text-transform:uppercase; color:var(--acajou); font-weight:600; display:flex; align-items:center; gap:10px; margin-bottom:16px;}
+  .eyebrow-dark::before{content:""; width:26px; height:1px; background:var(--acajou);}
+  .section-head h2{font-size:clamp(28px,4vw,44px); font-weight:600; line-height:1.15; letter-spacing:-.3px;}
+  .section-head p{font-size:17px; color:var(--sourdine); line-height:1.75; margin-top:16px;}
+
+  .reveal{opacity:0; transform:translateY(28px); transition:opacity .8s cubic-bezier(.2,.8,.2,1), transform .8s cubic-bezier(.2,.8,.2,1);}
+  .reveal.in{opacity:1; transform:translateY(0);}
+  .stagger > *{opacity:0; transform:translateY(24px); transition:opacity .7s ease, transform .7s ease;}
+  .stagger.in > *{opacity:1; transform:translateY(0);}
+
+  /* HISTOIRE */
+  #histoire{background:var(--jour);}
+  .hist-grid{display:grid; grid-template-columns:0.9fr 1.1fr; gap:80px;}
+  .hist-text p{font-size:16.5px; line-height:1.9; color:#3a382f; margin-bottom:20px;}
+  .founded{font-family:'Fraunces', serif; font-size:15px; color:var(--acajou); font-weight:600; display:flex; align-items:center; gap:10px; margin-bottom:24px;}
+  .founded .dot{width:7px; height:7px; border-radius:50%; background:var(--aube);}
+
+  .timeline{position:relative; padding-left:30px;}
+  .timeline::before{content:""; position:absolute; left:5px; top:6px; bottom:6px; width:1px; background:var(--ligne);}
+  .tl-item{position:relative; padding-bottom:38px;}
+  .tl-item:last-child{padding-bottom:0;}
+  .tl-item::before{content:""; position:absolute; left:-30px; top:4px; width:11px; height:11px; border-radius:50%; background:var(--jour); border:2px solid var(--acajou);}
+  .tl-year{font-family:'Fraunces', serif; font-weight:600; color:var(--acajou); font-size:16px; margin-bottom:8px;}
+  .tl-item p{font-size:15.5px; color:var(--sourdine); line-height:1.75;}
+
+  /* VISION/MISSION */
+  #vismis{background:var(--jour-2);}
+  .vm-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:28px;}
+  .vm-card{background:var(--nuit); color:var(--jour); border-radius:8px; padding:44px 40px; position:relative; overflow:hidden;}
+  .vm-card::before{content:""; position:absolute; top:0; left:0; width:3px; height:100%; background:var(--aube);}
+  .vm-card h3{font-size:13px; letter-spacing:2.5px; text-transform:uppercase; color:var(--aube-clair); margin-bottom:16px; font-weight:600;}
+  .vm-card p{font-size:16.5px; line-height:1.85; color:rgba(251,246,236,.88);}
+  .vm-card.light{background:var(--jour); color:var(--encre);}
+  .vm-card.light::before{background:var(--acajou);}
+  .vm-card.light h3{color:var(--acajou);}
+  .vm-card ul{list-style:none; margin-top:4px;}
+  .vm-card ul li{padding:12px 0; border-top:1px solid var(--ligne-nuit); font-size:15.5px; line-height:1.5; display:flex; gap:12px;}
+  .vm-card.light ul li{border-top:1px solid var(--ligne);}
+  .vm-card.light ul li:first-child{border-top:none;}
+  .vm-card ul li::before{content:"—"; color:var(--aube); flex-shrink:0;}
+  .vm-card.light ul li::before{color:var(--acajou);}
+
+  /* VALEURS */
+  #valeurs{background:var(--jour);}
+  .val-grid{display:grid; grid-template-columns:repeat(5,1fr); gap:1px; background:var(--ligne); border:1px solid var(--ligne);}
+  .val-card{background:var(--jour); padding:38px 24px; transition:background .3s ease, transform .3s ease;}
+  .val-card:hover{background:var(--jour-2); transform:translateY(-4px);}
+  .val-card .ic{width:36px; height:36px; margin-bottom:18px; color:var(--acajou);}
+  .val-card h4{font-family:'Fraunces', serif; font-size:17px; font-weight:600; margin-bottom:8px;}
+  .val-card p{font-size:13.5px; line-height:1.6; color:var(--sourdine);}
+
+  /* PILIERS DE VIE D'EGLISE */
+  #piliers{background:var(--nuit); color:var(--jour);}
+  #piliers .eyebrow-dark{color:var(--aube-clair);}
+  #piliers .eyebrow-dark::before{background:var(--aube-clair);}
+  #piliers .section-head p{color:rgba(251,246,236,.7);}
+  #piliers .section-head h2{color:var(--jour);}
+  .pil-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--ligne-nuit); border:1px solid var(--ligne-nuit);}
+  .pil-card{background:var(--nuit); padding:36px 28px; transition:background .3s ease, transform .3s ease;}
+  .pil-card:hover{background:var(--nuit-3); transform:translateY(-3px);}
+  .pil-card .num{font-family:'Fraunces', serif; font-size:12px; color:var(--aube); letter-spacing:1px; display:block; margin-bottom:14px;}
+  .pil-card h4{font-size:17px; font-weight:600; margin-bottom:10px;}
+  .pil-card p{font-size:14px; line-height:1.65; color:rgba(251,246,236,.68);}
+
+  /* INSTANCES resume */
+  #instances{background:var(--jour-2);}
+  .inst-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:14px;}
+  .inst-row{display:flex; gap:20px; align-items:flex-start; background:var(--jour); border:1px solid var(--ligne); border-radius:6px; padding:22px 24px; transition:transform .3s ease, box-shadow .3s ease;}
+  .inst-row:hover{transform:translateY(-3px); box-shadow:0 14px 30px rgba(14,27,51,0.08);}
+  .inst-row .n{font-family:'Fraunces', serif; color:var(--acajou); font-weight:600; font-size:15px; flex-shrink:0; width:26px;}
+  .inst-row h4{font-size:15.5px; font-weight:600; margin-bottom:5px;}
+  .inst-row p{font-size:13.5px; color:var(--sourdine); line-height:1.55;}
+
+  /* CITATION */
+  .quote-band{background:linear-gradient(135deg, var(--acajou), #5c2222); color:var(--jour); padding:110px 0; text-align:center; position:relative; overflow:hidden;}
+  .quote-band::after{content:""; position:absolute; inset:0; background:radial-gradient(circle at 20% 20%, rgba(212,168,67,.18), transparent 45%);}
+  .quote-band blockquote{font-family:'Fraunces', serif; font-size:clamp(22px,3vw,36px); font-style:italic; max-width:840px; margin:0 auto; line-height:1.5; position:relative; z-index:1;}
+  .quote-band cite{display:block; margin-top:26px; font-style:normal; font-size:13px; letter-spacing:2px; text-transform:uppercase; color:var(--aube-clair); position:relative; z-index:1;}
+
+  /* CTA CLOSING */
+  #invitation{background:var(--jour); text-align:center;}
+  #invitation .section-head{margin:0 auto 34px; text-align:center;}
+  #invitation .eyebrow-dark{justify-content:center;}
+  #invitation .eyebrow-dark::before{display:none;}
+  .cta-row{display:flex; gap:18px; justify-content:center; flex-wrap:wrap;}
+  .btn{display:inline-flex; align-items:center; gap:10px; padding:16px 30px; border-radius:4px; font-size:14px; font-weight:600; letter-spacing:.4px; transition:transform .3s ease, box-shadow .3s ease; border:1px solid var(--ligne); cursor:pointer;}
+  .btn-primary{background:var(--acajou); color:var(--jour); border-color:var(--acajou);}
+  .btn-primary:hover{transform:translateY(-2px); box-shadow:0 14px 28px rgba(122,46,46,.25);}
+  .btn-ghost{border-color:var(--ligne); color:var(--encre);}
+  .btn-ghost:hover{background:var(--jour-2); transform:translateY(-2px);}
+
+  footer{background:var(--nuit); color:rgba(251,246,236,.6); padding:54px 0 36px;}
+  .footer-top{display:flex; justify-content:space-between; align-items:center; padding-bottom:32px; border-bottom:1px solid var(--ligne-nuit); flex-wrap:wrap; gap:20px;}
+  .footer-top .brand-text{color:var(--jour);}
+  .footer-nav{display:flex; gap:28px; list-style:none;}
+  .footer-nav a{font-size:14px; opacity:.8;}
+  .footer-nav a:hover{opacity:1;}
+  .footer-bottom{display:flex; justify-content:space-between; padding-top:26px; font-size:13px; flex-wrap:wrap; gap:12px;}
+
+  @media (max-width:960px){ .val-grid{grid-template-columns:repeat(2,1fr);} .pil-grid{grid-template-columns:repeat(2,1fr);} .inst-grid{grid-template-columns:1fr;} }
+  @media (max-width:860px){
+    .nav-links{position:fixed; top:0; right:-100%; width:78%; height:100vh; background:var(--nuit); flex-direction:column; justify-content:center; align-items:flex-start; gap:28px; padding:0 40px; transition:right .4s ease; z-index:99;}
+    .nav-links.open{right:0;}
+    .nav-toggle{display:flex; flex-direction:column; gap:5px; z-index:101; background:none; border:none; cursor:pointer; padding:6px;}
+    .nav-toggle span{width:24px; height:2px; background:var(--jour); display:block;}
+    .hist-grid, .vm-grid{grid-template-columns:1fr;}
+    section{padding:80px 0;}
+  }
+  @media (max-width:560px){ .val-grid, .pil-grid{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+
+<div class="grain"></div>
+<div class="progress" id="progressBar"></div>
+
+<header id="siteHeader">
+  <div class="container">
+    <nav>
+      <a href="index.html" class="brand">
+        <span class="mark"></span>
+        <span class="brand-text">Église Baptiste<br>de l'Espoir<span>Cap-Haïtien</span></span>
+      </a>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="index.html">Accueil</a></li>
+        <li><a href="apropos.html" class="active">À propos</a></li>
+        <li><a href="index.html#valeurs">Valeurs</a></li>
+        <li><a href="index.html#ministeres">Ministères</a></li>
+        <li><a href="index.html#contact">Contact</a></li>
+      </ul>
+      <button class="nav-toggle" id="navToggle" aria-label="Ouvrir le menu"><span></span><span></span><span></span></button>
+    </nav>
+  </div>
+</header>
+
+<!-- HERO DE PAGE -->
+<section class="pagehero">
+  <div class="pagehero-glow"></div>
+  <div class="container">
+    <div class="breadcrumb"><a href="index.html">Accueil</a> &nbsp;/&nbsp; <span>À propos</span></div>
+    <h1>Notre histoire, notre <em>foi</em>, notre appel</h1>
+    <p>Depuis 1998, l'Église Baptiste de l'Espoir du Cap-Haïtien annonce l'Évangile de Jésus-Christ et accompagne chaque génération vers une foi vivante et une communion fraternelle authentique.</p>
+  </div>
+</section>
+
+<!-- HISTOIRE -->
+<section id="histoire">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow-dark">Notre histoire</span>
+      <h2>Une œuvre bâtie sur la fidélité, année après année</h2>
+    </div>
+
+    <div class="hist-grid">
+      <div class="hist-text reveal">
+        <div class="founded"><span class="dot"></span> Fondée en juin 1998</div>
+        <p>L'Église Baptiste de l'Espoir du Cap-Haïtien est une institution chrétienne évangélique fondée dans le but de glorifier Dieu, d'annoncer l'Évangile de Jésus-Christ et de contribuer au développement spirituel, moral et social de la communauté.</p>
+        <p>Située à la Ruelle Jean-Jacques Dessalines #4, Village Christophe, Vertières, Cap-Haïtien, Haïti, elle accueille avec joie toutes les personnes désireuses de connaître Dieu, de grandir dans leur foi et de vivre une véritable communion fraternelle.</p>
+        <p>Depuis sa création, l'Église s'engage à enseigner fidèlement la Parole de Dieu, à promouvoir les valeurs chrétiennes et à accompagner les croyants dans leur marche avec Jésus-Christ. Elle organise régulièrement des cultes d'adoration, des études bibliques, des réunions de prière, des formations et des activités d'évangélisation.</p>
+        <p>Aujourd'hui, l'Église Baptiste de l'Espoir poursuit sa mission avec foi, amour et engagement, en mettant l'accent sur la communion fraternelle, la croissance spirituelle et le service de la communauté, afin que toute personne puisse découvrir l'espérance véritable en Jésus-Christ.</p>
+      </div>
+
+      <div class="timeline reveal">
+        <div class="tl-item">
+          <div class="tl-year">1998 — Fondation</div>
+          <p>Naissance de l'Église Baptiste de l'Espoir à Vertières, Cap-Haïtien, avec une vocation claire : glorifier Dieu et annoncer fidèlement l'Évangile de Jésus-Christ.</p>
+        </div>
+        <div class="tl-item">
+          <div class="tl-year">Structuration des ministères</div>
+          <p>Mise en place progressive des instances (Conseil des Anciens, Corps pastoral, Comité administratif) et des ministères tournés vers chaque génération : enfants, jeunesse, musique, évangélisation.</p>
+        </div>
+        <div class="tl-item">
+          <div class="tl-year">Vie communautaire</div>
+          <p>Développement d'une vie d'église rythmée par les cultes d'adoration, les études bibliques, les réunions de prière, les formations et les activités familiales.</p>
+        </div>
+        <div class="tl-item">
+          <div class="tl-year">Aujourd'hui</div>
+          <p>Une communauté vivante, enracinée dans la Parole de Dieu, qui continue de grandir et de servir Vertières et le Cap-Haïtien avec foi, amour et engagement.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- VISION / MISSION -->
+<section id="vismis">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow-dark">Vision &amp; mission</span>
+      <h2>Ce que nous croyons être appelés à accomplir</h2>
+    </div>
+
+    <div class="vm-grid reveal">
+      <div class="vm-card">
+        <h3>Notre vision</h3>
+        <p>Former des disciples de Jésus-Christ capables d'impacter positivement leur famille, leur communauté et leur pays par leur témoignage, leur amour et leur engagement au service de Dieu.</p>
+      </div>
+      <div class="vm-card light">
+        <h3>Notre mission</h3>
+        <ul>
+          <li>Proclamer fidèlement l'Évangile de Jésus-Christ</li>
+          <li>Former des disciples enracinés dans la Parole de Dieu</li>
+          <li>Favoriser la croissance spirituelle des croyants</li>
+          <li>Développer les dons et talents des membres pour le service chrétien</li>
+          <li>Servir la communauté avec amour, compassion et intégrité</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- VALEURS -->
+<section id="valeurs">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow-dark">Ce qui nous anime</span>
+      <h2>Nos valeurs fondamentales</h2>
+      <p>Cinq convictions qui inspirent chaque enseignement, chaque service et chaque relation au sein de notre église.</p>
+    </div>
+  </div>
+  <div class="val-grid stagger" id="valGrid">
+    <div class="val-card">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M12 3c0 6-7 7-7 12a7 7 0 0014 0c0-5-7-6-7-12z"/></svg>
+      <h4>Foi</h4><p>Une confiance vivante en Dieu qui guide chaque décision et chaque pas de la communauté.</p>
+    </div>
+    <div class="val-card">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12l6 6L20 6"/></svg>
+      <h4>Fidélité</h4><p>Un enseignement fidèle à la Parole de Dieu, transmis avec constance et intégrité.</p>
+    </div>
+    <div class="val-card">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="12" cy="8" r="3.2"/><path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/></svg>
+      <h4>Communion</h4><p>Une fraternité authentique où chacun trouve sa place et grandit avec les autres.</p>
+    </div>
+    <div class="val-card">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M12 20s-7-4.35-9.3-8.6C1.2 8.1 3 5 6.2 5c2 0 3.4 1.1 4 2.4C10.8 6.1 12.2 5 14.2 5 17.4 5 19.2 8.1 17.6 11.4 15.3 15.65 12 20 12 20z"/></svg>
+      <h4>Amour</h4><p>Une compassion concrète, tournée vers les membres comme vers toute la communauté.</p>
+    </div>
+    <div class="val-card">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M12 3l2.4 4.9 5.4.8-3.9 3.8.9 5.4L12 15.5 7.2 17.9l.9-5.4L4.2 8.7l5.4-.8z"/></svg>
+      <h4>Service</h4><p>Mettre nos dons et nos talents au service de Dieu et de notre prochain, avec joie.</p>
+    </div>
+  </div>
+</section>
+
+<!-- PILIERS DE LA VIE D'EGLISE -->
+<section id="piliers">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow-dark">Notre vie d'église</span>
+      <h2>Les piliers de notre vie communautaire</h2>
+      <p>Des rendez-vous réguliers qui rythment la vie spirituelle de nos membres et de leurs familles.</p>
+    </div>
+  </div>
+  <div class="pil-grid stagger" id="pilGrid">
+    <div class="pil-card"><span class="num">01</span><h4>Cultes d'adoration</h4><p>Des temps de louange et de prédication pour rencontrer Dieu ensemble.</p></div>
+    <div class="pil-card"><span class="num">02</span><h4>Études bibliques</h4><p>Un approfondissement régulier de la Parole de Dieu, en groupe.</p></div>
+    <div class="pil-card"><span class="num">03</span><h4>Réunions de prière</h4><p>Des moments dédiés à l'intercession et à la communion avec Dieu.</p></div>
+    <div class="pil-card"><span class="num">04</span><h4>Formations &amp; évangélisation</h4><p>Des programmes de formation et des actions tournées vers l'extérieur.</p></div>
+  </div>
+</section>
+
+<!-- INSTANCES RESUME -->
+<section id="instances">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow-dark">Comment nous sommes organisés</span>
+      <h2>Nos instances &amp; ministères, en bref</h2>
+      <p>Dix instances et ministères travaillent en harmonie pour accomplir la mission de l'Église. Le détail complet est disponible sur la page Ministères.</p>
+    </div>
+
+    <div class="inst-grid stagger" id="instGrid">
+      <div class="inst-row"><span class="n">01</span><div><h4>Conseil des Anciens</h4><p>Orientation spirituelle et supervision administrative.</p></div></div>
+      <div class="inst-row"><span class="n">02</span><div><h4>Corps pastoral</h4><p>Prédication, enseignement et accompagnement pastoral.</p></div></div>
+      <div class="inst-row"><span class="n">03</span><div><h4>Éducation chrétienne</h4><p>Enseignement biblique et formation des membres.</p></div></div>
+      <div class="inst-row"><span class="n">04</span><div><h4>Ministère de la Jeunesse</h4><p>Encadrement et leadership chrétien des jeunes.</p></div></div>
+      <div class="inst-row"><span class="n">05</span><div><h4>Direction des Enfants</h4><p>Encadrement spirituel et éducatif adapté aux enfants.</p></div></div>
+      <div class="inst-row"><span class="n">06</span><div><h4>Ministère de la Musique</h4><p>Louange, adoration et développement musical.</p></div></div>
+      <div class="inst-row"><span class="n">07</span><div><h4>Évangélisation &amp; Missions</h4><p>Actions locales et missionnaires.</p></div></div>
+      <div class="inst-row"><span class="n">08</span><div><h4>Comité administratif</h4><p>Gestion des biens et des ressources financières.</p></div></div>
+      <div class="inst-row"><span class="n">09</span><div><h4>Diacres &amp; Diaconesses</h4><p>Services spirituels et assistance aux membres.</p></div></div>
+      <div class="inst-row"><span class="n">10</span><div><h4>Secrétariat</h4><p>Gestion administrative, archives et suivi des membres.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<div class="quote-band reveal">
+  <div class="container">
+    <blockquote>« Former des disciples de Jésus-Christ capables d'impacter positivement leur famille, leur communauté et leur pays. »</blockquote>
+    <cite>Vision de l'Église Baptiste de l'Espoir</cite>
+  </div>
+</div>
+
+<!-- INVITATION -->
+<section id="invitation">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow-dark">Rejoignez-nous</span>
+      <h2>Vous avez une place ici</h2>
+      <p>Que vous cherchiez une communauté, des réponses ou simplement un lieu de paix, l'Église Baptiste de l'Espoir vous accueille avec joie.</p>
+    </div>
+    <div class="cta-row reveal">
+      <a href="index.html#contact" class="btn btn-primary">Nous rendre visite</a>
+      <a href="index.html#ministeres" class="btn btn-ghost">Découvrir nos ministères</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="footer-top">
+      <span class="brand-text">Église Baptiste de l'Espoir<span>Cap-Haïtien, Haïti</span></span>
+      <ul class="footer-nav">
+        <li><a href="index.html">Accueil</a></li>
+        <li><a href="apropos.html">À propos</a></li>
+        <li><a href="index.html#ministeres">Ministères</a></li>
+        <li><a href="index.html#contact">Contact</a></li>
+      </ul>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 Église Baptiste de l'Espoir du Cap-Haïtien. Tous droits réservés.</span>
+      <span>Ruelle Jean-Jacques Dessalines #4, Village Christophe, Vertières</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  const header = document.getElementById('siteHeader');
+  const progressBar = document.getElementById('progressBar');
+  window.addEventListener('scroll', () => {
+    header.classList.toggle('scrolled', window.scrollY > 40);
+    const h = document.documentElement;
+    const pct = (h.scrollTop) / (h.scrollHeight - h.clientHeight) * 100;
+    progressBar.style.width = pct + '%';
+  });
+
+  const navToggle = document.getElementById('navToggle');
+  const navLinks = document.getElementById('navLinks');
+  navToggle.addEventListener('click', () => navLinks.classList.toggle('open'));
+  navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => navLinks.classList.remove('open')));
+
+  const revealEls = document.querySelectorAll('.reveal');
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { threshold: 0.15 });
+  revealEls.forEach(el => io.observe(el));
+
+  const staggerEls = document.querySelectorAll('.stagger');
+  const staggerIO = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if(e.isIntersecting){
+        [...e.target.children].forEach((child,i)=>{ child.style.transitionDelay = (i*70)+'ms'; });
+        e.target.classList.add('in');
+        staggerIO.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.1 });
+  staggerEls.forEach(el => staggerIO.observe(el));
+</script>
+
+</body>
+</html>

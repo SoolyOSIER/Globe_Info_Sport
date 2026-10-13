@@ -1,10 +1,10 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
 
 import api from "../api/axiosClient";
-import { ErrorMessage } from "../components/ui/UI";
-import { useList } from "../hooks/useResources";
+import { ErrorMessage, Loading } from "../components/ui/UI";
+import { useDetail, useList } from "../hooks/useResources";
 
 const emptyGoal = () => ({ joueur: "", passeur: "", minute: "", type_but: "BUT" });
 
@@ -17,7 +17,18 @@ export default function ResultatFormPage() {
   const [resume, setResume] = useState("");
   const [goals, setGoals] = useState([emptyGoal()]);
   const players = useList("joueurs", { page_size: 200 });
+  const matches = useList("matchs", { page_size: 200 });
   const client = useQueryClient();
+  const match = useDetail("matchs", matchId);
+  const hydrated = useRef(null);
+  useEffect(() => {
+    if (!match.data || hydrated.current === matchId) return;
+    hydrated.current = matchId;
+    setHome(match.data.score_domicile ?? "");
+    setAway(match.data.score_exterieur ?? "");
+    setResume(match.data.resume || "");
+    setGoals(match.data.buteurs?.length ? match.data.buteurs.map(goal => ({ joueur: goal.joueur, passeur: goal.passeur || "", minute: goal.minute, type_but: goal.type_but })) : [emptyGoal()]);
+  }, [match.data, matchId]);
   const sortedPlayers = useMemo(
     () => [...(players.data || [])].sort((a, b) => (a.nom_complet || "").localeCompare(b.nom_complet || "")),
     [players.data],
@@ -51,12 +62,16 @@ export default function ResultatFormPage() {
     });
   };
 
+  if (players.isLoading || matches.isLoading || (matchId && match.isLoading)) return <Loading />;
+  if (players.isError || matches.isError || match.isError) return <ErrorMessage error={players.error || matches.error || match.error} />;
   return <div className="max-w-3xl">
     <h1 className="font-display text-3xl font-black text-haiti-ink">Saisir un résultat</h1>
     <p className="mt-2 text-sm text-slate-500">Le classement, les buteurs et les passes décisives sont recalculés à la validation.</p>
     <form onSubmit={submit} className="mt-6 grid gap-5 rounded-2xl bg-white p-6 shadow-panel">
-      <label className="text-sm font-bold">ID match
-        <input required type="number" value={matchId} onChange={(event) => setMatchId(event.target.value)} className="mt-1 w-full rounded-lg border p-3" />
+      <label className="text-sm font-bold">Match
+        <select required value={matchId} onChange={(event) => { hydrated.current = null; setMatchId(event.target.value); mutation.reset(); }} className="mt-1 w-full rounded-lg border p-3">
+          <option value="">Sélectionner un match</option>{matches.data?.map((match) => <option key={match.id} value={match.id}>{match.club_domicile_detail?.nom || "Équipe"} – {match.club_exterieur_detail?.nom || match.adversaire_texte || "Adversaire"}</option>)}
+        </select>
       </label>
       <div className="grid grid-cols-2 gap-4">
         <label className="text-sm font-bold">Score domicile<input required min="0" type="number" value={home} onChange={(event) => setHome(event.target.value)} className="mt-1 w-full rounded-lg border p-3" /></label>
@@ -76,7 +91,7 @@ export default function ResultatFormPage() {
       </fieldset>
       <label className="text-sm font-bold">Résumé<textarea value={resume} onChange={(event) => setResume(event.target.value)} rows="5" className="mt-1 w-full rounded-lg border p-3" /></label>
       {mutation.isError && <ErrorMessage error={mutation.error} />}
-      <button disabled={mutation.isPending || players.isLoading} className="rounded-lg bg-haiti-red py-3 font-bold text-white disabled:opacity-50">{mutation.isPending ? "Validation…" : "Valider le résultat"}</button>
+      <button disabled={mutation.isPending || players.isLoading || matches.isLoading} className="rounded-lg bg-haiti-red py-3 font-bold text-white disabled:opacity-50">{mutation.isPending ? "Validation…" : "Valider le résultat"}</button>
       {mutation.isSuccess && <p role="status" className="text-sm font-bold text-emerald-700">Résultat enregistré et statistiques recalculées.</p>}
     </form>
   </div>;

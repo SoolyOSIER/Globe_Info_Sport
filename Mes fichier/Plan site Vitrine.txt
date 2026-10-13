@@ -1,0 +1,142 @@
+================================================================================
+
+sygmebec-vitrine/
+├── public/
+│   ├── favicon.ico
+│   └── robots.txt
+│
+├── src/
+│   ├── main.jsx
+│   ├── App.jsx
+│   ├── index.css
+│   │
+│   ├── router/
+│   │   └── index.jsx
+│   │
+│   ├── layouts/
+│   │   ├── PublicLayout.jsx
+│   │   └── components/
+│   │       ├── Header.jsx
+│   │       ├── Footer.jsx
+│   │       ├── NavBar.jsx
+│   │       └── MobileMenu.jsx
+│   │
+│   ├── pages/
+│   │   ├── Accueil.jsx
+│   │   ├── APropos.jsx
+│   │   ├── Evenements.jsx
+│   │   ├── EvenementDetail.jsx
+│   │   ├── Galerie.jsx
+│   │   ├── Adhesion.jsx                 (demande d'adhésion en ligne)
+│   │   ├── Contact.jsx
+│   │   ├── MentionsLegales.jsx
+│   │   ├── Confidentialite.jsx
+│   │   ├── NotFound.jsx
+│   │   │
+│   │   └── espace-membre/
+│   │       ├── Connexion.jsx
+│   │       ├── MotDePasseOublie.jsx
+│   │       ├── MonProfil.jsx
+│   │       └── MesInscriptions.jsx
+│   │
+│   ├── components/
+│   │   ├── home/
+│   │   │   ├── Hero.jsx
+│   │   │   ├── PresentationSection.jsx
+│   │   │   ├── EvenementsAVenir.jsx
+│   │   │   ├── GaleriePreview.jsx
+│   │   │   ├── Temoignages.jsx
+│   │   │   └── AppelAdhesion.jsx
+│   │   │
+│   │   ├── evenements/
+│   │   │   ├── EvenementCard.jsx
+│   │   │   ├── EvenementCalendrier.jsx
+│   │   │   ├── FormulaireInscription.jsx
+│   │   │   └── FiltresEvenements.jsx
+│   │   │
+│   │   ├── adhesion/
+│   │   │   └── FormulaireAdhesion.jsx
+│   │   │
+│   │   ├── galerie/
+│   │   │   ├── GalerieGrid.jsx
+│   │   │   └── ImageViewer.jsx
+│   │   │
+│   │   ├── contact/
+│   │   │   ├── ContactForm.jsx
+│   │   │   ├── Carte.jsx
+│   │   │   └── ReseauxSociaux.jsx
+│   │   │
+│   │   └── common/
+│   │       ├── Bouton.jsx
+│   │       ├── Modal.jsx
+│   │       ├── Loader.jsx
+│   │       ├── Toast.jsx
+│   │       └── SEO.jsx
+│   │
+│   ├── store/
+│   │   ├── index.js
+│   │   └── slices/
+│   │       ├── authMembreSlice.js
+│   │       └── uiSlice.js
+│   │
+│   ├── services/
+│   │   ├── api.js
+│   │   ├── evenementService.js
+│   │   ├── adhesionService.js
+│   │   ├── authMembreService.js
+│   │   └── contactService.js
+│   │
+│   ├── hooks/
+│   │   ├── useAuthMembre.js
+│   │   └── useDisponibilitesEvenement.js
+│   │
+│   ├── utils/
+│   │   ├── formatters.js
+│   │   └── validators.js
+│   │
+│   ├── styles/
+│   │   └── tailwind.config.js
+│   │
+│   └── assets/
+│       └── images/
+│           ├── home/
+│           ├── evenements/
+│           ├── galerie/
+│           └── backgrounds/
+│
+├── index.html
+├── vite.config.js
+├── tailwind.config.js
+└── package.json
+
+
+================================================================================
+K. SITE VITRINE PUBLIC — PAGES & COMPOSANTS DÉTAILLÉS
+================================================================================
+
+  1. Accueil        : héro plein écran (image/vidéo), présentation courte de
+                       l'organisation, aperçu des prochains événements,
+                       témoignages de membres, appel à l'adhésion.
+  2. À propos        : mission, valeurs, historique, équipe/responsables mis
+                       en avant.
+  3. Événements      : liste filtrable (à venir / passés), recherche par mot-
+                       clé, date, lieu (Evenement.rechercher()) ; chaque carte
+                       affiche titre, lieu, date/heure, image.
+  4. Détail événement: description complète, informations pratiques,
+                       formulaire d'inscription (avec ou sans compte),
+                       nombre de places restantes si capacité définie.
+  5. Galerie          : photos de l'organisation et des événements passés.
+  6. Adhésion         : formulaire de demande d'adhésion en ligne — les
+                       informations saisies alimentent une pré-fiche Membre
+                       validée ensuite par le SECRETAIRE.
+  7. Espace membre    : connexion, profil, historique des inscriptions aux
+                       événements — accessible uniquement si un compte
+                       Utilisateur est associé au Membre.
+  8. Contact          : formulaire, carte de localisation, coordonnées,
+                       réseaux sociaux.
+
+
+
+
+
+                       re donner moi la partie sygmebec-frontend/ de la meme maniere avant la denier modification en suite gerer pour moi la patie site vitrine en fonction de ce plans [Plan site Vitrine.txt](Plan site Vitrine.txt) puis gerer les connection entre site vitrine avec la partie backend et surtout donner moi tous les pages manque pour la  partie site vitrine en fonction de ce plan le projet doit lance dans la partie site vitrine d'abord

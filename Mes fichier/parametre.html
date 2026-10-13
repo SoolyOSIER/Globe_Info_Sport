@@ -1,0 +1,1197 @@
+ <!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Paramètres · Atelier</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #0b0d11;
+      --surface: #13171f;
+      --surface-2: #1a1f2b;
+      --surface-3: #232a38;
+      --border: #2b3140;
+      --border-soft: #1e232f;
+      --text: #efece7;
+      --text-dim: #9ea3b0;
+      --text-faint: #636a7a;
+      --accent: #d8b26b;
+      --accent-soft: rgba(216, 178, 107, 0.12);
+      --accent-glow: rgba(216, 178, 107, 0.25);
+      --accent-2: #6db89d;
+      --accent-2-soft: rgba(109, 184, 157, 0.12);
+      --danger: #d97a6b;
+      --radius-lg: 20px;
+      --radius-md: 14px;
+      --radius-sm: 10px;
+      --shadow-card: 0 2px 0 rgba(255, 255, 255, 0.02) inset, 0 20px 48px -20px rgba(0, 0, 0, 0.7);
+      --ease: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background: radial-gradient(1200px 700px at 80% -10%, rgba(216, 178, 107, 0.06), transparent 60%),
+        radial-gradient(1000px 600px at -5% 30%, rgba(109, 184, 157, 0.05), transparent 60%),
+        var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    ::selection {
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+
+    /* ---- orbs ---- */
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(90px);
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.3;
+    }
+    .orb-1 {
+      width: 500px;
+      height: 500px;
+      background: var(--accent);
+      top: -180px;
+      right: -140px;
+      opacity: 0.05;
+      animation: drift1 30s ease-in-out infinite alternate;
+    }
+    .orb-2 {
+      width: 440px;
+      height: 440px;
+      background: var(--accent-2);
+      bottom: -160px;
+      left: -120px;
+      opacity: 0.05;
+      animation: drift2 34s ease-in-out infinite alternate;
+    }
+    @keyframes drift1 {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(-50px, 60px) scale(1.1); }
+    }
+    @keyframes drift2 {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(50px, -50px) scale(1.15); }
+    }
+
+    /* ---- layout ---- */
+    .shell {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      max-width: 1360px;
+      margin: 0 auto;
+      min-height: 100vh;
+      gap: 0;
+    }
+
+    /* ===== SIDEBAR ===== */
+    .sidebar {
+      padding: 40px 24px 40px 36px;
+      border-right: 1px solid var(--border-soft);
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      animation: fadeSlideIn 0.8s var(--ease) both;
+      background: rgba(11, 13, 17, 0.4);
+      backdrop-filter: blur(4px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 44px;
+      opacity: 0;
+      animation: fadeSlideIn 0.7s var(--ease) 0.05s forwards;
+    }
+    .brand-mark {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: linear-gradient(145deg, var(--accent), #a8874a);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Fraunces', serif;
+      font-weight: 700;
+      font-size: 18px;
+      color: #13110d;
+      box-shadow: 0 8px 20px -8px rgba(216, 178, 107, 0.5);
+      transition: transform 0.3s var(--ease);
+    }
+    .brand:hover .brand-mark {
+      transform: rotate(-4deg) scale(1.02);
+    }
+    .brand-name {
+      font-family: 'Fraunces', serif;
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: -0.2px;
+    }
+    .brand-sub {
+      font-size: 11px;
+      color: var(--text-faint);
+      margin-top: 2px;
+      letter-spacing: 0.3px;
+    }
+
+    .nav-eyebrow {
+      font-size: 10px;
+      letter-spacing: 1.8px;
+      text-transform: uppercase;
+      color: var(--text-faint);
+      font-weight: 600;
+      margin: 26px 0 12px 12px;
+    }
+    .nav-eyebrow:first-of-type {
+      margin-top: 0;
+    }
+
+    .navlist {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      position: relative;
+    }
+    .navitem {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: 12px;
+      color: var(--text-dim);
+      font-size: 13.5px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: color 0.3s var(--ease), background 0.3s var(--ease), transform 0.2s var(--ease);
+      user-select: none;
+      position: relative;
+    }
+    .navitem svg {
+      width: 18px;
+      height: 18px;
+      opacity: 0.6;
+      transition: opacity 0.3s var(--ease), transform 0.3s var(--ease);
+      flex-shrink: 0;
+    }
+    .navitem:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.02);
+      transform: translateX(4px);
+    }
+    .navitem:hover svg {
+      opacity: 1;
+      transform: scale(1.04);
+    }
+    .navitem.active {
+      color: var(--accent);
+      background: var(--accent-soft);
+    }
+    .navitem.active svg {
+      opacity: 1;
+    }
+    .navitem .badge-nav {
+      margin-left: auto;
+      font-size: 10px;
+      background: var(--accent-2-soft);
+      color: var(--accent-2);
+      padding: 2px 10px;
+      border-radius: 30px;
+      font-weight: 600;
+    }
+
+    .sidebar-foot {
+      margin-top: auto;
+      padding-top: 24px;
+      border-top: 1px solid var(--border-soft);
+    }
+    .plan-card {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 18px 16px;
+      font-size: 12px;
+      transition: border-color 0.3s var(--ease);
+    }
+    .plan-card:hover {
+      border-color: var(--accent-soft);
+    }
+    .plan-card .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .plan-tag {
+      font-size: 10px;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      font-weight: 700;
+      color: var(--accent);
+      background: var(--accent-soft);
+      padding: 3px 10px;
+      border-radius: 30px;
+    }
+    .plan-bar {
+      height: 6px;
+      border-radius: 8px;
+      background: var(--surface-3);
+      overflow: hidden;
+      margin-top: 8px;
+    }
+    .plan-bar-fill {
+      height: 100%;
+      width: 64%;
+      background: linear-gradient(90deg, var(--accent-2), var(--accent));
+      border-radius: 8px;
+      animation: growBar 1.6s var(--ease) 0.4s both;
+    }
+    @keyframes growBar {
+      from { width: 0; }
+      to { width: 64%; }
+    }
+    .plan-note {
+      color: var(--text-faint);
+      margin-top: 10px;
+      font-size: 11px;
+    }
+
+    /* ===== MAIN ===== */
+    .main {
+      padding: 44px 52px 120px;
+      min-width: 0;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 42px;
+      opacity: 0;
+      animation: fadeSlideIn 0.7s var(--ease) 0.1s forwards;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    .eyebrow {
+      font-size: 11px;
+      letter-spacing: 2.4px;
+      text-transform: uppercase;
+      color: var(--accent);
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    h1 {
+      font-family: 'Fraunces', serif;
+      font-size: 38px;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, var(--text), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .topbar p {
+      color: var(--text-dim);
+      font-size: 14px;
+      margin-top: 8px;
+      max-width: 480px;
+      line-height: 1.6;
+    }
+    .save-status {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 12.5px;
+      color: var(--text-dim);
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      padding: 10px 18px;
+      border-radius: 40px;
+      backdrop-filter: blur(4px);
+    }
+    .save-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent-2);
+      box-shadow: 0 0 0 0 rgba(109, 184, 157, 0.5);
+      animation: pulseDot 2.6s ease-in-out infinite;
+    }
+    @keyframes pulseDot {
+      0% { box-shadow: 0 0 0 0 rgba(109, 184, 157, 0.4); }
+      70% { box-shadow: 0 0 0 10px rgba(109, 184, 157, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(109, 184, 157, 0); }
+    }
+
+    .section {
+      margin-bottom: 28px;
+      scroll-margin-top: 24px;
+      opacity: 0;
+      transform: translateY(18px);
+      animation: cardIn 0.7s var(--ease) forwards;
+    }
+    .section:nth-of-type(1) { animation-delay: 0.04s; }
+    .section:nth-of-type(2) { animation-delay: 0.10s; }
+    .section:nth-of-type(3) { animation-delay: 0.16s; }
+    .section:nth-of-type(4) { animation-delay: 0.22s; }
+    .section:nth-of-type(5) { animation-delay: 0.28s; }
+    .section:nth-of-type(6) { animation-delay: 0.34s; }
+
+    @keyframes cardIn {
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-card);
+      overflow: hidden;
+      transition: border-color 0.4s var(--ease), box-shadow 0.4s var(--ease);
+    }
+    .card:hover {
+      border-color: #323b4e;
+      box-shadow: 0 2px 0 rgba(255, 255, 255, 0.03) inset, 0 24px 56px -24px rgba(0, 0, 0, 0.7);
+    }
+
+    .card-head {
+      padding: 24px 30px;
+      border-bottom: 1px solid var(--border-soft);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: rgba(255, 255, 255, 0.01);
+    }
+    .card-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      background: var(--accent-soft);
+      color: var(--accent);
+      transition: transform 0.3s var(--ease), background 0.3s;
+    }
+    .card:hover .card-icon {
+      transform: scale(1.04);
+      background: rgba(216, 178, 107, 0.2);
+    }
+    .card-icon svg {
+      width: 20px;
+      height: 20px;
+    }
+    .card-head h2 {
+      font-family: 'Fraunces', serif;
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: -0.2px;
+    }
+    .card-head p {
+      font-size: 12.5px;
+      color: var(--text-faint);
+      margin-top: 2px;
+    }
+
+    .row-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 20px 30px;
+      border-bottom: 1px solid var(--border-soft);
+      transition: background 0.2s var(--ease);
+    }
+    .row-item:last-child {
+      border-bottom: none;
+    }
+    .row-item:hover {
+      background: rgba(255, 255, 255, 0.012);
+    }
+    .row-label {
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .row-desc {
+      font-size: 12px;
+      color: var(--text-faint);
+      margin-top: 4px;
+      line-height: 1.5;
+      max-width: 440px;
+    }
+
+    .profile-row {
+      padding: 28px 30px;
+      display: flex;
+      align-items: center;
+      gap: 22px;
+      border-bottom: 1px solid var(--border-soft);
+    }
+    .avatar {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      position: relative;
+      flex-shrink: 0;
+      background: conic-gradient(from 160deg, var(--accent), var(--accent-2), var(--accent));
+      padding: 3px;
+    }
+    .avatar-inner {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: var(--surface-3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Fraunces', serif;
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--accent);
+    }
+    .avatar-ring {
+      position: absolute;
+      inset: -5px;
+      border-radius: 50%;
+      border: 1.5px solid var(--accent);
+      opacity: 0.3;
+      animation: ringPulse 3s ease-in-out infinite;
+    }
+    @keyframes ringPulse {
+      0%, 100% { transform: scale(1); opacity: 0.3; }
+      50% { transform: scale(1.1); opacity: 0.05; }
+    }
+    .profile-name {
+      font-size: 17px;
+      font-weight: 600;
+    }
+    .profile-email {
+      font-size: 12.5px;
+      color: var(--text-faint);
+      margin-top: 3px;
+    }
+
+    .btn {
+      font-family: inherit;
+      font-size: 12.5px;
+      font-weight: 600;
+      letter-spacing: 0.1px;
+      padding: 9px 18px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.25s var(--ease);
+      white-space: nowrap;
+    }
+    .btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px -10px rgba(216, 178, 107, 0.2);
+    }
+    .btn-primary {
+      background: linear-gradient(150deg, var(--accent), #b08e4a);
+      color: #14120e;
+      border: none;
+    }
+    .btn-primary:hover {
+      color: #14120e;
+      filter: brightness(1.08);
+      box-shadow: 0 8px 24px -8px rgba(216, 178, 107, 0.5);
+      transform: translateY(-2px);
+    }
+    .btn-ghost-danger {
+      border-color: var(--border);
+      color: var(--text-dim);
+    }
+    .btn-ghost-danger:hover {
+      border-color: var(--danger);
+      color: var(--danger);
+      box-shadow: 0 8px 20px -10px rgba(217, 122, 107, 0.3);
+    }
+
+    input[type="text"],
+    input[type="email"] {
+      font-family: inherit;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      width: 230px;
+      transition: border-color 0.25s var(--ease), box-shadow 0.25s var(--ease);
+    }
+    input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px var(--accent-soft);
+    }
+
+    .switch {
+      position: relative;
+      width: 46px;
+      height: 26px;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+      position: absolute;
+    }
+    .switch-track {
+      position: absolute;
+      inset: 0;
+      background: var(--surface-3);
+      border: 1px solid var(--border);
+      border-radius: 30px;
+      transition: background 0.35s var(--ease), border-color 0.35s var(--ease);
+    }
+    .switch-thumb {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--text-dim);
+      transition: transform 0.35s var(--ease), background 0.3s var(--ease);
+    }
+    .switch input:checked + .switch-track {
+      background: var(--accent-2-soft);
+      border-color: var(--accent-2);
+    }
+    .switch input:checked + .switch-track .switch-thumb {
+      transform: translateX(20px);
+      background: var(--accent-2);
+    }
+
+    .segmented {
+      display: flex;
+      gap: 4px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 4px;
+    }
+    .seg-opt {
+      padding: 7px 16px;
+      border-radius: 9px;
+      font-size: 12.5px;
+      font-weight: 500;
+      color: var(--text-dim);
+      cursor: pointer;
+      transition: all 0.25s var(--ease);
+    }
+    .seg-opt.active {
+      background: var(--surface-3);
+      color: var(--accent);
+      box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05) inset;
+    }
+    .seg-opt:hover {
+      color: var(--text);
+    }
+
+    .swatches {
+      display: flex;
+      gap: 12px;
+    }
+    .swatch {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: transform 0.25s var(--ease), border-color 0.25s var(--ease);
+      position: relative;
+    }
+    .swatch:hover {
+      transform: scale(1.15);
+    }
+    .swatch.active {
+      border-color: #ffffffcc;
+    }
+    .swatch.active::after {
+      content: '✓';
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: #fff;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+    }
+
+    .session-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .session-icon svg {
+      width: 18px;
+      height: 18px;
+      color: var(--text-dim);
+    }
+    .session-meta {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .badge-current {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      color: var(--accent-2);
+      background: var(--accent-2-soft);
+      padding: 3px 10px;
+      border-radius: 30px;
+    }
+
+    .plans-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      padding: 28px 30px;
+    }
+    .plan-option {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 24px 20px;
+      background: var(--surface-2);
+      transition: all 0.3s var(--ease);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+    .plan-option:hover {
+      transform: translateY(-4px);
+      border-color: #3d465a;
+    }
+    .plan-option.selected {
+      border-color: var(--accent);
+      background: linear-gradient(160deg, var(--accent-soft), var(--surface-2));
+    }
+    .plan-option.selected::before {
+      content: 'Actuel';
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      font-size: 9.5px;
+      font-weight: 700;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: rgba(0, 0, 0, 0.3);
+      padding: 3px 10px;
+      border-radius: 30px;
+    }
+    .plan-option h3 {
+      font-family: 'Fraunces', serif;
+      font-size: 18px;
+      margin-bottom: 4px;
+    }
+    .plan-price {
+      font-size: 26px;
+      font-weight: 700;
+      margin: 12px 0 6px;
+    }
+    .plan-price span {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-faint);
+    }
+    .plan-option ul {
+      list-style: none;
+      margin-top: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .plan-option li {
+      font-size: 12.5px;
+      color: var(--text-dim);
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+    }
+    .plan-option li svg {
+      width: 14px;
+      height: 14px;
+      color: var(--accent-2);
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .keyrow {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .keybox {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--text-dim);
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      padding: 10px 14px;
+      border-radius: 10px;
+      letter-spacing: 0.4px;
+      user-select: none;
+    }
+    .icon-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.25s var(--ease);
+    }
+    .icon-btn:hover {
+      color: var(--accent);
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+    .icon-btn svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .footnote {
+      text-align: center;
+      color: var(--text-faint);
+      font-size: 11.5px;
+      margin-top: 48px;
+      letter-spacing: 0.3px;
+      opacity: 0.7;
+    }
+
+    @media (max-width: 920px) {
+      .shell {
+        grid-template-columns: 1fr;
+      }
+      .sidebar {
+        display: none;
+      }
+      .main {
+        padding: 28px 18px 80px;
+      }
+      .plans-grid {
+        grid-template-columns: 1fr;
+      }
+      .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation-duration: 0.001ms !important;
+        transition-duration: 0.001ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+
+  <div class="shell">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">A</div>
+        <div>
+          <div class="brand-name">Atelier</div>
+          <div class="brand-sub">Espace de travail</div>
+        </div>
+      </div>
+
+      <div class="nav-eyebrow">Compte</div>
+      <ul class="navlist">
+        <li class="navitem active" data-target="profil">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.4"/><path d="M4.5 20c1.6-3.6 4.6-5.4 7.5-5.4s5.9 1.8 7.5 5.4"/></svg>Profil
+        </li>
+        <li class="navitem" data-target="securite">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l7 3.2v5.3c0 4.6-3 8.7-7 9.5-4-.8-7-4.9-7-9.5V6.2L12 3z"/><path d="M9.5 12l1.8 1.8L15 10"/></svg>Sécurité
+          <span class="badge-nav">2FA</span>
+        </li>
+        <li class="navitem" data-target="notifications">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9a6 6 0 1112 0c0 4 1.4 5.6 2 6.4H4c.6-.8 2-2.4 2-6.4z"/><path d="M9.5 19a2.6 2.6 0 005 0"/></svg>Notifications
+        </li>
+      </ul>
+
+      <div class="nav-eyebrow">Espace</div>
+      <ul class="navlist">
+        <li class="navitem" data-target="apparence">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5v17M3.5 12h17"/></svg>Apparence
+        </li>
+        <li class="navitem" data-target="facturation">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.2" y="5.5" width="17.6" height="13" rx="2.4"/><path d="M3.2 10h17.6"/></svg>Facturation
+          <span class="badge-nav">Pro</span>
+        </li>
+        <li class="navitem" data-target="integrations">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="7" height="7" rx="1.6"/><rect x="13" y="4" width="7" height="7" rx="1.6"/><rect x="4" y="13" width="7" height="7" rx="1.6"/><rect x="13" y="13" width="7" height="7" rx="1.6"/></svg>Intégrations
+        </li>
+      </ul>
+
+      <div class="sidebar-foot">
+        <div class="plan-card">
+          <div class="row">
+            <span style="font-weight:600;">Espace Studio</span>
+            <span class="plan-tag">Pro</span>
+          </div>
+          <div style="color:var(--text-faint);">32 / 50 membres actifs</div>
+          <div class="plan-bar"><div class="plan-bar-fill"></div></div>
+          <div class="plan-note">Renouvellement le 1er sept. 2026</div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+      <div class="topbar">
+        <div>
+          <div class="eyebrow">Paramètres</div>
+          <h1>Votre espace, à votre image</h1>
+          <p>Gérez votre profil, la sécurité, les notifications, l'apparence, la facturation et les intégrations.</p>
+        </div>
+        <div class="save-status"><span class="save-dot"></span>Toutes les modifications sont enregistrées</div>
+      </div>
+
+      <!-- PROFIL -->
+      <section class="section" id="profil">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.4"/><path d="M4.5 20c1.6-3.6 4.6-5.4 7.5-5.4s5.9 1.8 7.5 5.4"/></svg></div>
+            <div><h2>Profil</h2><p>Informations visibles par les membres de l'espace</p></div>
+          </div>
+          <div class="profile-row">
+            <div class="avatar"><div class="avatar-ring"></div><div class="avatar-inner">MC</div></div>
+            <div style="flex:1;">
+              <div class="profile-name">Marie Charles</div>
+              <div class="profile-email">marie.charles@atelier-studio.co</div>
+            </div>
+            <button class="btn">Changer la photo</button>
+          </div>
+          <div class="row-item">
+            <div><div class="row-label">Nom complet</div><div class="row-desc">Affiché sur votre profil et dans les commentaires</div></div>
+            <input type="text" value="Marie Charles">
+          </div>
+          <div class="row-item">
+            <div><div class="row-label">Adresse e-mail</div><div class="row-desc">Utilisée pour la connexion et les notifications</div></div>
+            <input type="email" value="marie.charles@atelier-studio.co">
+          </div>
+          <div class="row-item">
+            <div><div class="row-label">Fuseau horaire</div><div class="row-desc">Heure affichée dans les rapports et rappels</div></div>
+            <div class="segmented">
+              <div class="seg-opt">UTC</div>
+              <div class="seg-opt active">Paris</div>
+              <div class="seg-opt">New York</div>
+            </div>
+          </div>
+          <div class="row-item">
+            <div><div class="row-label">Supprimer le compte</div><div class="row-desc">Action définitive — données effacées sous 30 jours</div></div>
+            <button class="btn btn-ghost-danger">Supprimer</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- SÉCURITÉ -->
+      <section class="section" id="securite">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l7 3.2v5.3c0 4.6-3 8.7-7 9.5-4-.8-7-4.9-7-9.5V6.2L12 3z"/><path d="M9.5 12l1.8 1.8L15 10"/></svg></div>
+            <div><h2>Sécurité</h2><p>Protégez l'accès à votre compte</p></div>
+          </div>
+          <div class="row-item">
+            <div><div class="row-label">Mot de passe</div><div class="row-desc">Dernière modification il y a 4 mois</div></div>
+            <button class="btn">Modifier</button>
+          </div>
+          <div class="row-item">
+            <div><div class="row-label">Authentification à deux facteurs</div><div class="row-desc">Vérification via une application dédiée</div></div>
+            <label class="switch"><input type="checkbox" checked><span class="switch-track"><span class="switch-thumb"></span></span></label>
+          </div>
+          <div class="row-item">
+            <div><div class="row-label">Clé API</div><div class="row-desc">Connectez des outils externes</div></div>
+            <div class="keyrow">
+              <span class="keybox">sk_live_••••••••7f2a</span>
+              <div class="icon-btn" title="Copier"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2h2"/></svg></div>
+              <div class="icon-btn" title="Régénérer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 12a8 8 0 0114-5.3M20 12a8 8 0 01-14 5.3"/><path d="M4 4v5h5M20 20v-5h-5"/></svg></div>
+            </div>
+          </div>
+          <div class="row-item">
+            <div>
+              <div class="session-meta">
+                <div class="session-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
+                <div>
+                  <div class="row-label" style="display:flex; align-items:center; gap:8px;">MacBook Pro — Port-au-Prince <span class="badge-current">Session actuelle</span></div>
+                  <div class="row-desc">Chrome 128 · dernière activité à l'instant</div>
+                </div>
+              </div>
+            </div>
+            <button class="btn" disabled style="opacity:0.4; cursor:default;">Active</button>
+          </div>
+          <div class="row-item">
+            <div>
+              <div class="session-meta">
+                <div class="session-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="6" y="2.5" width="12" height="19" rx="2.4"/><path d="M11 18.5h2"/></svg></div>
+                <div>
+                  <div class="row-label">iPhone 15 — Paris, France</div>
+                  <div class="row-desc">Application mobile · connecté le 3 août</div>
+                </div>
+              </div>
+            </div>
+            <button class="btn btn-ghost-danger">Déconnecter</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- NOTIFICATIONS -->
+      <section class="section" id="notifications">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9a6 6 0 1112 0c0 4 1.4 5.6 2 6.4H4c.6-.8 2-2.4 2-6.4z"/><path d="M9.5 19a2.6 2.6 0 005 0"/></svg></div>
+            <div><h2>Notifications</h2><p>Choisissez ce qui mérite votre attention</p></div>
+          </div>
+          <div class="row-item">
+            <div><div class="row-label">Résumé quotidien par e-mail</div><div class="row-desc">Récapitulatif de l'activité chaque matin</div></div>
+            <label class="switch"><input type="checkbox" checked><span class="switch-track"><span class="switch-thumb"></span></span></label>
+          </div>
+          <div class="row-item">
+            <div><div class="row-label">Mentions et commentaires</div><div class="row-desc">Notification immédiate lorsqu'on vous mentionne</div></div>
+            <label class="switch"><input type="checkbox" checked><span class="switch-track"><span class="switch-thumb"></span></span></label>
+          </div>
+          <div class="row-item">
+            <div><div class="row-label">Nouveaux membres</div><div class="row-desc">Alerte lorsqu'une personne rejoint l'espace</div></div>
+            <label class="switch"><input type="checkbox"><span class="switch-track"><span class="switch-thumb"></span></span></label>
+          </div>
+          <div class="row-item">
+            <div><div class="row-label">Notifications push</div><div class="row-desc">Alertes en temps réel sur vos appareils</div></div>
+            <label class="switch"><input type="checkbox" checked><span class="switch-track"><span class="switch-thumb"></span></span></label>
+          </div>
+          <div class="row-item">
+            <div><div class="row-label">Actualités produit</div><div class="row-desc">Nouveautés, améliorations et conseils</div></div>
+            <label class="switch"><input type="checkbox"><span class="switch-track"><span class="switch-thumb"></span></span></label>
+          </div>
+        </div>
+      </section>
+
+      <!-- APPARENCE -->
+      <section class="section" id="apparence">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5v17M3.5 12h17"/></svg></div>
+            <div><h2>Apparence</h2><p>Personnalisez l'interface de votre espace</p></div>
+          </div>
+          <div class="row-item">
+            <div><div class="row-label">Thème</div><div class="row-desc">S'applique à tout l'espace de travail</div></div>
+            <div class="segmented">
+              <div class="seg-opt">Clair</div>
+              <div class="seg-opt active">Sombre</div>
+              <div class="seg-opt">Système</div>
+            </div>
+          </div>
+          <div class="row-item">
+            <div><div class="row-label">Couleur d'accent</div><div class="row-desc">Boutons, liens et éléments actifs</div></div>
+            <div class="swatches">
+              <div class="swatch active" style="background:#d8b26b;"></div>
+              <div class="swatch" style="background:#6db89d;"></div>
+              <div class="swatch" style="background:#7f93d9;"></div>
+              <div class="swatch" style="background:#d97a6b;"></div>
+            </div>
+          </div>
+          <div class="row-item">
+            <div><div class="row-label">Densité de l'interface</div><div class="row-desc">Espacement des listes et tableaux</div></div>
+            <div class="segmented">
+              <div class="seg-opt">Confortable</div>
+              <div class="seg-opt active">Standard</div>
+              <div class="seg-opt">Compacte</div>
+            </div>
+          </div>
+          <div class="row-item">
+            <div><div class="row-label">Réduire les animations</div><div class="row-desc">Limite les transitions et mouvements</div></div>
+            <label class="switch"><input type="checkbox"><span class="switch-track"><span class="switch-thumb"></span></span></label>
+          </div>
+        </div>
+      </section>
+
+      <!-- FACTURATION -->
+      <section class="section" id="facturation">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.2" y="5.5" width="17.6" height="13" rx="2.4"/><path d="M3.2 10h17.6"/></svg></div>
+            <div><h2>Facturation</h2><p>Abonnement et moyens de paiement</p></div>
+          </div>
+          <div class="plans-grid">
+            <div class="plan-option">
+              <h3>Essentiel</h3>
+              <div class="plan-price">12€ <span>/ mois</span></div>
+              <ul>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M4 12l5 5L20 6"/></svg>5 membres</li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M4 12l5 5L20 6"/></svg>10 Go stockage</li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M4 12l5 5L20 6"/></svg>Support e-mail</li>
+              </ul>
+            </div>
+            <div class="plan-option selected">
+              <h3>Pro</h3>
+              <div class="plan-price">39€ <span>/ mois</span></div>
+              <ul>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M4 12l5 5L20 6"/></svg>50 membres</li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M4 12l5 5L20 6"/></svg>200 Go stockage</li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M4 12l5 5L20 6"/></svg>Intégrations avancées</li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M4 12l5 5L20 6"/></svg>Support prioritaire</li>
+              </ul>
+            </div>
+            <div class="plan-option">
+              <h3>Entreprise</h3>
+              <div class="plan-price">Sur devis</div>
+              <ul>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M4 12l5 5L20 6"/></svg>Membres illimités</li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M4 12l5 5L20 6"/></svg>Stockage sur mesure</li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M4 12l5 5L20 6"/></svg>Gestionnaire dédié</li>
+              </ul>
+            </div>
+          </div>
+          <div class="row-item">
+            <div><div class="row-label">Moyen de paiement</div><div class="row-desc">Visa se terminant par 4471 · expire 09/28</div></div>
+            <button class="btn">Mettre à jour</button>
+          </div>
+          <div class="row-item">
+            <div><div class="row-label">Historique de facturation</div><div class="row-desc">Téléchargez vos factures des 12 derniers mois</div></div>
+            <button class="btn">Consulter</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- INTÉGRATIONS -->
+      <section class="section" id="integrations">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="7" height="7" rx="1.6"/><rect x="13" y="4" width="7" height="7" rx="1.6"/><rect x="4" y="13" width="7" height="7" rx="1.6"/><rect x="13" y="13" width="7" height="7" rx="1.6"/></svg></div>
+            <div><h2>Intégrations</h2><p>Connectez les outils de votre équipe</p></div>
+          </div>
+          <div class="row-item">
+            <div><div class="row-label">Slack</div><div class="row-desc">Notifications d'équipe dans vos canaux</div></div>
+            <button class="btn">Connecté ✓</button>
+          </div>
+          <div class="row-item">
+            <div><div class="row-label">Google Drive</div><div class="row-desc">Synchronisez vos fichiers partagés</div></div>
+            <button class="btn btn-primary">Connecter</button>
+          </div>
+          <div class="row-item">
+            <div><div class="row-label">Zapier</div><div class="row-desc">Automatisation avec 5000+ applications</div></div>
+            <button class="btn btn-primary">Connecter</button>
+          </div>
+        </div>
+      </section>
+
+      <div class="footnote">Espace de travail « Atelier » · Membre depuis mars 2024</div>
+    </main>
+  </div>
+
+  <script>
+    // Sidebar active + scroll spy
+    const navItems = document.querySelectorAll('.navitem');
+    const sections = document.querySelectorAll('.section');
+
+    function setActive(target) {
+      navItems.forEach(item => item.classList.toggle('active', item.dataset.target === target));
+    }
+
+    navItems.forEach(item => {
+      item.addEventListener('click', () => {
+        const id = item.dataset.target;
+        setActive(id);
+        const el = document.getElementById(id);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) setActive(entry.target.id);
+      });
+    }, { rootMargin: '-20% 0px -70% 0px', threshold: 0 });
+    sections.forEach(s => observer.observe(s));
+
+    // Segmented controls
+    document.querySelectorAll('.segmented').forEach(group => {
+      group.querySelectorAll('.seg-opt').forEach(opt => {
+        opt.addEventListener('click', () => {
+          group.querySelectorAll('.seg-opt').forEach(o => o.classList.remove('active'));
+          opt.classList.add('active');
+        });
+      });
+    });
+
+    // Swatches
+    document.querySelectorAll('.swatches').forEach(group => {
+      group.querySelectorAll('.swatch').forEach(sw => {
+        sw.addEventListener('click', () => {
+          group.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
+          sw.classList.add('active');
+        });
+      });
+    });
+
+    // Plan selection
+    document.querySelectorAll('.plan-option').forEach(p => {
+      p.addEventListener('click', () => {
+        document.querySelectorAll('.plan-option').forEach(o => o.classList.remove('selected'));
+        p.classList.add('selected');
+      });
+    });
+
+    // Copy API key (mock)
+    document.querySelector('.keyrow .icon-btn')?.addEventListener('click', function () {
+      const original = this.innerHTML;
+      this.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M4 12l5 5L20 6"/></svg>';
+      setTimeout(() => { this.innerHTML = original; }, 1400);
+    });
+  </script>
+</body>
+</html>  

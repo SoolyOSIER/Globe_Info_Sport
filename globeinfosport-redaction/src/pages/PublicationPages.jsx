@@ -1,0 +1,12 @@
+import { Link } from "react-router-dom";
+import ResourcePage from "./ResourcePage";
+
+export function NewsletterPage() {
+  return <ResourcePage title="Newsletter" description="Retrouvez les abonnements reçus depuis la vitrine et leur état actuel." resource="newsletter" readOnly fields={[{ name: "email", label: "Adresse e-mail" }, { name: "actif", label: "Abonnement actif", type: "checkbox" }, { name: "created_at", label: "Date d’inscription" }]} format={(row, field) => field.name === "created_at" ? new Date(row.created_at).toLocaleDateString("fr") : undefined} />;
+}
+export function FAQPage() {
+  return <ResourcePage title="Questions fréquentes" description="Ces réponses sont affichées sur la page Contact de la vitrine. Classez-les avec le champ Ordre." resource="faq" fields={[{ name: "question", label: "Question", required: true, full: true }, { name: "reponse", label: "Réponse", type: "textarea", required: true, full: true }, { name: "ordre", label: "Ordre d’affichage", type: "number" }]} />;
+}
+export function VitrinePage() {
+  return <div className="space-y-8"><section className="desk-hero"><div><p className="desk-eyebrow">Le média / Présentation publique</p><h1>Votre vitrine,<br />votre histoire.</h1><p>Enrichissez la page À propos avec des blocs de présentation : mission, histoire, équipe ou projets. Les blocs actifs sont visibles par les lecteurs.</p><Link className="desk-primary" to="/galerie">Gérer les albums et les photos</Link></div></section><ResourcePage title="Blocs de présentation" description="Choisissez une clé unique, un titre et un texte. Activez le bloc pour l’afficher sur la page À propos." resource="pages-contenu" fields={[{ name: "cle", label: "Clé du bloc (ex. notre-equipe)", required: true }, { name: "titre", label: "Titre", required: true }, { name: "actif", label: "Visible sur la vitrine", type: "checkbox" }, { name: "image", label: "Illustration", type: "file" }, { name: "contenu", label: "Contenu (texte ou HTML)", type: "textarea", required: true, full: true }]} /><ResourcePage title="Partenaires" description="Les partenaires actifs apparaissent au bas de la vitrine." resource="partenaires" fields={[{ name: "nom", label: "Nom", required: true }, { name: "url", label: "Site internet", type: "url" }, { name: "ordre", label: "Ordre d’affichage", type: "number" }, { name: "actif", label: "Visible", type: "checkbox" }, { name: "logo", label: "Logo", type: "file", required: true }]} /></div>;
+}

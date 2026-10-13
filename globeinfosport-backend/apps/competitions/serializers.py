@@ -24,9 +24,30 @@ from apps.competitions.services import (
 
 
 class CompetitionSerializer(serializers.ModelSerializer):
+    clubs_detail = serializers.SerializerMethodField()
+    pays_detail = serializers.SerializerMethodField()
+    sport_detail = serializers.SerializerMethodField()
+
+    def get_clubs_detail(self, obj):
+        return ClubResumeSerializer(obj.clubs.all(), many=True, context=self.context).data
+
+    def get_pays_detail(self, obj):
+        from apps.actualites.serializers import PaysSerializer
+
+        return PaysSerializer(obj.pays, context=self.context).data if obj.pays else None
+
+    def get_sport_detail(self, obj):
+        from apps.actualites.serializers import SportSerializer
+
+        return SportSerializer(obj.sport, context=self.context).data if obj.sport else None
+
     class Meta:
         model = Competition
-        fields = ["id", "nom", "type", "saison", "actif"]
+        fields = [
+            "id", "nom", "type", "saison", "actif", "sport", "sport_detail", "pays", "pays_detail", "description", "logo",
+            "clubs", "clubs_detail", "source_donnees", "derniere_synchronisation",
+        ]
+        read_only_fields = ["source_donnees", "derniere_synchronisation"]
 
 
 class CompetitionPublicSerializer(CompetitionSerializer):
@@ -40,7 +61,7 @@ class ClubSerializer(serializers.ModelSerializer):
             "id",
             "nom",
             "slug",
-            "ville",
+            "ville", "sport", "pays", "entraineur",
             "logo",
             "stade",
             "fondation",

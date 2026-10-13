@@ -17,7 +17,7 @@ class Poste(models.Model):
 
 
 class Joueur(TimeStampedModel):
-    """Joueur haïtien actif, réutilisable par les compétitions et expatriés."""
+    """Athlète international, réutilisable par les compétitions et expatriés."""
 
     class PiedFort(models.TextChoices):
         GAUCHE = "GAUCHE", "Gauche"
@@ -25,12 +25,16 @@ class Joueur(TimeStampedModel):
 
     nom = models.CharField(max_length=150)
     prenom = models.CharField(max_length=150, blank=True)
+    sport = models.ForeignKey("actualites.Sport", null=True, blank=True, on_delete=models.PROTECT)
+    pays = models.ForeignKey("actualites.Pays", null=True, blank=True, on_delete=models.PROTECT)
     photo = models.ImageField(upload_to="joueurs/", null=True, blank=True)
     date_naissance = models.DateField(null=True, blank=True)
     poste = models.ForeignKey(
         Poste,
         on_delete=models.PROTECT,
         related_name="joueurs",
+        null=True,
+        blank=True,
     )
     club_actuel = models.CharField(max_length=150, blank=True)
     numero_maillot = models.PositiveSmallIntegerField(null=True, blank=True)

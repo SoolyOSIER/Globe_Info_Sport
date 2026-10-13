@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from rest_framework import serializers
+from django.core.exceptions import ValidationError as DjangoValidationError
 
 from .models import Joueur, Legende, Poste
 
@@ -24,6 +25,8 @@ class JoueurListSerializer(serializers.ModelSerializer):
             "id",
             "nom",
             "prenom",
+            "sport",
+            "pays",
             "nom_complet",
             "photo",
             "poste",
@@ -60,6 +63,8 @@ class JoueurCreateSerializer(serializers.ModelSerializer):
             "id",
             "nom",
             "prenom",
+            "sport",
+            "pays",
             "photo",
             "date_naissance",
             "poste",
@@ -79,7 +84,10 @@ class JoueurCreateSerializer(serializers.ModelSerializer):
         candidate = self.instance or Joueur()
         for field, value in attrs.items():
             setattr(candidate, field, value)
-        candidate.full_clean()
+        try:
+            candidate.full_clean()
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError(exc.message_dict) from exc
         return attrs
 
 
@@ -113,6 +121,8 @@ class JoueurPublicSerializer(serializers.ModelSerializer):
             "id",
             "nom",
             "prenom",
+            "sport",
+            "pays",
             "nom_complet",
             "photo",
             "date_naissance",

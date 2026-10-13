@@ -3,6 +3,7 @@ WORKDIR /app
 COPY globeinfosport-redaction/package*.json ./
 RUN npm install
 COPY globeinfosport-redaction/ ./
+ENV VITE_BASE_PATH=/redaction/ VITE_API_URL=/api/v1 VITE_VITRINE_URL=/
 RUN npm run build
 
 FROM node:20-alpine AS vitrine-build

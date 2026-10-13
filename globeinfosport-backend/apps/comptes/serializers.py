@@ -36,10 +36,11 @@ class UtilisateurSerializer(serializers.ModelSerializer):
             "bio",
             "role_redaction",
             "is_active",
+            "is_superuser",
             "date_creation_compte",
             "dernier_acces",
         ]
-        read_only_fields = ["id", "date_creation_compte", "dernier_acces"]
+        read_only_fields = ["id", "is_superuser", "date_creation_compte", "dernier_acces"]
 
 
 class UtilisateurCreateSerializer(serializers.ModelSerializer):

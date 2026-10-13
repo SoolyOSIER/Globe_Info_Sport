@@ -1,18 +1,22 @@
 from __future__ import annotations
 
+from django.db import transaction
 from django.db.models import F, Q
+from django.utils.dateparse import parse_datetime
 from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
-from apps.core.permissions import IsEditeurOuPlus, IsRedacteurOuPlus, has_minimum_role
+from apps.core.permissions import IsEditeurOuPlus, IsRedacteurOuPlus, IsAdministrateur, has_minimum_role
 
-from .filters import ArticleFilter
+from .models import Sport, Pays, Selection, RevisionArticle
+from .serializers import SportSerializer, PaysSerializer, SelectionSerializer, RevisionSerializer, CommentaireSerializer
+from .filters import ArticleFilter, SelectionFilter
 from .models import ActualiteSyndiquee, Article, Categorie, ChiffreCle, Citation, FluxSyndication, Tag, Video
 from .serializers import (
     ArticleCreateSerializer,
@@ -46,7 +50,7 @@ class ArticleViewSet(viewsets.ModelViewSet):
             return Article.objects.none()
         queryset = (
             Article.objects.select_related("categorie", "auteur", "auteur__role_redaction")
-            .prefetch_related("tags", "videos", "citations")
+            .prefetch_related("tags", "videos", "citations", "pays", "competitions", "clubs", "athletes", "selections", "galerie")
             .all()
         )
         user = self.request.user
@@ -55,7 +59,7 @@ class ArticleViewSet(viewsets.ModelViewSet):
         return queryset
 
     def get_permissions(self):  # type: ignore[no-untyped-def]
-        if self.action in {"publier", "destroy"}:
+        if self.action in {"publier", "programmer", "archiver", "reprendre", "destroy"}:
             return [IsEditeurOuPlus()]
         return [IsRedacteurOuPlus()]
 
@@ -67,31 +71,96 @@ class ArticleViewSet(viewsets.ModelViewSet):
         return ArticleDetailSerializer
 
     def perform_create(self, serializer) -> None:  # type: ignore[no-untyped-def]
-        serializer.save(auteur=self.request.user, statut=Article.Statut.BROUILLON)
+        with transaction.atomic():
+            article = serializer.save(auteur=self.request.user, statut=Article.Statut.BROUILLON)
+            self.record(article, "creation")
 
-    def perform_update(self, serializer) -> None:  # type: ignore[no-untyped-def]
-        if (
-            serializer.instance.statut == Article.Statut.PUBLIE
-            and not has_minimum_role(self.request.user, "EDITEUR_EN_CHEF")
-        ):
-            raise PermissionDenied(
-                "Seul un éditeur en chef peut modifier un article publié."
-            )
-        serializer.save()
+    def check_owner(self, article):
+        if not has_minimum_role(self.request.user, "EDITEUR_EN_CHEF"):
+            if article.auteur_id != self.request.user.pk or article.statut not in {Article.Statut.BROUILLON, Article.Statut.A_VALIDER}:
+                raise PermissionDenied("Vous pouvez modifier uniquement vos brouillons et soumissions.")
 
-    def retrieve(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
-        article = self.get_object()
-        Article.objects.filter(pk=article.pk).update(compteur_vues=F("compteur_vues") + 1)
-        article.refresh_from_db(fields=["compteur_vues"])
-        return Response(self.get_serializer(article).data)
+    def record(self, article, action_name):
+        RevisionArticle.objects.create(article=article, auteur=self.request.user,
+            action=action_name, donnees=dict(ArticleDetailSerializer(article, context={"request": self.request}).data))
+
+    def perform_update(self, serializer):
+        self.check_owner(serializer.instance)
+        with transaction.atomic():
+            article = serializer.save()
+            article.refresh_from_db()
+            self.record(article, "modification")
 
     @action(detail=True, methods=["post"])
-    def publier(self, request, pk=None):  # type: ignore[no-untyped-def]
-        article = self.get_object()
-        article.statut = Article.Statut.PUBLIE
-        article.date_publication = timezone.now()
-        article.save(update_fields=["statut", "date_publication", "updated_at"])
+    def soumettre(self, request, pk=None):
+        with transaction.atomic():
+            article = self.get_queryset().select_for_update().get(pk=self.get_object().pk)
+            self.check_owner(article)
+            if article.statut != Article.Statut.BROUILLON:
+                raise ValidationError("Seul un brouillon peut etre soumis.")
+            article.statut = Article.Statut.A_VALIDER
+            article.save()
+            self.record(article, "soumission")
+        return Response(ArticleDetailSerializer(article).data)
+
+    def transition(self, request, target):
+        with transaction.atomic():
+            article = self.get_queryset().select_for_update().get(pk=self.get_object().pk)
+            if target in {Article.Statut.PUBLIE, Article.Statut.PROGRAMME} and not all([article.titre.strip(), article.chapo.strip(), article.contenu.strip()]):
+                raise ValidationError("Titre, chapeau et contenu sont requis pour publier.")
+            if target == Article.Statut.PROGRAMME:
+                try:
+                    date = parse_datetime(str(request.data.get("date_publication", "")))
+                except ValueError:
+                    date = None
+                if not date or timezone.is_naive(date) or date <= timezone.now():
+                    raise ValidationError({"date_publication": "Indiquez une date future avec fuseau horaire."})
+                article.date_publication = date
+            elif target == Article.Statut.PUBLIE:
+                article.date_publication = timezone.now()
+            elif target == Article.Statut.BROUILLON:
+                article.date_publication = None
+            article.statut = target
+            article.save()
+            self.record(article, target)
         return Response(ArticleDetailSerializer(article, context={"request": request}).data)
+
+    @action(detail=True, methods=["post"])
+    def publier(self, request, pk=None):
+        return self.transition(request, Article.Statut.PUBLIE)
+
+    @action(detail=True, methods=["post"])
+    def programmer(self, request, pk=None):
+        return self.transition(request, Article.Statut.PROGRAMME)
+
+    @action(detail=True, methods=["post"])
+    def archiver(self, request, pk=None):
+        return self.transition(request, Article.Statut.ARCHIVE)
+
+    @action(detail=True, methods=["post"])
+    def reprendre(self, request, pk=None):
+        return self.transition(request, Article.Statut.BROUILLON)
+
+    @action(detail=True, methods=["get"])
+    def historique(self, request, pk=None):
+        article = self.get_object()
+        self.check_internal_access(article)
+        return Response(RevisionSerializer(article.revisions.select_related("auteur")[:100], many=True).data)
+
+    def check_internal_access(self, article):
+        if article.auteur_id != self.request.user.pk and not has_minimum_role(self.request.user, "EDITEUR_EN_CHEF"):
+            raise PermissionDenied("Cet espace est reserve a l'auteur et aux editeurs.")
+
+    @action(detail=True, methods=["get", "post"])
+    def commentaires(self, request, pk=None):
+        article = self.get_object()
+        self.check_internal_access(article)
+        if request.method == "POST":
+            serializer = CommentaireSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save(article=article, auteur=request.user)
+            return Response(serializer.data, status=201)
+        return Response(CommentaireSerializer(article.commentaires_internes.select_related("auteur"), many=True).data)
 
 
 class EditorialReferenceViewSet(viewsets.ModelViewSet):
@@ -168,16 +237,21 @@ class ArticlePublicListView(ListAPIView):
     throttle_scope = "public-read"
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_class = ArticleFilter
-    search_fields = ["titre", "chapo"]
+    search_fields = ["titre", "chapo", "tags__nom", "sport__nom", "pays__nom", "clubs__nom", "competitions__nom", "athletes__nom", "auteur__nom"]
     ordering_fields = ["date_publication", "titre"]
     ordering = ["-date_publication"]
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
         return (
-            Article.objects.filter(statut=Article.Statut.PUBLIE)
-            .select_related("categorie")
-            .prefetch_related("tags")
+            Article.objects.filter(statut=Article.Statut.PUBLIE, date_publication__lte=timezone.now())
+            .select_related("categorie", "auteur", "sport")
+            .prefetch_related("tags", "pays", "competitions", "clubs", "athletes", "selections", "galerie")
         )
+
+    def filter_queryset(self, queryset):  # type: ignore[no-untyped-def]
+        # Les filtres sur tags, pays et relations multiples ne doivent jamais
+        # afficher deux fois un même article.
+        return super().filter_queryset(queryset).distinct()
 
 
 class CategoriePublicListView(ListAPIView):
@@ -203,9 +277,9 @@ class ArticlePublicDetailView(RetrieveAPIView):
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
         return (
-            Article.objects.filter(statut=Article.Statut.PUBLIE)
-            .select_related("categorie")
-            .prefetch_related("tags", "videos", "citations")
+            Article.objects.filter(statut=Article.Statut.PUBLIE, date_publication__lte=timezone.now())
+            .select_related("categorie", "auteur", "sport")
+            .prefetch_related("tags", "videos", "citations", "pays", "competitions", "clubs", "athletes", "selections", "galerie")
         )
 
     def retrieve(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
@@ -238,7 +312,6 @@ class ActualiteSyndiqueePublicListView(ListAPIView):
 class VideoPublicListView(ListAPIView):
     """Featured and article-related videos without editorial fields."""
 
-    queryset = Video.objects.select_related("article_lie").all()
     serializer_class = VideoSerializer
     permission_classes = [AllowAny]
     throttle_scope = "public-read"
@@ -247,11 +320,19 @@ class VideoPublicListView(ListAPIView):
     ordering_fields = ["ordre", "created_at"]
     ordering = ["ordre", "-created_at"]
 
+    def get_queryset(self):  # type: ignore[no-untyped-def]
+        return Video.objects.select_related("article_lie").filter(
+            Q(article_lie__isnull=True)
+            | Q(
+                article_lie__statut=Article.Statut.PUBLIE,
+                article_lie__date_publication__lte=timezone.now(),
+            )
+        )
+
 
 class CitationPublicListView(ListAPIView):
     """Quotes presented on the news page and article pages."""
 
-    queryset = Citation.objects.select_related("article_lie").all()
     serializer_class = CitationSerializer
     permission_classes = [AllowAny]
     throttle_scope = "public-read"
@@ -259,3 +340,38 @@ class CitationPublicListView(ListAPIView):
     filterset_fields = ["article_lie"]
     ordering_fields = ["ordre", "created_at"]
     ordering = ["ordre", "-created_at"]
+
+    def get_queryset(self):  # type: ignore[no-untyped-def]
+        return Citation.objects.select_related("article_lie").filter(
+            Q(article_lie__isnull=True)
+            | Q(
+                article_lie__statut=Article.Statut.PUBLIE,
+                article_lie__date_publication__lte=timezone.now(),
+            )
+        )
+
+
+class InternationalReferenceViewSet(viewsets.ModelViewSet):
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ["nom"]
+    ordering_fields = ["nom"]
+    ordering = ["nom"]
+    def get_permissions(self):
+        return [AllowAny()] if self.action in {"list", "retrieve"} else [IsAdministrateur()]
+
+
+class SportViewSet(InternationalReferenceViewSet):
+    queryset = Sport.objects.all()
+    serializer_class = SportSerializer
+
+
+class PaysViewSet(InternationalReferenceViewSet):
+    queryset = Pays.objects.all()
+    serializer_class = PaysSerializer
+    filterset_fields = ["region", "code"]
+
+
+class SelectionViewSet(InternationalReferenceViewSet):
+    queryset = Selection.objects.select_related("pays", "sport").prefetch_related("joueurs", "competitions")
+    serializer_class = SelectionSerializer
+    filterset_class = SelectionFilter
